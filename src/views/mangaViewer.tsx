@@ -1,10 +1,20 @@
 import React, { FC, useEffect, useState } from "react";
-import { View, Image, Dimensions, StyleSheet } from "react-native";
-import Content from "../components/content";
+import {
+    View,
+    Dimensions,
+    StyleSheet,
+    SafeAreaView,
+    FlatList,
+} from "react-native";
+import Content from "../components/scrollContent";
 import Section from "../components/section";
 import { NHentai } from "../../api/nhentai";
 import DebugBorder from "../components/debugBorder";
 import VirtualList from "../components/virtualList";
+import CachedImage from "../components/cachedImage";
+import CachedImagesList from "../components/cachedImageList";
+import { NHentaiCache } from "../../cache/nhentai";
+import ClearCacheScreen from "../components/clearCacheScreen";
 
 interface MangaViewerProps {
     // Define your component props here
@@ -37,64 +47,64 @@ const MangaViewer: FC<MangaViewerProps> = ({}) => {
     };
     const handleImageLoad = async () => {
         try {
-            await new Promise<void>((res) => setTimeout(() => res(), 1000));
             // Load the next image if there are more images
-            if (currentIndex >= imageUris.length - 1)
+            if (currentIndex >= imageUris.length - 1) {
                 return console.log(
                     `Finished loading ${imagesToLoad.length} of ${imageUris.length} entries.`,
                 );
+            }
+
+            // await new Promise<void>((res) => setTimeout(() => res(), 1000));
 
             const nextIndex = currentIndex + 1;
-
+            setCurrentIndex(nextIndex);
             const images = [...imagesToLoad];
             images[nextIndex] = imageUris[nextIndex];
             setImagesToLoad(images);
-            setCurrentIndex(currentIndex + 1);
+
+            console.log("Finished loading image:", nextIndex);
         } catch (error) {
             console.error("Error loading image:", error);
         }
     };
     return (
-        <Content>
-            <Section title="Virtual">
-                <View>
-                    <VirtualList
-                        getItemCount={() => imagesToLoad.length}
-                        getItem={(_data, index) => ({
-                            id: `${index}`,
-                            title: imagesToLoad[index],
-                        })}
-                        renderer={({ item }) => (
-                            <DebugBorder debugInfo={+item.id + 1}>
-                                {imagesToLoad[+item.id] ? (
-                                    <Image
-                                        key={item.title}
-                                        source={{
-                                            uri: imagesToLoad[+item.id],
-                                        }}
-                                        style={[
-                                            styles.image,
-                                            {
-                                                opacity:
-                                                    +item.id === currentIndex
-                                                        ? 0.5
-                                                        : 1,
-                                            },
-                                        ]}
-                                        resizeMode="contain"
-                                        onLoadStart={handleImageLoadStart}
-                                        onLoadEnd={handleImageLoad}
-                                    />
-                                ) : (
-                                    // Placeholder or loading indicator while the image is being fetched
-                                    <View style={styles.placeholder} />
-                                )}
-                            </DebugBorder>
-                        )}
-                    ></VirtualList>
-                </View>
-            </Section>
-        </Content>
+        <VirtualList
+            data={imagesToLoad}
+            renderer={({ item }) => (
+                <DebugBorder debugInfo={+item.id + 1}>
+                    {imagesToLoad[+item.id] ? (
+                        <CachedImage
+                            style={[
+                                {
+                                    opacity:
+                                        +item.id === currentIndex ? 0.5 : 1,
+                                },
+                            ]}
+                            resizeMode="contain"
+                            onLoadStart={handleImageLoadStart}
+                            source={{ uri: imagesToLoad[+item.id] }}
+                            cachedImageName={NHentaiCache.getFileName(
+                                imagesToLoad[+item.id],
+                            )}
+                            onImageCached={handleImageLoad}
+                        />
+                    ) : (
+                        // Placeholder or loading indicator while the image is being fetched
+                        <View style={styles.placeholder} />
+                    )}
+                </DebugBorder>
+            )}
+        ></VirtualList>
+        //<CachedImagesList></CachedImagesList>
+        // <View>
+        //
+        //     <Section title="Clear Caches">
+        //         <ClearCacheScreen></ClearCacheScreen>
+        //     </Section>
+        //     <Section title="Virtual">
+        //
+        //     </Section>
+        // </View>
     );
 };
 
@@ -105,11 +115,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-    },
-    image: {
-        width: width - 50,
-        height: 500,
-        alignSelf: "center",
     },
     placeholder: {
         width: width - 50,

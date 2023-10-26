@@ -11,40 +11,45 @@ import {
 
 type ItemData = {
     id: string;
-    title: string;
+    value: string;
 };
 
 type ItemProps = {
-    title: string;
+    value: string;
 };
 
-const Item = ({ title }: ItemProps) => (
+const Item = ({ value }: ItemProps) => (
     <View style={styles.item}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.value}>{value}</Text>
     </View>
 );
 
+const getItem = (data: string[], index: number): ItemData => {
+    return {
+        id: `${index}`,
+        value: data[index],
+    };
+};
+
 interface VirtualListProps extends PropsWithChildren {
-    renderer?: ListRenderItem<ItemData> | null | undefined;
-    getItemCount: (_data: unknown) => number;
-    getItem: (_data: unknown, index: number) => ItemData;
+    data: string[];
+    renderer: ListRenderItem<ItemData> | null | undefined;
 }
 
 const VirtualList: React.FC<VirtualListProps> = ({
-    renderer = ({ item }) => <Item title={item.title} />,
-    getItemCount,
-    getItem = (_data: unknown, index: number): ItemData => ({
-        id: Math.random().toString(12).substring(0),
-        title: `Item ${index + 1}`,
-    }),
+    data,
+    renderer = ({ item }) => <Item value={item.value} />,
 }) => {
     return (
         <SafeAreaView style={styles.container}>
             <VirtualizedList
+                data={data.map((item, index) => getItem(data, index))}
                 initialNumToRender={10}
                 renderItem={renderer}
                 keyExtractor={(item) => item.id}
-                getItemCount={getItemCount}
+                getItemCount={(_data) => {
+                    return data.length;
+                }}
                 getItem={getItem}
             />
         </SafeAreaView>
@@ -53,18 +58,19 @@ const VirtualList: React.FC<VirtualListProps> = ({
 
 const styles = StyleSheet.create({
     container: {
+        height: 500,
         flex: 1,
         marginTop: StatusBar.currentHeight,
     },
     item: {
         backgroundColor: "#f9c2ff",
-        height: 150,
+        height: 500,
         justifyContent: "center",
         marginVertical: 8,
         marginHorizontal: 16,
         padding: 20,
     },
-    title: {
+    value: {
         fontSize: 32,
     },
 });

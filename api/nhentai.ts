@@ -16,7 +16,7 @@ const getRandomCover = async () => {
 const getRandomBookFirstChapter = async () => {
     const result = await get("/random");
     const { pages } = result.chapters[0];
-    const images = pages.map((page) => page.uri);
+    const images = pages.map((page: { uri: string }) => page.uri);
     console.log(images);
     return images;
 };
@@ -36,7 +36,7 @@ const search = async (query: string) => {
 const getByCode = async (code: string) => {
     const result = await get(`/get?identifier=${code}`);
     const { pages } = result.chapters[0];
-    const images = pages.map((page) => page.uri);
+    const images = pages.map((page: { uri: string }) => page.uri);
     console.log(images);
     return images;
 };

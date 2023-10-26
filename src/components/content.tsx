@@ -1,16 +1,16 @@
 import React, { FC, HTMLProps, ReactNode } from "react";
 import {
+    useColorScheme,
     SafeAreaView,
     StatusBar,
-    ScrollView,
-    useColorScheme,
+    ViewBase,
+    View,
 } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 
 interface ContentProps extends HTMLProps<HTMLDivElement> {
     children: ReactNode;
 }
-
 const Content: FC<ContentProps> = ({ children }) => {
     const isDarkMode = useColorScheme() === "dark";
 
@@ -23,12 +23,8 @@ const Content: FC<ContentProps> = ({ children }) => {
                 barStyle={isDarkMode ? "light-content" : "dark-content"}
                 backgroundColor={backgroundStyle.backgroundColor}
             />
-            <ScrollView
-                contentInsetAdjustmentBehavior="automatic"
-                style={backgroundStyle}
-            >
-                {children}
-            </ScrollView>
+
+            <View style={backgroundStyle}>{children}</View>
         </SafeAreaView>
     );
 };
