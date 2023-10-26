@@ -24,11 +24,7 @@ const getRandomBookFirstChapter = async () => {
 const searchFirstMatch = async (query: string) => {
     const result = await get(`/search?query=${query}`);
     const { results } = result;
-    const firstMatch = await get(`/get?identifier=${results[0].id}`);
-    const { pages } = firstMatch.chapters[0];
-    const images = pages.map((page) => page.uri);
-    console.log(images);
-    return images;
+    return getByCode(results[0].id);
 };
 
 const search = async (query: string) => {
@@ -37,9 +33,18 @@ const search = async (query: string) => {
     return result;
 };
 
+const getByCode = async (code: string) => {
+    const result = await get(`/get?identifier=${code}`);
+    const { pages } = result.chapters[0];
+    const images = pages.map((page) => page.uri);
+    console.log(images);
+    return images;
+};
+
 export const NHentai = {
     getRandomCover,
     getRandomBookFirstChapter,
     search,
     searchFirstMatch,
+    getByCode,
 };
