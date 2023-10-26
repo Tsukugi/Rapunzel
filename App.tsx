@@ -1,13 +1,6 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from "react";
-import type { PropsWithChildren } from "react";
+import React, { PropsWithChildren, useEffect, useState } from "react";
 import {
+    Image,
     SafeAreaView,
     ScrollView,
     StatusBar,
@@ -15,8 +8,8 @@ import {
     Text,
     useColorScheme,
     View,
+    Dimensions,
 } from "react-native";
-
 import {
     Colors,
     DebugInstructions,
@@ -24,6 +17,7 @@ import {
     LearnMoreLinks,
     ReloadInstructions,
 } from "react-native/Libraries/NewAppScreen";
+import { NHentai } from "./api/nhentai";
 
 type SectionProps = PropsWithChildren<{
     title: string;
@@ -57,12 +51,18 @@ function Section({ children, title }: SectionProps): JSX.Element {
     );
 }
 
-function App(): JSX.Element {
+const App: React.FC = () => {
+    const [imageUris, setImageUris] = useState([]);
     const isDarkMode = useColorScheme() === "dark";
 
     const backgroundStyle = {
         backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     };
+
+    useEffect(() => {
+        NHentai.searchFirstMatch("azur lane atago").then(setImageUris);
+        // NHentai.getRandomBookFirstChapter().then(setImageUris);
+    }, []);
 
     return (
         <SafeAreaView style={backgroundStyle}>
@@ -82,6 +82,29 @@ function App(): JSX.Element {
                             : Colors.white,
                     }}
                 >
+                    <Section title="NHentai">
+                        <View>
+                            {imageUris.length > 0 ? (
+                                imageUris.map((imageUri, index) => (
+                                    <View style={styles.container} key={index}>
+                                        {imageUris ? (
+                                            // Display the image with full width and auto height
+                                            <Image
+                                                source={{ uri: imageUri }}
+                                                style={styles.image}
+                                                resizeMode="contain"
+                                            />
+                                        ) : (
+                                            // Placeholder or loading indicator while the image is being fetched
+                                            <View style={styles.placeholder} />
+                                        )}
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.placeholder} />
+                            )}
+                        </View>
+                    </Section>
                     <Section title="Step One">
                         Edit <Text style={styles.highlight}>App.tsx</Text> to
                         change this screen and then come back to see your edits.
@@ -100,7 +123,9 @@ function App(): JSX.Element {
             </ScrollView>
         </SafeAreaView>
     );
-}
+};
+
+const { width, height } = Dimensions.get("screen");
 
 const styles = StyleSheet.create({
     sectionContainer: {
@@ -118,6 +143,22 @@ const styles = StyleSheet.create({
     },
     highlight: {
         fontWeight: "700",
+    },
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "scroll",
+    },
+    image: {
+        width: width, // Set your image width
+        height: height, // Set your image height
+        alignSelf: "center",
+    },
+    placeholder: {
+        width: width - 10,
+        height: width,
+        backgroundColor: "#222",
     },
 });
 
