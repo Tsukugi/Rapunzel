@@ -17,7 +17,7 @@ const MangaViewer: FC<MangaViewerProps> = ({}) => {
     useEffect(() => {
         const loadData = async () => {
             const uris: string[] = await NHentai.searchFirstMatch(
-                "atago azur lane",
+                "azur lane",
             );
 
             setImageUris(uris);
@@ -30,7 +30,6 @@ const MangaViewer: FC<MangaViewerProps> = ({}) => {
                     setLoadedImages((currentLoadedImages) => {
                         const images = [...currentLoadedImages];
                         images[index] = uri;
-                        console.log(images);
                         return images;
                     });
                 },

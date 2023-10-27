@@ -1,6 +1,60 @@
 import RNFS from "react-native-fs";
 import { NHentaiCache } from "./nhentai";
 
+const ImageCacheDirectory = RNFS.DocumentDirectoryPath;
+
+type Extension = ".jpg" | ".jpeg" | ".png" | ".gif"; // Fallback extensions to try
+const SupportedExtensions: Extension[] = [".jpg", ".png", ".jpeg"];
+
+interface RequestImageWithFallback {
+    url: string;
+    extensionIndex?: number;
+    downloadHandler: (url: string) => Promise<{ statusCode: number }>;
+}
+async function downloadImageWithFallback({
+    url,
+    extensionIndex = 0,
+    downloadHandler,
+}: RequestImageWithFallback) {
+    return new Promise<void>((onSuccess, onError) => {
+        const onDownloadFailed = () => {
+            // Error occurred, try next extension if available
+            const nextFallbackIndex = extensionIndex + 1;
+            if (nextFallbackIndex >= SupportedExtensions.length) {
+                // All fallbacks failed, handle error as needed
+                console.error("No extension supported for ", url);
+                return onError();
+            }
+
+            return downloadImageWithFallback({
+                url,
+                extensionIndex: nextFallbackIndex,
+                downloadHandler,
+            });
+        };
+        try {
+            const createdUrl =
+                NHentaiCache.removeFileExtension(url) +
+                SupportedExtensions[extensionIndex];
+            const response = downloadHandler(createdUrl);
+            response
+                .then(({ statusCode }) => {
+                    if (statusCode === 200) {
+                        return onSuccess();
+                    }
+                    console.warn(
+                        "Image download failed for ",
+                        createdUrl,
+                        statusCode,
+                    );
+                    onDownloadFailed();
+                })
+                .catch(onDownloadFailed);
+        } catch (error) {
+            onDownloadFailed();
+        }
+    });
+}
 interface DownloadAndCacheImageProps {
     uri: string;
     onImageCached?: (path: string) => void;
@@ -14,23 +68,26 @@ const downloadAndCacheImage = async ({
     const exists = await RNFS.exists(localImagePath);
 
     if (!exists) {
+        const onError = (error: unknown) => {
+            console.warn("Error downloading image:", error);
+        };
+
         try {
-            console.log("loading image:", uri);
-            await new Promise<void>((res) => setTimeout(() => res(), 1000));
+            console.log("Downloading image:", uri);
+            await new Promise<void>((res) => setTimeout(() => res(), 500));
 
-            const request = RNFS.downloadFile({
-                fromUrl: uri,
-                toFile: localImagePath,
+            await downloadImageWithFallback({
+                url: uri,
+                downloadHandler: (downloadUri) => {
+                    const request = RNFS.downloadFile({
+                        fromUrl: downloadUri,
+                        toFile: localImagePath,
+                    });
+                    return request.promise;
+                },
             });
-
-            await request.promise
-                .then((response) => {
-                    if (response.statusCode !== 200)
-                        console.error("Error downlading ", uri);
-                })
-                .catch((err) => console.error(err));
         } catch (error) {
-            console.error("Error downloading image:", error);
+            onError(error);
             return null;
         }
     }
@@ -39,7 +96,7 @@ const downloadAndCacheImage = async ({
 };
 
 const getCachePath = (filename: string) => {
-    return `${RNFS.DocumentDirectoryPath}/${filename}`;
+    return `${ImageCacheDirectory}/${filename}`;
 };
 interface StartLoadingImagesProps {
     data: string[];
@@ -71,7 +128,6 @@ const loadNextImage = async ({
     onImageCached,
 }: LoadNextImageProps) => {
     try {
-        // Load the next image if there are more images
         if (currentIndex >= data.length - 1) {
             return console.log(
                 `Finished loading ${currentIndex + 1} of ${
@@ -118,7 +174,7 @@ const redownloadImage = (filePath: string, imageUri: string) => {
 
 const calculateCacheSize = async (): Promise<number> => {
     try {
-        const cachePath = RNFS.CachesDirectoryPath; // Get the path to the cache directory
+        const cachePath = ImageCacheDirectory; // Get the path to the cache directory
         const info = await RNFS.stat(cachePath); // Get information about the cache directory
 
         const cacheSizeInBytes = info.size; // Cache size in bytes
@@ -133,8 +189,8 @@ const calculateCacheSize = async (): Promise<number> => {
 
 const clearCache = async (): Promise<void> => {
     try {
-        const cacheDirectory = `${RNFS.DocumentDirectoryPath}`;
-        const files = await RNFS.readDir(cacheDirectory);
+        const cachePath = ImageCacheDirectory;
+        const files = await RNFS.readDir(cachePath);
 
         // Iterate through the files and remove them
         for (const file of files) {
@@ -147,6 +203,25 @@ const clearCache = async (): Promise<void> => {
     }
 };
 
+const listCachedImages = async (): Promise<string[]> => {
+    try {
+        const files = await RNFS.readDir(ImageCacheDirectory);
+
+        // Filter files that have image extensions (adjust this according to your use case)
+        const imageFiles = files.filter((file) =>
+            /\.(jpg|jpeg|png|gif)$/i.test(file.name),
+        );
+
+        // Extract URIs for image files
+        const imageUris = imageFiles.map((file) => "file://" + file.path);
+
+        return imageUris;
+    } catch (error) {
+        console.error("Error reading cached images:", error);
+        return [];
+    }
+};
+
 export const DeviceCache = {
     downloadAndCacheImage,
     getCachePath,
@@ -154,4 +229,5 @@ export const DeviceCache = {
     redownloadImage,
     calculateCacheSize,
     clearCache,
+    listCachedImages,
 };

@@ -14,7 +14,7 @@ const CacheScreen = () => {
                 title="Calculate Cache Size"
                 onPress={onCalculateSizeHandler}
             />
-            <Text>Cache size: {size}MB</Text>
+            <Text>Cache size: {size.toFixed(2)}MB</Text>
         </View>
     );
 };

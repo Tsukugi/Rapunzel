@@ -22,8 +22,14 @@ const getIndexFromPath = (fileName: string) => {
     return +getPageFromPath(fileName) - 1;
 };
 
+const removeFileExtension = (path: string) => {
+    const fileNameWithoutExtension = path.replace(/\.[^/.]+$/, ""); // Remove everything after the last dot
+    return fileNameWithoutExtension;
+};
+
 export const NHentaiCache = {
     getFileName,
     getPageFromPath,
     getIndexFromPath,
+    removeFileExtension,
 };
