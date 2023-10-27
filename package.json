@@ -10,10 +10,14 @@
         "test": "jest"
     },
     "dependencies": {
+        "@react-navigation/native": "^6.1.9",
         "react": "18.2.0",
         "react-native": "0.72.6",
         "react-native-fs": "^2.20.0",
-        "react-native-python": "0.0.0"
+        "react-native-paper": "^5.11.1",
+        "react-native-safe-area-context": "^4.7.4",
+        "react-native-screens": "^3.27.0",
+        "react-native-vector-icons": "^10.0.1"
     },
     "devDependencies": {
         "@babel/core": "^7.20.0",
@@ -23,6 +27,7 @@
         "@react-native/metro-config": "^0.72.11",
         "@tsconfig/react-native": "^3.0.0",
         "@types/react": "^18.0.24",
+        "@types/react-native-vector-icons": "^6.4.16",
         "@types/react-test-renderer": "^18.0.0",
         "babel-jest": "^29.2.1",
         "eslint": "^8.19.0",

@@ -4,7 +4,6 @@ import VirtualList from "../components/virtualList/virtualList";
 import { NHentaiCache } from "../cache/nhentai";
 import ImageItem from "../components/virtualList/imageItem";
 import { DeviceCache } from "../cache/cache";
-import CacheScreen from "../components/cacheScreen";
 
 interface MangaViewerProps {
     // Define your component props here
@@ -16,9 +15,7 @@ const MangaViewer: FC<MangaViewerProps> = ({}) => {
 
     useEffect(() => {
         const loadData = async () => {
-            const uris: string[] = await NHentai.searchFirstMatch(
-                "azur lane",
-            );
+            const uris: string[] = await NHentai.searchFirstMatch("atago azur lane");
 
             setImageUris(uris);
             setLoadedImages(new Array(uris.length).fill(null));
@@ -46,16 +43,12 @@ const MangaViewer: FC<MangaViewerProps> = ({}) => {
         );
 
     return (
-        <>
-            <VirtualList
-                data={loadedImages}
-                renderer={({ item }) => (
-                    <ImageItem item={item} onReload={onReloadHandler} />
-                )}
-            />
-
-            <CacheScreen />
-        </>
+        <VirtualList
+            data={loadedImages}
+            renderer={({ item }) => (
+                <ImageItem item={item} onReload={onReloadHandler} />
+            )}
+        />
     );
 };
 export default MangaViewer;

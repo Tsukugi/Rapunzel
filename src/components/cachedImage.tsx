@@ -23,14 +23,14 @@ const CachedImage: React.FC<CachedImageProps> = ({
     return (
         <TouchableOpacity onPress={() => onReload(uri)}>
             <View style={styles.container}>
-                <DebugBorder debugInfo={uri}>
-                    <Image
-                        {...props}
-                        source={{ uri: "file://" + uri }}
-                        style={styles.image}
-                        resizeMode="contain"
-                    />
-                </DebugBorder>
+                {/* <DebugBorder debugInfo={uri}> */}
+                <Image
+                    {...props}
+                    source={{ uri: "file://" + uri }}
+                    style={styles.image}
+                    resizeMode="contain"
+                />
+                {/* </DebugBorder> */}
             </View>
         </TouchableOpacity>
     );
@@ -52,4 +52,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default (CachedImage);
+export default CachedImage;
