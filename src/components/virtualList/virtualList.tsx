@@ -33,7 +33,7 @@ const getItem = (data: string[], index: number): ItemData => {
 
 interface VirtualListProps extends PropsWithChildren {
     data: string[];
-    renderer: ListRenderItem<ItemData> | null | undefined;
+    renderer?: ListRenderItem<ItemData> | null | undefined;
 }
 
 const VirtualList: React.FC<VirtualListProps> = ({
@@ -43,13 +43,13 @@ const VirtualList: React.FC<VirtualListProps> = ({
     return (
         <SafeAreaView style={styles.container}>
             <VirtualizedList
-                data={data.map((item, index) => getItem(data, index))}
-                initialNumToRender={10}
+                data={data}
+                initialNumToRender={1}
+                maxToRenderPerBatch={3}
+                windowSize={6}
                 renderItem={renderer}
                 keyExtractor={(item) => item.id}
-                getItemCount={(_data) => {
-                    return data.length;
-                }}
+                getItemCount={(_data) => _data.length}
                 getItem={getItem}
             />
         </SafeAreaView>
@@ -58,7 +58,6 @@ const VirtualList: React.FC<VirtualListProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        height: 500,
         flex: 1,
         marginTop: StatusBar.currentHeight,
     },

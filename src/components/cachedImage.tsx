@@ -1,58 +1,38 @@
-import React, { useEffect } from "react";
-import { View, Image, StyleSheet, ImageProps, Dimensions } from "react-native";
-import RNFS from "react-native-fs";
+import React from "react";
+import {
+    View,
+    Image,
+    StyleSheet,
+    ImageProps,
+    Dimensions,
+    TouchableOpacity,
+} from "react-native";
+import DebugBorder from "./debugBorder";
 
 interface CachedImageProps extends ImageProps {
     source: { uri: string };
-    onImageCached: (uri: string) => void;
-    cachedImageName?: string;
+    onReload: (uri: string) => void;
 }
+
 const CachedImage: React.FC<CachedImageProps> = ({
-    onImageCached,
-    source,
-    cachedImageName = `${Math.random().toString(12).substring(0)}.jpg`,
+    source: { uri },
+    onReload,
     ...props
 }) => {
-    const getFileName = () => {
-        return "file://" + RNFS.DocumentDirectoryPath + "/" + cachedImageName;
-    };
-
-    useEffect(() => {
-        const downloadAndCacheImage = async () => {
-            const localImagePath = `${RNFS.DocumentDirectoryPath}/${cachedImageName}`;
-
-            const exists = await RNFS.exists(localImagePath);
-
-            if (!exists) {
-                try {
-                    const request = RNFS.downloadFile({
-                        fromUrl: source.uri,
-                        toFile: localImagePath,
-                    });
-
-                    await request.promise;
-
-                    console.log(getFileName());
-                } catch (error) {
-                    console.error("Error downloading image:", error);
-                }
-            }
-            onImageCached(getFileName());
-        };
-
-        downloadAndCacheImage();
-    }, []);
-
+    console.log("refresh!", uri);
     return (
-        <View style={styles.container}>
-            <Image
-                {...props}
-                style={styles.image}
-                source={{
-                    uri: getFileName(),
-                }}
-            />
-        </View>
+        <TouchableOpacity onPress={() => onReload(uri)}>
+            <View style={styles.container}>
+                <DebugBorder debugInfo={uri}>
+                    <Image
+                        {...props}
+                        source={{ uri: "file://" + uri }}
+                        style={styles.image}
+                        resizeMode="contain"
+                    />
+                </DebugBorder>
+            </View>
+        </TouchableOpacity>
     );
 };
 
@@ -67,8 +47,9 @@ const styles = StyleSheet.create({
     image: {
         width: width - 50,
         height: 500,
+        backgroundColor: "#555",
         alignSelf: "center",
     },
 });
 
-export default CachedImage;
+export default (CachedImage);
