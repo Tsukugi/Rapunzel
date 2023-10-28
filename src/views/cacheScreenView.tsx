@@ -2,6 +2,8 @@ import React, { FC } from "react";
 import CacheScreen from "../components/cacheScreen";
 import ScrollContent from "../components/scrollContent";
 import Section from "../components/section";
+import CachedImagesList from "../components/cachedImageList";
+import Content from "../components/content";
 
 interface CacheScreenViewProps {
     // Define your component props here
@@ -9,11 +11,14 @@ interface CacheScreenViewProps {
 
 const CacheScreenView: FC<CacheScreenViewProps> = ({}) => {
     return (
-        <ScrollContent>
+        <Content>
             <Section title="Cache">
                 <CacheScreen />
             </Section>
-        </ScrollContent>
+            <Section title="List">
+                <CachedImagesList></CachedImagesList>
+            </Section>
+        </Content>
     );
 };
 

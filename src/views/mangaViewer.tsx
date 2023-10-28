@@ -5,10 +5,7 @@ import { NHentaiCache } from "../cache/nhentai";
 import ImageItem from "../components/virtualList/imageItem";
 import { DeviceCache } from "../cache/cache";
 
-interface MangaViewerProps {
-    // Define your component props here
-}
-
+interface MangaViewerProps {}
 
 // TODO: Add heights from backend to support full image dynamically
 const MangaViewer: FC<MangaViewerProps> = ({}) => {
@@ -17,7 +14,9 @@ const MangaViewer: FC<MangaViewerProps> = ({}) => {
 
     useEffect(() => {
         const loadData = async () => {
-            const uris: string[] = await NHentai.searchFirstMatch("atago azur lane");
+            const uris: string[] = await NHentai.searchFirstMatch(
+                "atago azur lane",
+            );
 
             setImageUris(uris);
             setLoadedImages(new Array(uris.length).fill(null));
