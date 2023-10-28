@@ -9,6 +9,8 @@ interface MangaViewerProps {
     // Define your component props here
 }
 
+
+// TODO: Add heights from backend to support full image dynamically
 const MangaViewer: FC<MangaViewerProps> = ({}) => {
     const [imageUris, setImageUris] = useState<string[]>([]);
     const [loadedImages, setLoadedImages] = useState<string[]>([]);

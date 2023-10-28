@@ -1,6 +1,7 @@
 /**
  * @format
- */
+ */ 
+import "react-native-gesture-handler"; // Installation guide mentions this should be at the top
 
 import { AppRegistry } from "react-native";
 import App from "./src/App";

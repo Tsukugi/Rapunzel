@@ -59,15 +59,14 @@ const VirtualList: React.FC<VirtualListProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: StatusBar.currentHeight,
     },
     item: {
         backgroundColor: "#f9c2ff",
-        height: 500,
+        height: 550,
         justifyContent: "center",
         marginVertical: 8,
-        marginHorizontal: 16,
-        padding: 20,
+        marginHorizontal: 8,
+        padding: 10,
     },
     value: {
         fontSize: 32,

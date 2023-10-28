@@ -1,44 +1,18 @@
 import React from "react";
-import { createMaterialBottomTabNavigator } from "react-native-paper/react-navigation";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import CacheScreenView from "./views/cacheScreenView";
 import MangaViewer from "./views/mangaViewer";
+import TabNavigator from "./components/navigators/tabNavigator";
+import DrawerNavigator from "./components/navigators/drawerNavigator";
 
-const Tab = createMaterialBottomTabNavigator();
+const Views = [MangaViewer, CacheScreenView].map((view) => ({
+    name: view.name,
+    component: view,
+    icon: "home",
+}));
+
 const App: React.FC = () => {
-    return (
-        <Tab.Navigator initialRouteName="Home">
-            <Tab.Screen
-                name="Home"
-                component={MangaViewer}
-                options={{
-                    tabBarLabel: "Home",
-                    tabBarIcon: ({ color }) => (
-                        <MaterialCommunityIcons
-                            name="home"
-                            color={color}
-                            size={26}
-                        />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Cache"
-                component={CacheScreenView}
-                options={{
-                    tabBarLabel: "Cache",
-                    tabBarIcon: ({ color }) => (
-                        <MaterialCommunityIcons
-                            name="wifi"
-                            color={color}
-                            size={26}
-                        />
-                    ),
-                }}
-            />
-        </Tab.Navigator>
-    );
+    return <DrawerNavigator views={Views}></DrawerNavigator>;
 };
 
 export default App;

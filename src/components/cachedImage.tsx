@@ -7,7 +7,6 @@ import {
     Dimensions,
     TouchableOpacity,
 } from "react-native";
-import DebugBorder from "./debugBorder";
 
 interface CachedImageProps extends ImageProps {
     source: { uri: string };
@@ -23,14 +22,12 @@ const CachedImage: React.FC<CachedImageProps> = ({
     return (
         <TouchableOpacity onPress={() => onReload(uri)}>
             <View style={styles.container}>
-                {/* <DebugBorder debugInfo={uri}> */}
                 <Image
                     {...props}
                     source={{ uri: "file://" + uri }}
                     style={styles.image}
                     resizeMode="contain"
                 />
-                {/* </DebugBorder> */}
             </View>
         </TouchableOpacity>
     );
@@ -45,9 +42,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     image: {
-        width: width - 50,
-        height: 500,
-        backgroundColor: "#555",
+        width: width,
+        height: 550,
         alignSelf: "center",
     },
 });
