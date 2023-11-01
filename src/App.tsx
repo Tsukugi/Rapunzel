@@ -1,15 +1,9 @@
 import React from "react";
 
-import CacheScreenView from "./views/cacheScreenView";
-import MangaViewer from "./views/mangaViewer";
-import TabNavigator from "./components/navigators/tabNavigator";
 import DrawerNavigator from "./components/navigators/drawerNavigator";
+import { Navigation } from "./components/navigators/navigation";
 
-const Views = [MangaViewer, CacheScreenView].map((view) => ({
-    name: view.name,
-    component: view,
-    icon: "home",
-}));
+const Views = Navigation.getViews();
 
 const App: React.FC = () => {
     return <DrawerNavigator views={Views}></DrawerNavigator>;

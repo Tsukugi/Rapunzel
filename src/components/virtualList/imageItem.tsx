@@ -1,27 +1,29 @@
 import React from "react";
 import CachedImage from "../cachedImage";
+import { VirtualItem } from "./interfaces";
 
 interface ImageItemProps {
-    item: { id: string; value: string };
+    item: VirtualItem;
     handleImageLoadStart?: () => void;
     handleImageLoad?: () => void;
-    onReload: (uri: string) => void;
+    onClick: (item: VirtualItem) => void;
 }
 
 const ImageItem: React.FC<ImageItemProps> = ({
-    item: { id, value },
+    item,
     handleImageLoadStart,
     handleImageLoad,
-    onReload,
+    onClick,
 }): React.JSX.Element => {
+    const onClickHandler = () => onClick(item);
     return (
         <CachedImage
             onLoadStart={handleImageLoadStart}
             onLoad={handleImageLoad}
-            source={{ uri: value }}
-            onReload={onReload}
+            source={{ uri: item.value }}
+            onClick={onClickHandler}
         />
     );
 };
 
-export default (ImageItem);
+export default ImageItem;

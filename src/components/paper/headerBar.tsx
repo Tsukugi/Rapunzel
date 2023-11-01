@@ -1,6 +1,8 @@
-import * as React from "react";
 import { Appbar } from "react-native-paper";
 import PaperSearch from "./search";
+import { useTaihouStore } from "../../store/store";
+import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 
 interface HeaderBarProps {
     openMenu: () => void;
@@ -9,7 +11,15 @@ interface HeaderBarProps {
 }
 
 const HeaderBar = ({ openMenu, openOptions, openSearch }: HeaderBarProps) => {
-    const [showSearch, setShowSearch] = React.useState(false);
+    const [showSearch, setShowSearch] = useState(false);
+    const [searchText, setSearchTerm] = useState("");
+    const [header] = useTaihouStore().header;
+    const [debouncedSearchText] = useDebounce(searchText, 1000);
+
+    useEffect(() => {
+        header.searchValue = searchText;
+    }, [debouncedSearchText]);
+
     return (
         <Appbar.Header>
             {/* <Appbar.BackAction onPress={_goBack} /> */}
@@ -17,7 +27,11 @@ const HeaderBar = ({ openMenu, openOptions, openSearch }: HeaderBarProps) => {
             <Appbar.Action icon="menu" onPress={openMenu} />
             <Appbar.Content title="" />
             {showSearch ? (
-                <PaperSearch onClose={() => setShowSearch(false)} />
+                <PaperSearch
+                    value={searchText}
+                    onValueChange={setSearchTerm}
+                    onClose={() => setShowSearch(false)}
+                />
             ) : (
                 <Appbar.Action
                     icon="magnify"

@@ -20,8 +20,8 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
         header: ({ navigation }) => (
             <HeaderBar
                 openMenu={navigation.openDrawer}
-                openOptions={console.log}
-                openSearch={console.log}
+                openOptions={() => {}}
+                openSearch={() => {}}
             />
         ),
         drawerActiveTintColor: primary,
@@ -34,10 +34,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     return (
         <Drawer.Navigator
             screenListeners={{
-                state: (e) => {
-                    // Do something with the state
-                    console.log("state changed", e.data);
-                },
+                state: (e) => {},
             }}
         >
             {views.map((view, index) => (

@@ -10,17 +10,17 @@ import {
 
 interface CachedImageProps extends ImageProps {
     source: { uri: string };
-    onReload: (uri: string) => void;
+    onClick: (uri: string) => void;
 }
 
 const CachedImage: React.FC<CachedImageProps> = ({
     source: { uri },
-    onReload,
+    onClick,
     ...props
 }) => {
     console.log("refresh!", uri);
     return (
-        <TouchableOpacity onPress={() => onReload(uri)}>
+        <TouchableOpacity onPress={() => onClick(uri)}>
             <View style={styles.container}>
                 <Image
                     {...props}

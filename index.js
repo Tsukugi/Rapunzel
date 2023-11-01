@@ -9,6 +9,7 @@ import { name as appName } from "./app.json";
 import { PaperProvider } from "react-native-paper";
 import { NavigationContainer } from "@react-navigation/native";
 import { LocalTheme } from "./themes";
+import { initTaihouStore } from "./src/store/store";
 
 export default function Main() {
     return (
@@ -20,4 +21,5 @@ export default function Main() {
     );
 }
 
+initTaihouStore();
 AppRegistry.registerComponent(appName, () => Main);
