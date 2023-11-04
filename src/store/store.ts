@@ -1,44 +1,57 @@
 import { TaihouOptions, UseState, useState } from "@atsu/taihou";
-interface HeaderState {
+import { NHentai } from "../api/interfaces";
+import { RapunzelConfigBase } from "../config/interfaces";
+
+export interface HeaderState {
     searchValue: string;
 }
-interface ReaderState {
-    title: string;
-    images: string[];
+export interface ReaderState {
+    book: NHentai.Book | null;
+    cachedImages: string[];
 }
+export interface ConfigState extends RapunzelConfigBase {}
 
-interface BrowseState {
-    bookList: Record<string, unknown>; // Key as Ids
+export interface BrowseState {
+    bookListRecord: Record<string, NHentai.Book>; // Key as Ids
+    bookList: NHentai.Book[];
+    cachedImages: string[];
 }
 
 interface Store {
+    config: UseState<ConfigState>;
     header: UseState<HeaderState>;
     reader: UseState<ReaderState>;
     browse: UseState<BrowseState>;
 }
 
-const TaihouStore = {} as Store;
-export const useTaihouStore = () => {
-    if (Object.keys(TaihouStore).length === 0) {
+const RapunzelState = {} as Store;
+export const useRapunzelStore = () => {
+    if (Object.keys(RapunzelState).length === 0) {
         throw Error("Taihou Store not initialized");
     }
-    return TaihouStore;
+    return RapunzelState;
 };
 
-export const initTaihouStore = () => {
-    const defaultConfig: Partial<TaihouOptions> = { debug: true };
+export const initRapunzelStore = () => {
+    const defaultConfig: Partial<TaihouOptions> = { debug: false };
 
     const useConfig = <T>(name: string, state: T) =>
         useState(state, { ...defaultConfig, name });
 
-    TaihouStore.reader = useConfig<ReaderState>("reader", {
-        title: "",
-        images: [],
+    RapunzelState.config = useConfig<ConfigState>("config", {
+        debug: true,
+        useFallbackExtensionOnDownload: true,
     });
-    TaihouStore.header = useConfig<HeaderState>("header", {
+    RapunzelState.reader = useConfig<ReaderState>("reader", {
+        book: null,
+        cachedImages: [],
+    });
+    RapunzelState.header = useConfig<HeaderState>("header", {
         searchValue: "ass",
     });
-    TaihouStore.browse = useConfig<BrowseState>("browse", {
-        bookList: {},
+    RapunzelState.browse = useConfig<BrowseState>("browse", {
+        bookListRecord: {},
+        bookList: [],
+        cachedImages: [],
     });
 };

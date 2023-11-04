@@ -5,4 +5,11 @@ export interface UsesNavigation {
 /*
  * ViewNames Provides context to navigation methods about which views we registered.
  */
-export type ViewNames = "BrowseView" | "MangaReaderView" | "CacheScreenView";
+export enum ViewNames {
+    RapunzelBrowse = "RapunzelBrowse",
+    RapunzelReader = "RapunzelReader",
+    RapunzelCache = "RapunzelCache",
+    RapunzelSettings = "RapunzelSettings",
+}
+
+export type ViewNameKeys = keyof typeof ViewNames;

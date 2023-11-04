@@ -16,7 +16,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
         colors: { primary, background, onBackground },
     } = useTheme();
 
-    const [options, setOptions] = useState<DrawerNavigationOptions>({
+    const [options] = useState<DrawerNavigationOptions>({
         header: ({ navigation }) => (
             <HeaderBar
                 openMenu={navigation.openDrawer}

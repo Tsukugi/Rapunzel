@@ -8,28 +8,28 @@ import {
     ListRenderItem,
 } from "react-native";
 import { VirtualItem } from "./interfaces";
-import Item, { getVirtualItem } from "./item";
+import Item from "./item";
 
 interface VirtualListProps extends PropsWithChildren {
-    data: string[];
+    data: VirtualItem[];
     renderer?: ListRenderItem<VirtualItem>;
-    getItem?: () => VirtualItem;
+    getItem?: (data: any, index: number) => VirtualItem;
 }
 
 const VirtualList: React.FC<VirtualListProps> = ({
     data,
     renderer = ({ item }) => <Item value={item.value} />,
-    getItem = getVirtualItem,
+    getItem = (_, index) => data[index],
 }) => {
     return (
         <SafeAreaView style={styles.container}>
             <VirtualizedList
-                data={data}
+                data={data.map((data) => data.value)}
                 initialNumToRender={1}
                 maxToRenderPerBatch={3}
                 windowSize={6}
                 renderItem={renderer}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(_, index) => index.toString()}
                 getItemCount={(_data) => _data.length}
                 getItem={getItem}
             />

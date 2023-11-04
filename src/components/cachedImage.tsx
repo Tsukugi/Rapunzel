@@ -7,6 +7,8 @@ import {
     Dimensions,
     TouchableOpacity,
 } from "react-native";
+import { RapunzelLog } from "../config/log";
+import { Text } from "react-native-paper";
 
 interface CachedImageProps extends ImageProps {
     source: { uri: string };
@@ -18,16 +20,20 @@ const CachedImage: React.FC<CachedImageProps> = ({
     onClick,
     ...props
 }) => {
-    console.log("refresh!", uri);
+    //RapunzelLog.log("[CachedImage] refresh!", uri);
     return (
         <TouchableOpacity onPress={() => onClick(uri)}>
             <View style={styles.container}>
-                <Image
-                    {...props}
-                    source={{ uri: "file://" + uri }}
-                    style={styles.image}
-                    resizeMode="contain"
-                />
+                {uri === null ? (
+                    <Text style={styles.image}>Placeholder</Text>
+                ) : (
+                    <Image
+                        {...props}
+                        source={{ uri: "file://" + uri }}
+                        style={styles.image}
+                        resizeMode="contain"
+                    />
+                )}
             </View>
         </TouchableOpacity>
     );

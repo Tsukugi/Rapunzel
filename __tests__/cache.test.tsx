@@ -8,13 +8,17 @@ const imageName = "image.jpg";
 const bookId = "123123";
 const testDomain = "nhentai.net";
 
-const useLocalFilename = () => `${bookId}.${imageName}`;
-const useDomainFilename = () => `${testDomain}/${bookId}/${imageName}`;
-const useLocalFullPathFilename = () =>
-    `file://${cachePath}/${useLocalFilename()}`;
+const useLocalFilename = (mockPrefix = "") =>
+    `${bookId}.${mockPrefix}${imageName}`;
+const useDomainFilename = (mockPrefix = "") =>
+    `${testDomain}/${bookId}/${mockPrefix}${imageName}`;
+const useLocalFullPathFilename = (mockPrefix = "") =>
+    `file://${cachePath}/${useLocalFilename(mockPrefix)}`;
 
 const usePromise = <T,>(returnValue: T): Promise<T> =>
     new Promise((res) => res(returnValue));
+
+jest.mock("./../src/config/log", () => ({ RapunzelLog: console }));
 jest.mock("react-native-fs", () => ({
     DocumentDirectoryPath: cachePath,
     exists: () => true,
@@ -74,6 +78,9 @@ describe("Use device cache", () => {
         const images = await DeviceCache.redownloadImage(
             cachePath,
             useDomainFilename(),
+            (uri) => {
+                expect(uri).toEqual(useLocalFullPathFilename());
+            },
         );
         expect(images).toEqual(useLocalFullPathFilename());
     });
@@ -82,18 +89,23 @@ describe("Use device cache", () => {
         let testIndex = 0;
         const images = await DeviceCache.startLoadingImages({
             data: [
-                useDomainFilename(),
-                useDomainFilename(),
-                useDomainFilename(),
-                useDomainFilename(),
-                useDomainFilename(),
+                useDomainFilename("0"),
+                useDomainFilename("1"),
+                useDomainFilename("2"),
+                useDomainFilename("3"),
+                useDomainFilename("4"),
             ],
-            onImageLoaded: (url, index) => {
-                expect(url).toEqual(useLocalFullPathFilename());
-                expect(index).toEqual(testIndex);
+            onImageLoaded: async (url) => {
+                expect(url).toEqual(useLocalFullPathFilename(`${testIndex}`));
                 testIndex++;
             },
         });
-        expect(images).toEqual([useLocalFullPathFilename()]);
+        expect(images).toEqual([
+            useLocalFullPathFilename("0"),
+            useLocalFullPathFilename("1"),
+            useLocalFullPathFilename("2"),
+            useLocalFullPathFilename("3"),
+            useLocalFullPathFilename("4"),
+        ]);
     });
 });

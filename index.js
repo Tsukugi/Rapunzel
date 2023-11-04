@@ -9,7 +9,8 @@ import { name as appName } from "./app.json";
 import { PaperProvider } from "react-native-paper";
 import { NavigationContainer } from "@react-navigation/native";
 import { LocalTheme } from "./themes";
-import { initTaihouStore } from "./src/store/store";
+import { initRapunzelStore } from "./src/store/store";
+import { initRapunzelStorage } from "./src/cache/storage";
 
 export default function Main() {
     return (
@@ -21,5 +22,8 @@ export default function Main() {
     );
 }
 
-initTaihouStore();
+initRapunzelStore();
+// We start the storage once the store is ready, so we can restore data.
+initRapunzelStorage();
+
 AppRegistry.registerComponent(appName, () => Main);

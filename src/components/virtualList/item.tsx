@@ -12,14 +12,6 @@ const Item = ({ value }: ItemProps) => (
     </View>
 );
 
-export const getVirtualItem = (data: string[], index: number): VirtualItem => {
-    return {
-        id: `${index}`,
-        index: index,
-        value: data[index],
-    };
-};
-
 const styles = StyleSheet.create({
     item: {
         backgroundColor: "#f9c2ff",

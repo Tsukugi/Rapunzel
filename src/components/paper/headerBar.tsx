@@ -1,8 +1,10 @@
 import { Appbar } from "react-native-paper";
 import PaperSearch from "./search";
-import { useTaihouStore } from "../../store/store";
+import { useRapunzelStore } from "../../store/store";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
+import { useRapunzelStorage } from "../../cache/storage";
+import { StorageEntries } from "../../cache/interfaces";
 
 interface HeaderBarProps {
     openMenu: () => void;
@@ -13,11 +15,12 @@ interface HeaderBarProps {
 const HeaderBar = ({ openMenu, openOptions, openSearch }: HeaderBarProps) => {
     const [showSearch, setShowSearch] = useState(false);
     const [searchText, setSearchTerm] = useState("");
-    const [header] = useTaihouStore().header;
+    const [, saveSearchText] = useRapunzelStorage(StorageEntries.searchText, "");
+    const [header] = useRapunzelStore().header;
     const [debouncedSearchText] = useDebounce(searchText, 1000);
-
     useEffect(() => {
         header.searchValue = searchText;
+        saveSearchText(searchText);
     }, [debouncedSearchText]);
 
     return (
