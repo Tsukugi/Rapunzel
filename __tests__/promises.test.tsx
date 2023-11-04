@@ -1,7 +1,7 @@
 import "react-native";
 // Note: import explicitly to use the types shiped with jest.
 import { test, describe, jest, expect } from "@jest/globals";
-import { RapunzelPromise } from "../src/utils/promise";
+import { PromiseTools } from "../src/tools/promise";
 
 describe("Promises helper functions", () => {
     test("Recursive promises", async () => {
@@ -12,7 +12,7 @@ describe("Promises helper functions", () => {
         let testIndex = 0;
 
         console.time();
-        const total = await RapunzelPromise.recursivePromiseChain({
+        const total = await PromiseTools.recursivePromiseChain({
             promises: promisesArray,
             onPromiseSettled: async (result) => {
                 console.timeLog();

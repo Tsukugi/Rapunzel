@@ -2,6 +2,20 @@ import React, { FC } from "react";
 import { Checkbox } from "react-native-paper";
 import { RapunzelConfigBase } from "../../config/interfaces";
 import { useRapunzelStore } from "../../store/store";
+import { StorageEntries } from "../../cache/interfaces";
+import { useRapunzelStorage } from "../../cache/storage";
+
+const getStatus = (checkedMatch: boolean) =>
+    checkedMatch ? "checked" : "unchecked";
+
+const trySaveOnStorage = <T,>(key: string, value: T) => {
+    const canSaveOnStorage =
+        Object.values<string>(StorageEntries).includes(key);
+
+    if (!canSaveOnStorage) return;
+
+    useRapunzelStorage().setItem(key as StorageEntries, value);
+};
 
 interface RapunzelCheckboxItemProps {
     label: string;
@@ -20,14 +34,13 @@ const RapunzelConfigCheckbox: FC<RapunzelCheckboxItemProps> = ({
         config[configId],
     );
 
-    const getStatus = (checkedMatch: boolean) =>
-        checkedMatch ? "checked" : "unchecked";
-
     const onCheckedHandler = () => {
         if (typeof config[configId] !== "boolean")
             throw "[onCheckedHandler] Cannot assign value to a non boolean property";
 
         const newState: boolean = !config[configId];
+
+        trySaveOnStorage(configId, newState);
 
         setLocalChecked(newState);
         config[configId] = !config[configId];

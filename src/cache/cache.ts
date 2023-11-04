@@ -1,7 +1,7 @@
 import RNFS from "react-native-fs";
 import { NHentaiCache } from "./nhentai";
 import { RapunzelLog } from "../config/log";
-import { RapunzelPromise } from "../utils/promise";
+import { PromiseTools } from "../tools/promise";
 
 const ImageCacheDirectory = RNFS.DocumentDirectoryPath;
 
@@ -133,7 +133,7 @@ const startLoadingImages = async ({
         await onImageLoaded(url);
     };
 
-    await RapunzelPromise.recursivePromiseChain({
+    await PromiseTools.recursivePromiseChain({
         promises: data.map((uri) => () => {
             if (cancelProcess) {
                 RapunzelLog.log(cancelProcess);

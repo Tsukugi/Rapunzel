@@ -8,7 +8,6 @@ export interface UsesNavigation {
 export enum ViewNames {
     RapunzelBrowse = "RapunzelBrowse",
     RapunzelReader = "RapunzelReader",
-    RapunzelCache = "RapunzelCache",
     RapunzelSettings = "RapunzelSettings",
 }
 

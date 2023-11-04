@@ -15,12 +15,13 @@ interface HeaderBarProps {
 const HeaderBar = ({ openMenu, openOptions, openSearch }: HeaderBarProps) => {
     const [showSearch, setShowSearch] = useState(false);
     const [searchText, setSearchTerm] = useState("");
-    const [, saveSearchText] = useRapunzelStorage(StorageEntries.searchText, "");
     const [header] = useRapunzelStore().header;
     const [debouncedSearchText] = useDebounce(searchText, 1000);
+
     useEffect(() => {
+        if (!searchText) return;
         header.searchValue = searchText;
-        saveSearchText(searchText);
+        useRapunzelStorage().setItem(StorageEntries.searchText, searchText);
     }, [debouncedSearchText]);
 
     return (

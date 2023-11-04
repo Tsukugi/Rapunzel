@@ -40,4 +40,4 @@ const recursivePromiseChain = <T>({
     });
 };
 
-export const RapunzelPromise = { recursivePromiseChain };
+export const PromiseTools = { recursivePromiseChain };
