@@ -6,12 +6,14 @@ export interface HeaderState {
     searchValue: string;
 }
 export interface ReaderState {
+    activeProcessId: string;
     book: NHentai.Book | null;
     cachedImages: string[];
 }
 export interface ConfigState extends RapunzelConfigBase {}
 
 export interface BrowseState {
+    activeProcessId: string;
     bookListRecord: Record<string, NHentai.Book>; // Key as Ids
     bookList: NHentai.Book[];
     cachedImages: string[];
@@ -33,7 +35,7 @@ export const useRapunzelStore = () => {
 };
 
 export const initRapunzelStore = () => {
-    const defaultConfig: Partial<TaihouOptions> = { debug: true };
+    const defaultConfig: Partial<TaihouOptions> = { debug: false };
 
     const useConfig = <T>(name: string, state: T) =>
         useState(state, { ...defaultConfig, name });
@@ -43,6 +45,7 @@ export const initRapunzelStore = () => {
         useFallbackExtensionOnDownload: true,
     });
     RapunzelState.reader = useConfig<ReaderState>("reader", {
+        activeProcessId: "",
         book: null,
         cachedImages: [],
     });
@@ -50,6 +53,7 @@ export const initRapunzelStore = () => {
         searchValue: "ass",
     });
     RapunzelState.browse = useConfig<BrowseState>("browse", {
+        activeProcessId: "",
         bookListRecord: {},
         bookList: [],
         cachedImages: [],

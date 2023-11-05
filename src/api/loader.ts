@@ -1,6 +1,7 @@
 import { DeviceCache, StartLoadingImagesProps } from "../cache/cache";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
+import { RandomTools } from "../tools/random";
 import { NHentai } from "./interfaces";
 import { NHentaiApi } from "./nhentai";
 
@@ -10,25 +11,29 @@ const searchFirstMatch = async (searchValue: string) => {
     return uris;
 };
 
+interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
+    id = RandomTools.generateRandomId(10),
     data,
     onImageLoaded,
-    cancelProcess,
-}: StartLoadingImagesProps): Promise<string[]> => {
+    shouldCancelLoad,
+}: LoadImageListProps): Promise<string[]> => {
     if (data.length === 0) return [];
 
     RapunzelLog.log(
-        `[loadImageList]: Start loading images, size ${data.length}`,
+        `[loadImageList]: Start loading images, size ${data.length}, id ${id}`,
     );
-
-    const indexes = await DeviceCache.startLoadingImages({
-        data,
-        onImageLoaded: async (uri) => {
-            return await onImageLoaded(uri);
-        },
-        cancelProcess,
-    });
-    return indexes;
+    try {
+        const indexes = await DeviceCache.startLoadingImages({
+            id,
+            data,
+            onImageLoaded,
+            shouldCancelLoad,
+        });
+        return indexes;
+    } catch (error) {
+        return [];
+    }
 };
 
 const search = async (query: string): Promise<NHentai.Search | null> => {
@@ -42,12 +47,14 @@ const search = async (query: string): Promise<NHentai.Search | null> => {
 export const useRapunzelLoader = (
     setLocalState: (newState: string[]) => void = (value) => value,
 ) => {
+    const getNewId = () => RandomTools.generateRandomId(10);
+
     const {
         reader: [reader],
         browse: [browse],
     } = useRapunzelStore();
     /**
-     * Executor for the onImageLoaded event, it will allow user to specify which value in the external state will be set once this is triggered
+     * Handler for onImageLoaded event, it will trigger events for localState and StoreState.
      * @param updateState
      * @returns
      */
@@ -60,7 +67,6 @@ export const useRapunzelLoader = (
 
         const onImageLoaded = async (url: string) => {
             loadedImages[index] = url;
-            RapunzelLog.log("[loadBook] ", index, loadedImages);
             setStoreState(loadedImages);
             setLocalState(loadedImages);
             index++;
@@ -73,19 +79,26 @@ export const useRapunzelLoader = (
      * @param code Unique id of a book
      * @returns
      */
-    const loadBook = async (code: string, cancelProcess = false) => {
+    const loadBook = async (code: string) => {
         const book = await NHentaiApi.getByCode(code);
         if (!book) return null;
 
         const images = book.chapters[0].pages.map((page) => page.uri);
         reader.book = book;
 
+        reader.activeProcessId = getNewId();
+
         const promise = loadImageList({
+            id: reader.activeProcessId,
             data: images,
             onImageLoaded: imageStateLoader((value) => {
                 reader.cachedImages = value;
             }, images.length),
-            cancelProcess,
+            shouldCancelLoad: (id) => {
+                const cancel = id !== reader.activeProcessId;
+                if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
+                return cancel;
+            },
         });
 
         return promise;
@@ -96,7 +109,7 @@ export const useRapunzelLoader = (
      * @param searchValue
      * @returns
      */
-    const loadSearch = async (searchValue: string, cancelProcess = false) => {
+    const loadSearch = async (searchValue: string) => {
         const data = await search(searchValue);
         if (!data || data.results.length === 0) return null;
 
@@ -111,12 +124,19 @@ export const useRapunzelLoader = (
         browse.bookList = data.results;
         browse.bookListRecord = bookDict;
 
+        browse.activeProcessId = getNewId();
+
         const promise = loadImageList({
+            id: browse.activeProcessId,
             data: covers,
             onImageLoaded: imageStateLoader((value) => {
                 browse.cachedImages = value;
             }, covers.length),
-            cancelProcess,
+            shouldCancelLoad: (id) => {
+                const cancel = id !== browse.activeProcessId;
+                if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
+                return cancel;
+            },
         });
 
         return promise;

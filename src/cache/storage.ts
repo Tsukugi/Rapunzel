@@ -1,7 +1,6 @@
 import { MMKVLoader } from "react-native-mmkv-storage";
 import { useRapunzelStore } from "../store/store";
 import {
-    StorageKeys,
     StorageEntries,
     RapunzelStorageBase,
     UseStorage,
@@ -25,14 +24,8 @@ export const useRapunzelStorage = (): UseStorage => {
         return exec(key, value);
     };
 
-    const {
-        setBool,
-        setString,
-        getItem: innerGetItem,
-        setInt,
-        setArray,
-        setMap,
-    } = RapunzelStorage.instance;
+    const { setBool, setString, setInt, setArray, setMap, getItem } =
+        RapunzelStorage.instance;
 
     const buildTypedExecutor =
         <T, ET>(executor: TypeExecutor<ET>) =>
@@ -41,8 +34,6 @@ export const useRapunzelStorage = (): UseStorage => {
             return value;
         };
 
-    const getItem: Storage.GetItem = <T>(key: StorageEntries) =>
-        innerGetItem(key) as T;
     const setItem: Storage.SetItem = <T>(key: StorageEntries, value: T) => {
         const executors: UseTypedExecutorProps<T> = {
             string: buildTypedExecutor(setString),
@@ -59,39 +50,50 @@ export const useRapunzelStorage = (): UseStorage => {
 
     return {
         setItem,
-        getItem,
+        instance: RapunzelStorage.instance,
     };
 };
 
 export const initRapunzelStorage = () => {
     RapunzelStorage.instance = new MMKVLoader().initialize();
 
-    const getValue = async <T>(key: StorageKeys): Promise<T | null> => {
-        const value = (await RapunzelStorage.instance.getItem(key)) as T;
-        if (value === null || value === undefined) return null;
-        return value;
-    };
+    const { getBool, getString, getInt, getArray, getMap, getItem } =
+        RapunzelStorage.instance;
 
     const {
         config: [config],
         header: [header],
     } = useRapunzelStore();
 
-    const { searchText, debug } = StorageEntries;
-    assignValueIfSet(getValue<string>(searchText), header.searchValue);
-    assignValueIfSet(getValue<boolean>(debug), config.debug);
-};
-
-const assignValueIfSet = <StorageValue, StoreValue>(
-    storageValue: Promise<StorageValue>,
-    storeValue: StoreValue,
-) => {
-    const assign = (
-        value: null | undefined | StorageValue,
-        storeValue: StoreValue,
-    ) => {
-        if (value === null) return;
-        storeValue = value as StoreValue;
+    const setIfValid = <T>(setter: (value: T) => void) => {
+        const onLoadValue = (err: any, value: T | null | undefined) => {
+            if (err) console.error("[initRapunzelStorage]", err);
+            if (value !== null && value !== undefined) {
+                setter(value);
+            }
+        };
+        return onLoadValue;
     };
-    storageValue.then((v) => assign(v, storeValue));
+
+    getString(
+        StorageEntries.searchText,
+        setIfValid((value) => {
+            header.searchValue = value;
+            console.log("[initRapunzelStorage]", header, "=>", value);
+        }),
+    );
+    getBool(
+        StorageEntries.debug,
+        setIfValid((value) => {
+            config.debug = value;
+            console.log("[initRapunzelStorage]", config, "=>", value);
+        }),
+    );
+    getBool(
+        StorageEntries.useFallbackExtensionOnDownload,
+        setIfValid((value) => {
+            config.useFallbackExtensionOnDownload = value;
+            console.log("[initRapunzelStorage]", config, "=>", value);
+        }),
+    );
 };

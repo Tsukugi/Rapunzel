@@ -5,7 +5,6 @@ import { VirtualItem } from "../components/virtualList/interfaces";
 
 import { DeviceCache } from "../cache/cache";
 import { ReaderState, useRapunzelStore } from "../store/store";
-import { RapunzelLog } from "../config/log";
 
 interface RapunzelReaderProps {}
 
@@ -15,10 +14,10 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
     const {
         reader: [reader, watchReader, unwatchReader],
     } = useRapunzelStore();
-    RapunzelLog.log("[RapunzelReader] refresh!", reader.cachedImages.length);
+    // RapunzelLog.log("[RapunzelReader] refresh!", reader.cachedImages.length);
 
     useEffect(() => {
-        const onWatchReader = async ({ cachedImages }: ReaderState) =>
+        const onWatchReader = async ({ cachedImages }: ReaderState) => {
             setLoadedImages(
                 cachedImages.map((image, index) => ({
                     id: `${index + 1}`,
@@ -26,7 +25,7 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
                     value: image,
                 })),
             );
-
+        };
         watchReader(onWatchReader);
 
         return () => {

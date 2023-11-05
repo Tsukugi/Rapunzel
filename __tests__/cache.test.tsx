@@ -38,6 +38,7 @@ jest.mock("react-native-fs", () => ({
 }));
 
 import { DeviceCache } from "../src/cache/cache";
+import { RandomTools } from "../src/tools/random";
 
 describe("Use device cache", () => {
     test("Calculate cache size", async () => {
@@ -56,6 +57,14 @@ describe("Use device cache", () => {
             downloadHandler: () => usePromise({ statusCode: 200 }),
         });
         expect(image).toEqual(imageName);
+
+        const image2 = await DeviceCache.downloadImageWithFallback({
+            url: imageName,
+            downloadHandler: () => usePromise({ statusCode: 404 }),
+        }).catch((error) => {
+            console.log(error);
+        });
+        expect(image2).toEqual(null);
     });
 
     test("Download and cache image", async () => {
@@ -99,6 +108,7 @@ describe("Use device cache", () => {
                 expect(url).toEqual(useLocalFullPathFilename(`${testIndex}`));
                 testIndex++;
             },
+            shouldCancelLoad: () => false,
         });
         expect(images).toEqual([
             useLocalFullPathFilename("0"),
@@ -106,6 +116,68 @@ describe("Use device cache", () => {
             useLocalFullPathFilename("2"),
             useLocalFullPathFilename("3"),
             useLocalFullPathFilename("4"),
+        ]);
+    });
+
+    test("Interrupt loading", async () => {
+        let testIndex = 0;
+        const images = await DeviceCache.startLoadingImages({
+            data: [
+                useDomainFilename("0"),
+                useDomainFilename("1"),
+                useDomainFilename("2"),
+                useDomainFilename("3"),
+                useDomainFilename("4"),
+            ],
+            onImageLoaded: async (url) => {
+                testIndex++;
+            },
+
+            shouldCancelLoad: () => testIndex >= 2,
+        });
+        expect(images).toEqual([
+            useLocalFullPathFilename("0"),
+            useLocalFullPathFilename("1"),
+        ]);
+    });
+
+    test("Interrupt loading through another process", async () => {
+        let testIndex = 0;
+
+        const loadData = [
+            useDomainFilename("0"),
+            useDomainFilename("1"),
+            useDomainFilename("2"),
+            useDomainFilename("3"),
+            useDomainFilename("4"),
+        ];
+
+        let activeId = RandomTools.generateRandomId(10);
+
+        const images = await DeviceCache.startLoadingImages({
+            id: activeId,
+            data: loadData,
+            onImageLoaded: async () => {
+                testIndex++;
+
+                if (testIndex === 2) {
+                    activeId = RandomTools.generateRandomId(10);
+                    await DeviceCache.startLoadingImages({
+                        id: activeId,
+                        data: loadData,
+                        onImageLoaded: () => Promise.resolve(),
+                        shouldCancelLoad: () => false,
+                    });
+                }
+            },
+            shouldCancelLoad: (id) => {
+                console.log(id, activeId, id !== activeId);
+                return id !== activeId;
+            },
+        });
+        expect(images).toEqual([
+            useLocalFullPathFilename("0"),
+            useLocalFullPathFilename("1"),
         ]);
     });
 });

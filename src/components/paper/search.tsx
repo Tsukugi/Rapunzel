@@ -4,6 +4,7 @@ import { Searchbar } from "react-native-paper";
 interface PaperSearchProps {
     placeholder?: string;
     value: string;
+    isLoading: boolean;
     onValueChange: (newValue: string) => void;
     onClose: () => void;
 }
@@ -11,6 +12,7 @@ interface PaperSearchProps {
 const PaperSearch = ({
     value,
     placeholder = "Search",
+    isLoading,
     onValueChange,
     onClose,
 }: PaperSearchProps) => {
@@ -23,10 +25,11 @@ const PaperSearch = ({
 
     return (
         <Searchbar
+            placeholder={placeholder}
+            loading={isLoading}
             style={{ width: 300 }}
             traileringIcon="close"
             onTraileringIconPress={onClose}
-            placeholder={placeholder}
             onChangeText={onChangeHandler}
             value={searchQuery}
         />

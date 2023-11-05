@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
-import { HeaderState, useRapunzelStore } from "../store/store";
+import { BrowseState, useRapunzelStore } from "../store/store";
 import { useRapunzelLoader } from "../api/loader";
 import ImageRenderer from "../components/virtualList/imageItem";
 import { VirtualItem } from "../components/virtualList/interfaces";
@@ -10,30 +10,24 @@ interface RapunzelBrowseProps extends UsesNavigation {}
 
 const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem[]>([]);
-    const [cancelReaderLoad, setCancelReaderLoad] = useState<boolean>(false);
     const {
-        browse: [browse],
-        header: [, watchHeader],
+        browse: [browse, watchBrowse, unwatchBrowse],
     } = useRapunzelStore();
 
-    const { loadSearch } = useRapunzelLoader((cachedImages) =>
-        setLoadedImages(
-            cachedImages.map((image, index) => ({
-                id: browse.bookList[index].id,
-                index,
-                value: image,
-            })),
-        ),
-    );
-
     useEffect(() => {
-        const onWatchHeader = async ({ searchValue }: HeaderState) => {
-            loadSearch(searchValue);
+        const onWatchBrowse = async ({ cachedImages }: BrowseState) => {
+            setLoadedImages(
+                cachedImages.map((image, index) => ({
+                    id: browse.bookList[index].id,
+                    index,
+                    value: image,
+                })),
+            );
         };
 
-        watchHeader(onWatchHeader);
+        watchBrowse(onWatchBrowse);
         return () => {
-            watchHeader(onWatchHeader);
+            unwatchBrowse(onWatchBrowse);
         };
     }, []);
 

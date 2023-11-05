@@ -1,48 +1,69 @@
 import React, { FC, useState } from "react";
+import { Icon, useTheme } from "react-native-paper";
+
 import {
     DrawerNavigationOptions,
     createDrawerNavigator,
 } from "@react-navigation/drawer";
-import HeaderBar from "../paper/headerBar";
-import { useTheme } from "react-native-paper";
+import HeaderBar from "../paper/header/headerBar";
+import { HeaderLeftMode } from "../paper/interfaces";
+
+import CustomDrawerContent from "./customDrawerContent";
+import { ViewDict, ViewNavigationData } from "./navigation";
+
 interface DrawerNavigatorProps {
-    views: { name: string; component: React.ComponentType }[];
+    views: ViewDict;
 }
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
-    const {
-        colors: { primary, background, onBackground },
-    } = useTheme();
+    const { colors } = useTheme();
 
     const [options] = useState<DrawerNavigationOptions>({
-        header: ({ navigation }) => (
-            <HeaderBar
-                openMenu={navigation.openDrawer}
-                openOptions={() => {}}
-                openSearch={() => {}}
-            />
-        ),
-        drawerActiveTintColor: primary,
+        drawerActiveTintColor: colors.primary,
         drawerLabelStyle: {
-            color: onBackground,
+            color: colors.onBackground,
         },
-        drawerContentStyle: { backgroundColor: background },
+        sceneContainerStyle: {
+            backgroundColor: colors.background,
+        },
+
+        drawerStyle: {
+            backgroundColor: colors.background,
+        },
+        drawerType: "back",
     });
 
+    const useOptions = (
+        options: DrawerNavigationOptions,
+        view: ViewNavigationData,
+    ): DrawerNavigationOptions => {
+        return {
+            ...options,
+            ...view.viewDrawerOptions,
+            header: ({ navigation }) => (
+                <HeaderBar
+                    leftMode={view.header.leftMode || HeaderLeftMode.menu}
+                    onBack={navigation.goBack}
+                    openMenu={navigation.openDrawer}
+                    openOptions={() => {}}
+                    openSearch={() => {}}
+                    onSearchProcess={(view) => navigation.navigate(view)}
+                />
+            ),
+            drawerIcon: ({ size }) => <Icon size={size} source={view.icon} />,
+        };
+    };
+
     return (
-        <Drawer.Navigator
-            screenListeners={{
-                state: (e) => {},
-            }}
-        >
-            {views.map((view, index) => (
+        <Drawer.Navigator drawerContent={CustomDrawerContent}>
+            {Object.values(views).map((view, index) => (
                 <Drawer.Screen
                     key={index}
-                    name={view.name}
+                    name={view.component.name}
                     component={view.component}
-                    options={options}
+                    options={useOptions(options, view)}
                 />
             ))}
         </Drawer.Navigator>

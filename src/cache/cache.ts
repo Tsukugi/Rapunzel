@@ -2,6 +2,7 @@ import RNFS from "react-native-fs";
 import { NHentaiCache } from "./nhentai";
 import { RapunzelLog } from "../config/log";
 import { PromiseTools } from "../tools/promise";
+import { RandomTools } from "../tools/random";
 
 const ImageCacheDirectory = RNFS.DocumentDirectoryPath;
 
@@ -18,51 +19,48 @@ const downloadImageWithFallback = async ({
 }: RequestImageWithFallback) => {
     let extensionIndex = 0;
 
-    const onFallback = (extensionIndex: number) =>
-        new Promise<string | null>((onSuccess, onError) => {
-            const onDownloadFailed = (): void => {
-                // Error occurred, try next extension if available
+    const downloadWithExtension = (extensionIndex: number) =>
+        new Promise<string>(async (onSuccess, onError) => {
+            const onDownloadFailed = async (): Promise<void> => {
                 const nextFallbackIndex = extensionIndex + 1;
                 if (nextFallbackIndex >= SupportedExtensions.length) {
-                    // All fallbacks failed, handle error as needed
-                    RapunzelLog.error("No extension supported for ", url);
-                    onError(null);
+                    // All fallbacks failed
+                    onError(`No extension supported for "${url}"`);
                 } else {
-                    RapunzelLog.error(
-                        "Retrying download with ",
-                        SupportedExtensions[nextFallbackIndex],
+                    RapunzelLog.warn(
+                        `[downloadImageWithFallback] Retrying download with ${SupportedExtensions[nextFallbackIndex]} for ${url}`,
                     );
-                    onFallback(nextFallbackIndex);
+                    await downloadWithExtension(nextFallbackIndex);
                 }
             };
 
+            const createdUrl = `${NHentaiCache.removeFileExtension(url)}${
+                SupportedExtensions[extensionIndex]
+            }`;
+
             try {
-                const createdUrl =
-                    NHentaiCache.removeFileExtension(url) +
-                    SupportedExtensions[extensionIndex];
-                return downloadHandler(createdUrl)
-                    .then((res) => {
-                        if (res.statusCode === 200) {
-                            RapunzelLog.log("Successful download ", createdUrl);
-                            return onSuccess(createdUrl);
-                        }
-                        return onDownloadFailed();
-                    })
-                    .catch((res) => {
-                        RapunzelLog.warn(
-                            "Image download failed for ",
-                            createdUrl,
-                            res.statusCode,
-                        );
-                        return onDownloadFailed();
-                    });
+                const res = await downloadHandler(createdUrl);
+                if (res.statusCode === 200) {
+                    RapunzelLog.log(
+                        `[downloadImageWithFallback] Successful download => ${createdUrl}`,
+                    );
+                    return onSuccess(createdUrl);
+                }
+                await onDownloadFailed();
             } catch (error) {
-                return onDownloadFailed();
+                onError(error);
             }
         });
 
-    const res = await onFallback(extensionIndex);
-    return res;
+    try {
+        const res = await downloadWithExtension(extensionIndex);
+        return res;
+    } catch (error) {
+        RapunzelLog.error(
+            `[downloadImageWithFallback] Image download failed for ${url}, reason: ${error}`,
+        );
+        return null;
+    }
 };
 
 const getRandomDelay = () => Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
@@ -80,14 +78,17 @@ const downloadAndCacheImage = async ({
 
     if (!exists) {
         const onError = (error: unknown) => {
-            RapunzelLog.warn("Error downloading image:", error);
+            RapunzelLog.warn(
+                "[downloadAndCacheImage] Error downloading image:",
+                error,
+            );
         };
 
         try {
             await new Promise<void>((res) =>
                 setTimeout(() => res(), getRandomDelay()),
             );
-            RapunzelLog.log("Downloading image:", uri);
+            //RapunzelLog.log("Downloading image:", uri);
             await downloadImageWithFallback({
                 url: uri,
                 downloadHandler: (downloadUri) => {
@@ -112,33 +113,30 @@ const getCachePath = (filename: string) => {
     return `${ImageCacheDirectory}/${filename}`;
 };
 export interface StartLoadingImagesProps {
+    id?: string;
     data: string[];
     onImageLoaded: (url: string) => Promise<void>;
-    cancelProcess?: boolean;
+    shouldCancelLoad: (id: string) => boolean;
 }
 
 const startLoadingImages = async ({
+    id = RandomTools.generateRandomId(10),
     data,
     onImageLoaded,
-    cancelProcess = false,
+    shouldCancelLoad,
 }: StartLoadingImagesProps): Promise<string[]> => {
     const indexes: string[] = [];
 
-    //  RapunzelLog.log("[startLoadingImages] Start", indexes);
-
     const onImageLoadedHandler = async (url: string) => {
+        if (!url) return; // If no url is passed we expect a load inerruption, so we will skip
         indexes.push(url);
-        // RapunzelLog.log("[startLoadingImages] onImageLoadedHandler", indexes);
-
         await onImageLoaded(url);
     };
 
-    await PromiseTools.recursivePromiseChain({
+    await PromiseTools.recursivePromiseChain<string>({
         promises: data.map((uri) => () => {
-            if (cancelProcess) {
-                RapunzelLog.log(cancelProcess);
-                return Promise.reject<string>();
-            }
+            const cancelProcess = shouldCancelLoad(id);
+            if (cancelProcess) return Promise.resolve(""); // This will interrupt the load chain;
             return downloadAndCacheImage({ uri });
         }),
         onPromiseSettled: onImageLoadedHandler,
@@ -147,7 +145,6 @@ const startLoadingImages = async ({
     RapunzelLog.log(
         `[startLoadingImages] Finished loading ${data.length} entries.`,
     );
-    // RapunzelLog.log("[startLoadingImages] Finished", indexes);
 
     return indexes;
 };
@@ -191,7 +188,10 @@ const calculateCacheSize = async (): Promise<number> => {
 
         return cacheSizeInMegabytes;
     } catch (error) {
-        RapunzelLog.error("Error calculating cache size:", error);
+        RapunzelLog.error(
+            "[calculateCacheSize] Error calculating cache size:",
+            error,
+        );
         return 0; // Return 0 if there's an error
     }
 };
@@ -227,7 +227,10 @@ const listCachedImages = async (): Promise<string[]> => {
 
         return imageUris;
     } catch (error) {
-        RapunzelLog.error("Error reading cached images:", error);
+        RapunzelLog.error(
+            "[listCachedImages] Error reading cached images:",
+            error,
+        );
         return [];
     }
 };
