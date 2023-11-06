@@ -1,21 +1,24 @@
 import { TaihouOptions, UseState, useState } from "@atsu/taihou";
-import { NHentai } from "../api/interfaces";
 import { RapunzelConfigBase } from "../config/interfaces";
+import { Book, CloudFlareConfig, Thumbnail } from "@atsu/lilith";
 
 export interface HeaderState {
     searchValue: string;
 }
 export interface ReaderState {
     activeProcessId: string;
-    book: NHentai.Book | null;
+    book: Book | null;
     cachedImages: string[];
 }
-export interface ConfigState extends RapunzelConfigBase {}
+export interface ConfigState extends RapunzelConfigBase {
+    apiLoaderConfig: CloudFlareConfig;
+    repoHtml: string;
+}
 
 export interface BrowseState {
     activeProcessId: string;
-    bookListRecord: Record<string, NHentai.Book>; // Key as Ids
-    bookList: NHentai.Book[];
+    bookListRecord: Record<string, Thumbnail>; // Key as Ids
+    bookList: Thumbnail[];
     cachedImages: string[];
 }
 
@@ -43,6 +46,12 @@ export const initRapunzelStore = () => {
     RapunzelState.config = useConfig<ConfigState>("config", {
         debug: true,
         useFallbackExtensionOnDownload: true,
+        apiLoaderConfig: {
+            "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+            cookie: "cf_clearance=No07bTPjTPG8ay4yw6Swd2YWsl3OOQEyUD5k3CrfLV0-1698867081-0-1-6fa998a8.7d6487d8.38a8c748-160.0.0; csrftoken=GVZOyHvhqPkKd294OAxMu2szdWS9pbU4Pp6uHPOQ2EbDjzTlePBtaF3aF8kNVnNV",
+        },
+        repoHtml: ``,
     });
     RapunzelState.reader = useConfig<ReaderState>("reader", {
         activeProcessId: "",

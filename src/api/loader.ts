@@ -2,14 +2,8 @@ import { DeviceCache, StartLoadingImagesProps } from "../cache/cache";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
-import { NHentai } from "./interfaces";
-import { NHentaiApi } from "./nhentai";
 
-const searchFirstMatch = async (searchValue: string) => {
-    if (!searchValue) return;
-    const uris: string[] = await NHentaiApi.searchFirstMatch(searchValue);
-    return uris;
-};
+import { LilithRepo, Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
@@ -36,14 +30,6 @@ const loadImageList = async ({
     }
 };
 
-const search = async (query: string): Promise<NHentai.Search | null> => {
-    if (!query) return null;
-
-    RapunzelLog.log(`[search]: Search through a text, query ${query}`);
-    const searchResults = await NHentaiApi.search(query);
-    return searchResults;
-};
-
 export const useRapunzelLoader = (
     setLocalState: (newState: string[]) => void = (value) => value,
 ) => {
@@ -52,7 +38,16 @@ export const useRapunzelLoader = (
     const {
         reader: [reader],
         browse: [browse],
+        config: [config],
     } = useRapunzelStore();
+
+    const loader = useAPILoader({
+        repo: LilithRepo.NHentai,
+        configurations: {
+            headers: config.apiLoaderConfig,
+        },
+    });
+
     /**
      * Handler for onImageLoaded event, it will trigger events for localState and StoreState.
      * @param updateState
@@ -80,7 +75,7 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadBook = async (code: string) => {
-        const book = await NHentaiApi.getByCode(code);
+        const book = await loader.get(code);
         if (!book) return null;
 
         const images = book.chapters[0].pages.map((page) => page.uri);
@@ -110,11 +105,14 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadSearch = async (searchValue: string) => {
-        const data = await search(searchValue);
-        if (!data || data.results.length === 0) return null;
-
+        const data = await loader.search(searchValue, 1, Sort.POPULAR);
+        console.log(data);
+        if (!data || data.results.length === 0) {
+            RapunzelLog.error(`[loadSearch] Search returned no results`);
+            return null;
+        }
         const covers: string[] = [];
-        const bookDict: Record<string, NHentai.Book> = {};
+        const bookDict: Record<string, Thumbnail> = {};
 
         data.results.forEach((manga) => {
             covers.push(manga.cover.uri);

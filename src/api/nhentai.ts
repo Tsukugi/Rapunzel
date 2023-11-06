@@ -1,4 +1,4 @@
-import { NHentai } from "./interfaces";
+import { Book, SearchResult } from "@atsu/lilith";
 
 const host = "http://192.168.0.133:5000";
 
@@ -10,17 +10,17 @@ const get = async <T>(path: string): Promise<T> => {
 };
 
 const getRandomBook = async () => {
-    const result = await get<NHentai.Book>("/random");
+    const result = await get<Book>("/random");
     return result;
 };
 
-const search = async (query: string): Promise<NHentai.Search> => {
-    const result = await get<NHentai.Search>(`/search?query=${query}`);
+const search = async (query: string): Promise<SearchResult> => {
+    const result = await get<SearchResult>(`/search?query=${query}`);
     return result;
 };
 
-const getByCode = async (code: string): Promise<NHentai.Book> => {
-    const result = await get<NHentai.Book>(`/get?identifier=${code}`);
+const getByCode = async (code: string): Promise<Book> => {
+    const result = await get<Book>(`/get?identifier=${code}`);
     return result;
 };
 
@@ -34,7 +34,7 @@ const getRandomBookFirstChapter = async () => {
 
 const searchFirstMatch = async (query: string): Promise<string[]> => {
     if (!query) return [];
-    const result = await get<NHentai.Search>(`/search?query=${query}`);
+    const result = await get<SearchResult>(`/search?query=${query}`);
     const { results } = result;
     return getByCodeFirstChapter(results[0].id);
 };

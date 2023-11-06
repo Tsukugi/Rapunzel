@@ -34,7 +34,6 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const onMangaSelectHandler = async (item: VirtualItem) => {
         const code = browse.bookList[item.index].id;
 
-        console.log(code, browse.bookList[item.index].title);
         useRapunzelLoader().loadBook(code);
         navigation.navigate(ViewNames.RapunzelReader);
     };

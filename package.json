@@ -10,7 +10,8 @@
         "test": "jest --config jest.config.ts"
     },
     "dependencies": {
-        "@atsu/taihou": "github:Tsukugi/Taihou#develop",
+        "@atsu/lilith": "^0.2.1",
+        "@atsu/taihou": "^0.3.2",
         "@react-navigation/drawer": "^6.6.6",
         "@react-navigation/native": "^6.1.9",
         "react": "18.2.0",
@@ -23,6 +24,7 @@
         "react-native-safe-area-context": "^4.7.4",
         "react-native-screens": "^3.27.0",
         "react-native-vector-icons": "^10.0.1",
+        "react-native-webview": "^13.6.2",
         "use-debounce": "^9.0.4"
     },
     "devDependencies": {

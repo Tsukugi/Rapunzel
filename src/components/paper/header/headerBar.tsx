@@ -46,8 +46,7 @@ const HeaderBar = ({
 
     useEffect(() => {
         if (!searchText || searchText === header.searchValue) {
-            RapunzelLog.log(searchText, header.searchValue);
-
+            RapunzelLog.log(`[HeaderBar]`, searchText, header.searchValue);
             return;
         }
         setIsLoading(true);

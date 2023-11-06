@@ -6,6 +6,7 @@ export interface UsesNavigation {
  * ViewNames Provides context to navigation methods about which views we registered.
  */
 export enum ViewNames {
+    RapunzelWebView = "RapunzelWebView",
     RapunzelBrowse = "RapunzelBrowse",
     RapunzelReader = "RapunzelReader",
     RapunzelSettings = "RapunzelSettings",

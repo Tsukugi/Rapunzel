@@ -6,7 +6,7 @@ const size = 52428800; // 50 MB in bytes
 const cachePath = "cache";
 const imageName = "image.jpg";
 const bookId = "123123";
-const testDomain = "nhentai.net";
+const testDomain = "testdomain.net";
 
 const useLocalFilename = (mockPrefix = "") =>
     `${bookId}.${mockPrefix}${imageName}`;

@@ -3,6 +3,7 @@ import { UsesNavigation, ViewNames } from "./interfaces";
 import RapunzelBrowse from "../../views/RapunzelBrowse";
 import RapunzelReader from "../../views/RapunzelReader";
 import RapunzelSettings from "../../views/RapunzelSettings";
+import RapunzelWebView from "../../views/RapunzelWebView";
 
 //* Dependencies thay may be abstacted to other place
 import { DrawerNavigationOptions } from "@react-navigation/drawer";
@@ -48,6 +49,14 @@ const getViews = (): ViewDict => {
             header: {},
             viewDrawerOptions: {
                 title: "Settings",
+            },
+        },
+        RapunzelWebView: {
+            component: RapunzelWebView,
+            icon: "wifi",
+            header: {},
+            viewDrawerOptions: {
+                title: "WebView",
             },
         },
     };
