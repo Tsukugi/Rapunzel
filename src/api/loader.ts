@@ -4,6 +4,7 @@ import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
 import { LilithRepo, Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
+import { customFetchImpl, useCheerioDomParser } from "./customLilithImpl";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
@@ -14,13 +15,15 @@ const loadImageList = async ({
 }: LoadImageListProps): Promise<string[]> => {
     if (data.length === 0) return [];
 
+    const imageSet = data.filter((data) => !!data);
     RapunzelLog.log(
-        `[loadImageList]: Start loading images, size ${data.length}, id ${id}`,
+        `[loadImageList]: Start loading images, size ${imageSet.length}, id ${id}`,
     );
+
     try {
         const indexes = await DeviceCache.startLoadingImages({
             id,
-            data,
+            data: imageSet,
             onImageLoaded,
             shouldCancelLoad,
         });
@@ -45,6 +48,8 @@ export const useRapunzelLoader = (
         repo: LilithRepo.NHentai,
         configurations: {
             headers: config.apiLoaderConfig,
+            domParser: useCheerioDomParser,
+            fetchImpl: customFetchImpl,
         },
     });
 
@@ -75,7 +80,10 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadBook = async (code: string) => {
+        RapunzelLog.log("[loadBook] Loading book with code ", code);
         const book = await loader.get(code);
+
+        RapunzelLog.log(book);
         if (!book) return null;
 
         const images = book.chapters[0].pages.map((page) => page.uri);
@@ -105,8 +113,8 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadSearch = async (searchValue: string) => {
-        const data = await loader.search(searchValue, 1, Sort.POPULAR);
-        console.log(data);
+        const data = await loader.search(searchValue, 0, Sort.RECENT);
+
         if (!data || data.results.length === 0) {
             RapunzelLog.error(`[loadSearch] Search returned no results`);
             return null;

@@ -44,7 +44,7 @@ export const useRapunzelStore = () => {
 };
 
 export const initRapunzelStore = () => {
-    const defaultConfig: Partial<TaihouOptions> = { debug: true };
+    const defaultConfig: Partial<TaihouOptions> = { debug: false };
 
     const useConfig = <T>(name: string, state: T) =>
         useState(state, { ...defaultConfig, name });

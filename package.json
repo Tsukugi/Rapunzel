@@ -10,7 +10,7 @@
         "test": "jest --config jest.config.ts"
     },
     "dependencies": {
-        "@atsu/lilith": "^0.2.1",
+        "@atsu/lilith": "^0.2.3",
         "@atsu/taihou": "^0.3.2",
         "@react-native-cookies/cookies": "^6.2.1",
         "@react-navigation/drawer": "^6.6.6",
@@ -26,7 +26,8 @@
         "react-native-screens": "^3.27.0",
         "react-native-vector-icons": "^10.0.1",
         "react-native-webview": "^13.6.2",
-        "use-debounce": "^9.0.4"
+        "use-debounce": "^9.0.4",
+        "cheerio": "^1.0.0-rc.12"
     },
     "devDependencies": {
         "@babel/core": "^7.20.0",
