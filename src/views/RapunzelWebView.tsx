@@ -9,7 +9,7 @@ import {
 } from "../cache/useWebviewCache";
 import { useRapunzelStore } from "../store/store";
 import { Snackbar } from "react-native-paper";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 interface RapunzelWebViewProps {}
 
@@ -22,15 +22,20 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({}) => {
     } = useRapunzelStore();
 
     const [visible, setVisible] = React.useState(true);
+    const [hideTimeoutId, setHideTimeoutId] = React.useState<number>(0);
     const [scrapInfoMessage, setScrapInfoMessage] = React.useState("");
 
-    const onDismissSnackBar = () => setVisible(true);
+    const onDismissSnackBar = () => setVisible(!visible);
 
     const onWebviewUpdate = (value: string) => {
         if (!config.debug) return;
         setScrapInfoMessage(value);
         setVisible(true);
-        setTimeout(() => setVisible(true), 3000);
+        clearTimeout(hideTimeoutId);
+        const id = setTimeout(() => {
+            if (id === hideTimeoutId) setVisible(false);
+        }, 3000);
+        setHideTimeoutId(id);
     };
 
     useRouter({ route: ViewNames.RapunzelWebView });
