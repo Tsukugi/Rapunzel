@@ -17,7 +17,7 @@ export interface ReaderState {
 }
 export interface ConfigState extends RapunzelConfigBase {
     apiLoaderConfig: CloudFlareConfig;
-    repoHtml: string;
+    webviewUrl: string;
 }
 
 export interface BrowseState {
@@ -59,7 +59,7 @@ export const initRapunzelStore = () => {
             "User-Agent": "",
             cookie: "",
         },
-        repoHtml: ``,
+        webviewUrl: `https://nhentai.net/`,
     });
     RapunzelState.reader = useConfig<ReaderState>("reader", {
         activeProcessId: "",

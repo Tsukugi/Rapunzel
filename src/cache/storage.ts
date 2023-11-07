@@ -8,6 +8,8 @@ import {
 } from "./interfaces";
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
+import { CloudFlareConfig } from "@atsu/lilith";
+import { RapunzelLog } from "../config/log";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
@@ -67,11 +69,12 @@ export const initRapunzelStorage = () => {
         router: [router],
     } = useRapunzelStore();
 
-    const setIfValid = <T>(setter: (value: T) => void) => {
+    const setIfValid = <T>(setter: (key: T) => void) => {
         const onLoadValue = (err: any, value: T | null | undefined) => {
             if (err) console.error("[initRapunzelStorage]", err);
             if (value !== null && value !== undefined) {
                 setter(value);
+                RapunzelLog.log("[initRapunzelStorage]", "=>", value);
             }
         };
         return onLoadValue;
@@ -81,28 +84,30 @@ export const initRapunzelStorage = () => {
         StorageEntries.searchText,
         setIfValid((value) => {
             header.searchValue = value;
-            console.log("[initRapunzelStorage]", header, "=>", value);
         }),
     );
     getBool(
         StorageEntries.debug,
         setIfValid((value) => {
             config.debug = value;
-            console.log("[initRapunzelStorage]", config, "=>", value);
         }),
     );
     getBool(
         StorageEntries.useFallbackExtensionOnDownload,
         setIfValid((value) => {
             config.useFallbackExtensionOnDownload = value;
-            console.log("[initRapunzelStorage]", config, "=>", value);
         }),
     );
     getString(
         StorageEntries.currentRoute,
         setIfValid((value) => {
             router.currentRoute = value as ViewNames;
-            console.log("[initRapunzelStorage]", router, "=>", value);
+        }),
+    );
+    getMap(
+        StorageEntries.apiLoaderConfig,
+        setIfValid((value) => {
+            config.apiLoaderConfig = value as CloudFlareConfig;
         }),
     );
 };

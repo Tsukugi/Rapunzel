@@ -12,6 +12,7 @@
     "dependencies": {
         "@atsu/lilith": "^0.2.1",
         "@atsu/taihou": "^0.3.2",
+        "@react-native-cookies/cookies": "^6.2.1",
         "@react-navigation/drawer": "^6.6.6",
         "@react-navigation/native": "^6.1.9",
         "react": "18.2.0",
