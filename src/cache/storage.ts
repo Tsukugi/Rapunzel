@@ -7,6 +7,7 @@ import {
     Storage,
 } from "./interfaces";
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
+import { ViewNames } from "../components/navigators/interfaces";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
@@ -63,6 +64,7 @@ export const initRapunzelStorage = () => {
     const {
         config: [config],
         header: [header],
+        router: [router],
     } = useRapunzelStore();
 
     const setIfValid = <T>(setter: (value: T) => void) => {
@@ -94,6 +96,13 @@ export const initRapunzelStorage = () => {
         setIfValid((value) => {
             config.useFallbackExtensionOnDownload = value;
             console.log("[initRapunzelStorage]", config, "=>", value);
+        }),
+    );
+    getString(
+        StorageEntries.currentRoute,
+        setIfValid((value) => {
+            router.currentRoute = value as ViewNames;
+            console.log("[initRapunzelStorage]", router, "=>", value);
         }),
     );
 };

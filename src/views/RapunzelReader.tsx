@@ -2,10 +2,11 @@ import React, { FC, useEffect, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import ImageRenderer from "../components/virtualList/imageItem";
 import { VirtualItem } from "../components/virtualList/interfaces";
-
-import { DeviceCache } from "../cache/cache";
+import { ViewNames } from "../components/navigators/interfaces";
+import { useRouter } from "../components/navigators/useRouter";
 import { ReaderState, useRapunzelStore } from "../store/store";
 
+import { DeviceCache } from "../cache/cache";
 interface RapunzelReaderProps {}
 
 // TODO: Add heights from backend to support full image dynamically
@@ -14,7 +15,8 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
     const {
         reader: [reader, watchReader, unwatchReader],
     } = useRapunzelStore();
-    // RapunzelLog.log("[RapunzelReader] refresh!", reader.cachedImages.length);
+
+    useRouter({ route: ViewNames.RapunzelReader });
 
     useEffect(() => {
         const onWatchReader = async ({ cachedImages }: ReaderState) => {

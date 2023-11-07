@@ -1,15 +1,17 @@
 import React, { FC } from "react";
+import { List } from "react-native-paper";
 import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
 import CacheScreen from "../components/cacheScreen";
-import { Divider, List, MD3Colors, Text } from "react-native-paper";
-import { View } from "react-native";
+import { ViewNames } from "../components/navigators/interfaces";
+import { useRouter } from "../components/navigators/useRouter";
 
 interface RapunzelSettingsProps {
     // Define your component props here
 }
 
 const RapunzelSettings: FC<RapunzelSettingsProps> = ({}) => {
+    useRouter({ route: ViewNames.RapunzelSettings });
     return (
         <ScrollContent>
             <List.AccordionGroup>

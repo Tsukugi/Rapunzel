@@ -5,6 +5,7 @@ import { useRapunzelLoader } from "../api/loader";
 import ImageRenderer from "../components/virtualList/imageItem";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
+import { useRouter } from "../components/navigators/useRouter";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
@@ -13,6 +14,8 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const {
         browse: [browse, watchBrowse, unwatchBrowse],
     } = useRapunzelStore();
+
+    useRouter({ route: ViewNames.RapunzelBrowse });
 
     useEffect(() => {
         const onWatchBrowse = async ({ cachedImages }: BrowseState) => {

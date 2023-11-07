@@ -10,6 +10,7 @@ import { HeaderLeftMode } from "../paper/interfaces";
 
 import CustomDrawerContent from "./customDrawerContent";
 import { ViewDict, ViewNavigationData } from "./navigation";
+import { useRapunzelStore } from "../../store/store";
 
 interface DrawerNavigatorProps {
     views: ViewDict;
@@ -19,6 +20,10 @@ const Drawer = createDrawerNavigator();
 
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     const { colors } = useTheme();
+
+    const {
+        router: [router],
+    } = useRapunzelStore();
 
     const [options] = useState<DrawerNavigationOptions>({
         drawerActiveTintColor: colors.primary,
@@ -57,7 +62,10 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     };
 
     return (
-        <Drawer.Navigator drawerContent={CustomDrawerContent}>
+        <Drawer.Navigator
+            drawerContent={CustomDrawerContent}
+            initialRouteName={router.currentRoute}
+        >
             {Object.values(views).map((view, index) => (
                 <Drawer.Screen
                     key={index}

@@ -4,6 +4,7 @@ export enum StorageEntries {
     debug = "debug",
     searchText = "searchText",
     useFallbackExtensionOnDownload = "useFallbackExtensionOnDownload",
+    currentRoute = "currentRoute",
 }
 
 export namespace Storage {

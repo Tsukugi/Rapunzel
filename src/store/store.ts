@@ -1,6 +1,11 @@
 import { TaihouOptions, UseState, useState } from "@atsu/taihou";
 import { RapunzelConfigBase } from "../config/interfaces";
 import { Book, CloudFlareConfig, Thumbnail } from "@atsu/lilith";
+import { ViewNames } from "../components/navigators/interfaces";
+
+export interface RouterState {
+    currentRoute: ViewNames;
+}
 
 export interface HeaderState {
     searchValue: string;
@@ -23,6 +28,7 @@ export interface BrowseState {
 }
 
 interface Store {
+    router: UseState<RouterState>;
     config: UseState<ConfigState>;
     header: UseState<HeaderState>;
     reader: UseState<ReaderState>;
@@ -38,18 +44,20 @@ export const useRapunzelStore = () => {
 };
 
 export const initRapunzelStore = () => {
-    const defaultConfig: Partial<TaihouOptions> = { debug: false };
+    const defaultConfig: Partial<TaihouOptions> = { debug: true };
 
     const useConfig = <T>(name: string, state: T) =>
         useState(state, { ...defaultConfig, name });
 
+    RapunzelState.router = useConfig<RouterState>("router", {
+        currentRoute: ViewNames.RapunzelBrowse,
+    });
     RapunzelState.config = useConfig<ConfigState>("config", {
         debug: true,
         useFallbackExtensionOnDownload: true,
         apiLoaderConfig: {
-            "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-            cookie: "cf_clearance=No07bTPjTPG8ay4yw6Swd2YWsl3OOQEyUD5k3CrfLV0-1698867081-0-1-6fa998a8.7d6487d8.38a8c748-160.0.0; csrftoken=GVZOyHvhqPkKd294OAxMu2szdWS9pbU4Pp6uHPOQ2EbDjzTlePBtaF3aF8kNVnNV",
+            "User-Agent": "",
+            cookie: "",
         },
         repoHtml: ``,
     });
