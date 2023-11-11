@@ -46,7 +46,7 @@ const HeaderBar = ({
 
     useEffect(() => {
         if (!searchText || searchText === header.searchValue) {
-            RapunzelLog.log(`[HeaderBar]`, searchText, header.searchValue);
+            RapunzelLog.log(`[HeaderBar] ignoring `, header.searchValue);
             return;
         }
         setIsLoading(true);
@@ -70,7 +70,6 @@ const HeaderBar = ({
             {showSearch ? (
                 <PaperSearch
                     isLoading={isLoading}
-                    value={searchText}
                     onValueChange={setSearchTerm}
                     onClose={() => setShowSearch(false)}
                 />

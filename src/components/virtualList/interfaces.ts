@@ -1,5 +1,5 @@
-export interface VirtualItem {
+export interface VirtualItem<T> {
     id: string;
     index: number;
-    value: string;
+    value: T;
 }

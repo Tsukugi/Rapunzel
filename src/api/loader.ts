@@ -82,9 +82,8 @@ export const useRapunzelLoader = (
     const loadBook = async (code: string) => {
         RapunzelLog.log("[loadBook] Loading book with code ", code);
         const book = await loader.get(code);
-
-        RapunzelLog.log(book);
         if (!book) return null;
+        reader.cachedImages = [];
 
         const images = book.chapters[0].pages.map((page) => page.uri);
         reader.book = book;
@@ -113,12 +112,17 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadSearch = async (searchValue: string) => {
+        RapunzelLog.log(
+            "[loadSearch] Searching for the following",
+            searchValue,
+        );
         const data = await loader.search(searchValue, 0, Sort.RECENT);
-
         if (!data || data.results.length === 0) {
             RapunzelLog.error(`[loadSearch] Search returned no results`);
             return null;
         }
+        reader.cachedImages = [];
+
         const covers: string[] = [];
         const bookDict: Record<string, Thumbnail> = {};
 
