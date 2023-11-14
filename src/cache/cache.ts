@@ -63,7 +63,7 @@ const downloadImageWithFallback = async ({
     }
 };
 
-const getRandomDelay = () => Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
+const getRandomDelay = () => Math.floor(Math.random() * (1000 - 500 + 1)) + 100;
 interface DownloadAndCacheImageProps {
     uri: string;
     onImageCached?: (path: string) => void;

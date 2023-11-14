@@ -1,6 +1,6 @@
 import { TaihouOptions, UseState, useState } from "@atsu/taihou";
 import { RapunzelConfigBase } from "../config/interfaces";
-import { Book, CloudFlareConfig, Thumbnail } from "@atsu/lilith";
+import { Book, Headers, LilithRepo, Thumbnail } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 
 export interface RouterState {
@@ -16,8 +16,9 @@ export interface ReaderState {
     cachedImages: string[];
 }
 export interface ConfigState extends RapunzelConfigBase {
-    apiLoaderConfig: CloudFlareConfig;
+    apiLoaderConfig: Headers;
     webviewUrl: string;
+    repository: LilithRepo;
 }
 
 export interface BrowseState {
@@ -60,6 +61,7 @@ export const initRapunzelStore = () => {
             cookie: "",
         },
         webviewUrl: `https://nhentai.net/`,
+        repository: LilithRepo.NHentai,
     });
     RapunzelState.reader = useConfig<ReaderState>("reader", {
         activeProcessId: "",

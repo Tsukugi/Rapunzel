@@ -11,7 +11,7 @@ interface RapunzelReaderProps {}
 
 // TODO: Add heights from backend to support full image dynamically
 const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
-    const [loadedImages, setLoadedImages] = useState<VirtualItem[]>([]);
+    const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
     const {
         reader: [reader, watchReader, unwatchReader],
     } = useRapunzelStore();
@@ -35,8 +35,8 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
         };
     }, []);
 
-    const onReloadHandler = (item: VirtualItem) => {
-        const newUri = reader.book?.chapters[0].pages[item.index].uri;
+    const onReloadHandler = (item: VirtualItem<string>) => {
+        const newUri = ""; // reader.book?.chapters[0].pages[item.index].uri;
         if (!newUri) return;
         DeviceCache.redownloadImage(item.value, newUri, () => {});
     };

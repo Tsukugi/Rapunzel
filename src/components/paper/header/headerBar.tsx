@@ -45,10 +45,6 @@ const HeaderBar = ({
     }, []);
 
     useEffect(() => {
-        if (!searchText || searchText === header.searchValue) {
-            RapunzelLog.log(`[HeaderBar] ignoring `, header.searchValue);
-            return;
-        }
         setIsLoading(true);
         header.searchValue = searchText;
         useRapunzelStorage().setItem(StorageEntries.searchText, searchText);

@@ -3,8 +3,7 @@ import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
-import { LilithRepo, Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
-import { customFetchImpl, useCheerioDomParser } from "./customLilithImpl";
+import { Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
@@ -45,17 +44,15 @@ export const useRapunzelLoader = (
     } = useRapunzelStore();
 
     const loader = useAPILoader({
-        repo: LilithRepo.NHentai,
+        repo: config.repository,
         configurations: {
             headers: config.apiLoaderConfig,
-            domParser: useCheerioDomParser,
-            fetchImpl: customFetchImpl,
         },
     });
 
     /**
      * Handler for onImageLoaded event, it will trigger events for localState and StoreState.
-     * @param updateState
+     * @param setStoreState
      * @returns
      */
     const imageStateLoader = (
@@ -80,12 +77,15 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadBook = async (code: string) => {
-        RapunzelLog.log("[loadBook] Loading book with code ", code);
-        const book = await loader.get(code);
+        RapunzelLog.log("[loadBook] Loading book with code", code);
+        const book = await loader.getBook(code).catch(RapunzelLog.error);
         if (!book) return null;
-        reader.cachedImages = [];
+        const firstChapter = await loader
+            .getChapter(book.chapters[0])
+            .catch(RapunzelLog.error);
+        if (!firstChapter) return null;
 
-        const images = book.chapters[0].pages.map((page) => page.uri);
+        const images = firstChapter.pages.map((page) => page.uri);
         reader.book = book;
 
         reader.activeProcessId = getNewId();
@@ -116,7 +116,7 @@ export const useRapunzelLoader = (
             "[loadSearch] Searching for the following",
             searchValue,
         );
-        const data = await loader.search(searchValue, 0, Sort.RECENT);
+        const data = await loader.search(searchValue, 1, Sort.RECENT);
         if (!data || data.results.length === 0) {
             RapunzelLog.error(`[loadSearch] Search returned no results`);
             return null;

@@ -8,7 +8,7 @@ import {
 } from "./interfaces";
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
-import { CloudFlareConfig } from "@atsu/lilith";
+import { Headers, LilithRepo } from "@atsu/lilith";
 import { RapunzelLog } from "../config/log";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
@@ -107,7 +107,13 @@ export const initRapunzelStorage = () => {
     getMap(
         StorageEntries.apiLoaderConfig,
         setIfValid((value) => {
-            config.apiLoaderConfig = value as CloudFlareConfig;
+            config.apiLoaderConfig = value as Headers;
+        }),
+    );
+    getString(
+        StorageEntries.repository,
+        setIfValid((value) => {
+            config.repository = value as LilithRepo;
         }),
     );
 };

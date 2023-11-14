@@ -1,17 +1,32 @@
 import React, { FC } from "react";
 import { List } from "react-native-paper";
+import { LilithRepo } from "@atsu/lilith";
+
 import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
 import CacheScreen from "../components/cacheScreen";
 import { ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
+import { useRapunzelStore } from "../store/store";
+import { useRapunzelStorage } from "../cache/storage";
+import { StorageEntries } from "../cache/interfaces";
+import { RapunzelSelect } from "../components/RapunzelSelect";
 
-interface RapunzelSettingsProps {
-    // Define your component props here
-}
+interface RapunzelSettingsProps {}
 
 const RapunzelSettings: FC<RapunzelSettingsProps> = ({}) => {
+    const {
+        config: [config],
+    } = useRapunzelStore();
+    const { setItem } = useRapunzelStorage();
+
     useRouter({ route: ViewNames.RapunzelSettings });
+
+    const onSetValueHandler = (value: string) => {
+        config.repository = value as LilithRepo;
+        setItem(StorageEntries.repository, value);
+    };
+
     return (
         <ScrollContent>
             <List.AccordionGroup>
@@ -23,6 +38,11 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({}) => {
                     <RapunzelConfigCheckbox
                         label="Use Fallback extensions"
                         configId="useFallbackExtensionOnDownload"
+                    />
+                    <RapunzelSelect
+                        label="Repository"
+                        list={[LilithRepo.NHentai, LilithRepo.MangaDex]}
+                        onSelect={onSetValueHandler}
                     />
                 </List.Accordion>
                 <List.Accordion title="Device and Cache" id="2">
