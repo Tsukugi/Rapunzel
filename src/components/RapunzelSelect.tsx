@@ -1,5 +1,5 @@
 import { useState, useEffect, FC } from "react";
-import { StyleProp, TextStyle, ViewStyle } from "react-native";
+import { StyleProp, TextStyle } from "react-native";
 import { useTheme } from "react-native-paper";
 import { PaperSelect } from "react-native-paper-select";
 

@@ -29,13 +29,8 @@ const { width } = Dimensions.get("screen");
 
 const styles = StyleSheet.create({
     container: {
-        padding: 2,
-        marginVertical: 2,
-        borderRadius: 30,
-
         display: "flex",
         width,
-
         flexDirection: "row",
         justifyContent: "center",
     },

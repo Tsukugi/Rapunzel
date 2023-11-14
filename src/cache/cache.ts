@@ -53,8 +53,11 @@ const downloadImageWithFallback = async ({
         });
 
     try {
-        const res = await downloadWithExtension(extensionIndex);
-        return res;
+        const res = await downloadHandler(url);
+        if (res.statusCode !== 200) {
+            return await downloadWithExtension(extensionIndex);
+        }
+        return url;
     } catch (error) {
         RapunzelLog.error(
             `[downloadImageWithFallback] Image download failed for ${url}, reason: ${error}`,
@@ -63,7 +66,7 @@ const downloadImageWithFallback = async ({
     }
 };
 
-const getRandomDelay = () => Math.floor(Math.random() * (1000 - 500 + 1)) + 100;
+const getRandomDelay = () => Math.floor(Math.random() * (200 - 100 + 1)) + 100;
 interface DownloadAndCacheImageProps {
     uri: string;
     onImageCached?: (path: string) => void;
@@ -88,7 +91,7 @@ const downloadAndCacheImage = async ({
             await new Promise<void>((res) =>
                 setTimeout(() => res(), getRandomDelay()),
             );
-            //RapunzelLog.log("Downloading image:", uri);
+
             await downloadImageWithFallback({
                 url: uri,
                 downloadHandler: (downloadUri) => {
