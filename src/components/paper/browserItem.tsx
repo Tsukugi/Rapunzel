@@ -1,8 +1,8 @@
 import { Button, Card, Text, useTheme } from "react-native-paper";
 import { FC } from "react";
 import { Thumbnail } from "@atsu/lilith";
-import { Dimensions, Platform, StyleSheet } from "react-native";
-import { Colors } from "react-native/Libraries/NewAppScreen";
+import { Dimensions, StyleSheet } from "react-native";
+import { removeValuesInParenthesesAndBrackets } from "../../tools/string";
 
 export interface BrowseItemWithStyle extends BrowserItemProps {
     style: Record<string, any>;
@@ -36,14 +36,8 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
                     backgroundColor: colors.surface,
                     opacity: 0.8,
                 }}
-                title={thumbnail.title}
+                title={removeValuesInParenthesesAndBrackets(thumbnail.title)}
             />
-            {/* <Card.Actions style={styles.actions}>
-                <Button style={styles.btn} mode="outlined">
-                    Save
-                </Button>
-                <Button onPress={onPressHandler}>Read</Button>
-            </Card.Actions> */}
         </Card>
     );
 };
