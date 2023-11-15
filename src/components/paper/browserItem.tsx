@@ -33,8 +33,13 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
                 titleNumberOfLines={2}
                 style={{
                     ...styles.title,
-                    backgroundColor: colors.surface,
-                    opacity: 0.8,
+                    backgroundColor: colors.backdrop,
+                }}
+                titleStyle={{
+                    color: "white",
+                    lineHeight: 14,
+                    textAlignVertical: "center",
+                    fontSize: 12,
                 }}
                 title={removeValuesInParenthesesAndBrackets(thumbnail.title)}
             />
@@ -51,6 +56,7 @@ const styles = StyleSheet.create({
         margin: 2,
         borderRadius: 30,
         flex: 1,
+        overflow: "hidden",
     },
 
     cover: {
@@ -61,15 +67,6 @@ const styles = StyleSheet.create({
     title: {
         bottom: 0,
         position: "absolute",
-    },
-    actions: {
-        top: 0,
-        right: 0,
-        position: "absolute",
-    },
-
-    btn: {
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
     },
 });
 export default BrowseItem;

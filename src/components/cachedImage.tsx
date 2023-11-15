@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     View,
     Image,
@@ -7,8 +7,32 @@ import {
     Dimensions,
     TouchableOpacity,
 } from "react-native";
-import { RapunzelLog } from "../config/log";
-import { Text, useTheme } from "react-native-paper";
+import { ActivityIndicator, Icon, useTheme } from "react-native-paper";
+
+interface EmptyImageComponentProps {
+    onPress: () => void;
+}
+const EmptyImageComponent = ({ onPress }: EmptyImageComponentProps) => {
+    return (
+        <TouchableOpacity
+            style={{ ...styles.image, ...styles.container }}
+            onPress={onPress}
+        >
+            <Icon size={32} source={"image-outline"} />
+        </TouchableOpacity>
+    );
+};
+
+const LoadingComponent = () => {
+    const { colors } = useTheme();
+
+    return (
+        <View style={{ ...styles.image, ...styles.container }}>
+            (
+            <ActivityIndicator animating={true} color={colors.onBackground} />
+        </View>
+    );
+};
 
 interface CachedImageProps extends ImageProps {
     source: { uri: string };
@@ -20,10 +44,11 @@ const CachedImage: React.FC<CachedImageProps> = ({
     onClick,
     ...props
 }) => {
+    const [loading, setLoading] = useState(false);
+
     const { colors } = useTheme();
-    //RapunzelLog.log("[CachedImage] refresh!", uri);
     return (
-        <TouchableOpacity onPress={() => onClick(uri)}>
+        <TouchableOpacity>
             <View
                 style={{
                     ...styles.container,
@@ -31,10 +56,17 @@ const CachedImage: React.FC<CachedImageProps> = ({
                 }}
             >
                 {uri === null ? (
-                    <Text style={styles.image}>Placeholder</Text>
+                    loading ? (
+                        <LoadingComponent />
+                    ) : (
+                        <EmptyImageComponent onPress={() => onClick(uri)} />
+                    )
                 ) : (
                     <Image
                         {...props}
+                        onError={() => {}}
+                        onLoadStart={() => setLoading(true)}
+                        onLoadEnd={() => setLoading(false)}
                         source={{ uri: "file://" + uri }}
                         style={styles.image}
                         resizeMode="contain"
@@ -46,7 +78,6 @@ const CachedImage: React.FC<CachedImageProps> = ({
 };
 
 const { width } = Dimensions.get("screen");
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -55,8 +86,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: width,
-        height: 550,
-        alignSelf: "center",
+        minHeight: 583,
     },
 });
 
