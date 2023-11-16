@@ -38,9 +38,6 @@ const getViews = (): ViewDict => {
             },
             viewDrawerOptions: {
                 title: "Reader",
-                headerStyle: {
-                    backgroundColor: "transparent",
-                },
             },
         },
         RapunzelSettings: {

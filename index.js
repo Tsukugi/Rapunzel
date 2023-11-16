@@ -15,7 +15,7 @@ import { initRapunzelStorage } from "./src/cache/storage";
 export default function Main() {
     return (
         <NavigationContainer>
-            <PaperProvider theme={LocalTheme.getTheme()}>
+            <PaperProvider theme={LocalTheme.useTheme()}>
                 <App />
             </PaperProvider>
         </NavigationContainer>

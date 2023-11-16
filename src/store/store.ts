@@ -1,40 +1,15 @@
-import { TaihouOptions, UseState, useState } from "@atsu/taihou";
-import { RapunzelConfigBase } from "../config/interfaces";
-import { Book, Headers, LilithRepo, Thumbnail } from "@atsu/lilith";
+import { TaihouOptions, useState } from "@atsu/taihou";
+import { LilithRepo } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
-
-export interface RouterState {
-    currentRoute: ViewNames;
-}
-
-export interface HeaderState {
-    searchValue: string;
-}
-export interface ReaderState {
-    activeProcessId: string;
-    book: Book | null;
-    cachedImages: string[];
-}
-export interface ConfigState extends RapunzelConfigBase {
-    apiLoaderConfig: Headers;
-    webviewUrl: string;
-    repository: LilithRepo;
-}
-
-export interface BrowseState {
-    activeProcessId: string;
-    bookListRecord: Record<string, Thumbnail>; // Key as Ids
-    bookList: Thumbnail[];
-    cachedImages: string[];
-}
-
-interface Store {
-    router: UseState<RouterState>;
-    config: UseState<ConfigState>;
-    header: UseState<HeaderState>;
-    reader: UseState<ReaderState>;
-    browse: UseState<BrowseState>;
-}
+import { onHeaderStoreEvents } from "./header";
+import {
+    BrowseState,
+    ConfigState,
+    HeaderState,
+    ReaderState,
+    RouterState,
+    Store,
+} from "./interfaces";
 
 const RapunzelState = {} as Store;
 export const useRapunzelStore = () => {
@@ -71,10 +46,13 @@ export const initRapunzelStore = () => {
     RapunzelState.header = useConfig<HeaderState>("header", {
         searchValue: "ass",
     });
+
     RapunzelState.browse = useConfig<BrowseState>("browse", {
         activeProcessId: "",
         bookListRecord: {},
         bookList: [],
         cachedImages: [],
     });
+
+    onHeaderStoreEvents(RapunzelState);
 };

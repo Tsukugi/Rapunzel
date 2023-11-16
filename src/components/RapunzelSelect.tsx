@@ -1,7 +1,7 @@
 import { useState, useEffect, FC } from "react";
 import { StyleProp, TextStyle } from "react-native";
-import { useTheme } from "react-native-paper";
 import { PaperSelect } from "react-native-paper-select";
+import { LocalTheme } from "../../themes";
 
 interface SelectItem {
     _id: string;
@@ -25,7 +25,7 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
     list,
     onSelect,
 }) => {
-    const { colors } = useTheme();
+    const { colors } = LocalTheme.useTheme();
 
     const [stateValues, setStateValues] = useState<StateValues>({
         value: "",

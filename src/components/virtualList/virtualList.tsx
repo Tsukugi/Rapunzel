@@ -1,13 +1,13 @@
 import React, { PropsWithChildren } from "react";
 import {
-    SafeAreaView,
+    View,
     VirtualizedList,
     StyleSheet,
     ListRenderItem,
 } from "react-native";
 import { VirtualItem } from "./interfaces";
 import Item from "./item";
-import { useTheme } from "react-native-paper";
+import { LocalTheme } from "../../../themes";
 
 interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
@@ -20,9 +20,9 @@ const VirtualList = <T,>({
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_, index) => data[index],
 }: VirtualListProps<T>) => {
-    const { colors } = useTheme();
+    const { colors } = LocalTheme.useTheme();
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <VirtualizedList
                 data={data}
                 initialNumToRender={1}
@@ -34,7 +34,7 @@ const VirtualList = <T,>({
                 getItemCount={(_data) => _data.length}
                 getItem={getItem}
             />
-        </SafeAreaView>
+        </View>
     );
 };
 

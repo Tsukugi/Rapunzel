@@ -94,18 +94,12 @@ const darkTheme: MD3Theme = {
     },
 };
 
-const toggleTheme = (): void => {
-    const isDarkMode = useColorScheme() === "dark";
-    Appearance.setColorScheme(isDarkMode ? "light" : "dark");
-};
-
-const getTheme = (): MD3Theme => {
+const useTheme = (): MD3Theme => {
     const isDarkMode = useColorScheme() === "dark";
     const theme = isDarkMode ? darkTheme : lightTheme;
     return theme;
 };
 
 export const LocalTheme = {
-    getTheme,
-    toggleTheme,
+    useTheme,
 };

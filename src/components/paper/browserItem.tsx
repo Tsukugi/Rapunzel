@@ -1,8 +1,9 @@
-import { Button, Card, Text, useTheme } from "react-native-paper";
+import { Card, Text } from "react-native-paper";
 import { FC } from "react";
 import { Thumbnail } from "@atsu/lilith";
 import { Dimensions, StyleSheet } from "react-native";
 import { removeValuesInParenthesesAndBrackets } from "../../tools/string";
+import { LocalTheme } from "../../../themes";
 
 export interface BrowseItemWithStyle extends BrowserItemProps {
     style: Record<string, any>;
@@ -19,7 +20,7 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
     thumbnail,
     onClick,
 }) => {
-    const { colors } = useTheme();
+    const { colors } = LocalTheme.useTheme();
 
     const onPressHandler = () => onClick(thumbnail);
     if (!thumbnail) return <Text>Text</Text>;

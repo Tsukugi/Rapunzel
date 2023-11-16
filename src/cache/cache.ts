@@ -7,7 +7,7 @@ import { RandomTools } from "../tools/random";
 const ImageCacheDirectory = RNFS.DocumentDirectoryPath;
 
 type Extension = ".jpg" | ".jpeg" | ".png" | ".gif"; // Fallback extensions to try
-const SupportedExtensions: Extension[] = [".jpg", ".png", ".jpeg"];
+const SupportedExtensions: Extension[] = [".jpg", ".png", ".jpeg", ".gif"];
 
 interface RequestImageWithFallback {
     url: string;

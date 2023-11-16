@@ -1,38 +1,24 @@
-import { useEffect, useState } from "react";
 import { Searchbar } from "react-native-paper";
-import { HeaderState, useRapunzelStore } from "../../store/store";
+import { Dimensions, StyleSheet } from "react-native";
+import { useState } from "react";
 
 interface PaperSearchProps {
     placeholder?: string;
-    initialValue?: string;
+    value?: string;
     isLoading: boolean;
     onValueChange: (newValue: string) => void;
     onClose: () => void;
 }
 
 const PaperSearch = ({
-    initialValue = "",
+    value = "",
     placeholder = "Search",
     isLoading,
     onValueChange,
     onClose,
 }: PaperSearchProps) => {
-    const [searchQuery, setSearchQuery] = useState(initialValue);
+    const [searchQuery, setSearchQuery] = useState(value);
 
-    const {
-        header: [, watchHeader, unwatchHeader],
-    } = useRapunzelStore();
-
-    useEffect(() => {
-        const onWatchHeader = async ({ searchValue }: HeaderState) => {
-            setSearchQuery(searchValue);
-        };
-
-        watchHeader(onWatchHeader);
-        return () => {
-            unwatchHeader(onWatchHeader);
-        };
-    }, []);
     const onChangeHandler = (text: string) => {
         setSearchQuery(text);
         onValueChange(text);
@@ -42,10 +28,7 @@ const PaperSearch = ({
         <Searchbar
             placeholder={placeholder}
             loading={isLoading}
-            style={{
-                width: 300,
-                height: 45,
-            }}
+            style={styles.Searchbar}
             inputStyle={{
                 paddingTop: 0,
             }}
@@ -53,8 +36,18 @@ const PaperSearch = ({
             onTraileringIconPress={onClose}
             onChangeText={onChangeHandler}
             value={searchQuery}
+            defaultValue={value}
         />
     );
 };
+
+const { width } = Dimensions.get("screen");
+
+const styles = StyleSheet.create({
+    Searchbar: {
+        minWidth: (width * 2) / 3,
+        height: 45,
+    },
+});
 
 export default PaperSearch;

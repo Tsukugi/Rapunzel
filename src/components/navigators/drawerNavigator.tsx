@@ -1,5 +1,5 @@
 import React, { FC, useState } from "react";
-import { Icon, useTheme } from "react-native-paper";
+import { Icon } from "react-native-paper";
 
 import {
     DrawerNavigationOptions,
@@ -11,6 +11,7 @@ import { HeaderLeftMode } from "../paper/interfaces";
 import CustomDrawerContent from "./customDrawerContent";
 import { ViewDict, ViewNavigationData } from "./navigation";
 import { useRapunzelStore } from "../../store/store";
+import { LocalTheme } from "../../../themes";
 
 interface DrawerNavigatorProps {
     views: ViewDict;
@@ -19,33 +20,27 @@ interface DrawerNavigatorProps {
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
-    const { colors } = useTheme();
+    const { colors } = LocalTheme.useTheme();
 
     const {
         router: [router],
     } = useRapunzelStore();
 
-    const [options] = useState<DrawerNavigationOptions>({
-        drawerActiveTintColor: colors.primary,
-        drawerLabelStyle: {
-            color: colors.onBackground,
-        },
-        sceneContainerStyle: {
-            backgroundColor: colors.background,
-        },
-
-        drawerStyle: {
-            backgroundColor: colors.background,
-        },
-        drawerType: "back",
-    });
-
-    const useOptions = (
-        options: DrawerNavigationOptions,
-        view: ViewNavigationData,
-    ): DrawerNavigationOptions => {
+    const useOptions = (view: ViewNavigationData): DrawerNavigationOptions => {
         return {
-            ...options,
+            drawerActiveTintColor: colors.primary,
+            drawerLabelStyle: {
+                color: colors.onBackground,
+            },
+            sceneContainerStyle: {
+                backgroundColor: colors.background,
+            },
+
+            drawerStyle: {
+                backgroundColor: colors.background,
+            },
+            drawerType: "back",
+
             ...view.viewDrawerOptions,
             header: ({ navigation }) => (
                 <HeaderBar
@@ -54,7 +49,9 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                     openMenu={navigation.openDrawer}
                     openOptions={() => {}}
                     openSearch={() => {}}
-                    onSearchProcess={(view) => navigation.navigate(view)}
+                    onSearchProcess={(view) => {
+                        navigation.navigate(view);
+                    }}
                 />
             ),
             drawerIcon: ({ size }) => <Icon size={size} source={view.icon} />,
@@ -71,7 +68,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                     key={index}
                     name={view.component.name}
                     component={view.component}
-                    options={useOptions(options, view)}
+                    options={useOptions(view)}
                 />
             ))}
         </Drawer.Navigator>

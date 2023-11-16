@@ -7,7 +7,8 @@ import {
     Dimensions,
     TouchableOpacity,
 } from "react-native";
-import { ActivityIndicator, Icon, useTheme } from "react-native-paper";
+import { ActivityIndicator, Icon } from "react-native-paper";
+import { LocalTheme } from "../../themes";
 
 interface EmptyImageComponentProps {
     onPress: () => void;
@@ -24,11 +25,10 @@ const EmptyImageComponent = ({ onPress }: EmptyImageComponentProps) => {
 };
 
 const LoadingComponent = () => {
-    const { colors } = useTheme();
+    const { colors } = LocalTheme.useTheme();
 
     return (
         <View style={{ ...styles.image, ...styles.container }}>
-            (
             <ActivityIndicator animating={true} color={colors.onBackground} />
         </View>
     );
@@ -46,7 +46,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
 }) => {
     const [loading, setLoading] = useState(false);
 
-    const { colors } = useTheme();
+    const { colors } = LocalTheme.useTheme();
     return (
         <TouchableOpacity>
             <View
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: width,
-        minHeight: 583,
+        minHeight: width * 1.4,
     },
 });
 

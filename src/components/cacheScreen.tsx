@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
 import { DeviceCache } from "../cache/cache";
-import { Avatar, Button, Card, IconButton, Text } from "react-native-paper";
+import { Button, Card, Text } from "react-native-paper";
 
 const CacheScreen = () => {
     const [size, setSize] = useState(0);

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IconButton, MD3Colors } from "react-native-paper";
+import { IconButton } from "react-native-paper";
 import { IconSource } from "react-native-paper/lib/typescript/components/Icon";
 
 interface GenericIconButtonProps {
