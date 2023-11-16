@@ -8,15 +8,6 @@ import { useRapunzelStorage } from "../../cache/storage";
 const getStatus = (checkedMatch: boolean) =>
     checkedMatch ? "checked" : "unchecked";
 
-const trySaveOnStorage = <T,>(key: string, value: T) => {
-    const canSaveOnStorage =
-        Object.values<string>(StorageEntries).includes(key);
-
-    if (!canSaveOnStorage) return;
-
-    useRapunzelStorage().setItem(key as StorageEntries, value);
-};
-
 interface RapunzelCheckboxItemProps {
     label: string;
     configId: keyof RapunzelConfigBase;
@@ -40,10 +31,9 @@ const RapunzelConfigCheckbox: FC<RapunzelCheckboxItemProps> = ({
 
         const newState: boolean = !config[configId];
 
-        trySaveOnStorage(configId, newState);
-
         setLocalChecked(newState);
-        config[configId] = !config[configId];
+        config[configId] = newState;
+        useRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
     return (

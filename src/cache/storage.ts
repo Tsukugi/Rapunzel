@@ -10,6 +10,7 @@ import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
 import { Headers, LilithRepo } from "@atsu/lilith";
 import { RapunzelLog } from "../config/log";
+import { ConfigState } from "../store/interfaces";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
@@ -86,18 +87,6 @@ export const initRapunzelStorage = () => {
             header.searchValue = value;
         }),
     );
-    getBool(
-        StorageEntries.debug,
-        setIfValid((value) => {
-            config.debug = value;
-        }),
-    );
-    getBool(
-        StorageEntries.useFallbackExtensionOnDownload,
-        setIfValid((value) => {
-            config.useFallbackExtensionOnDownload = value;
-        }),
-    );
     getString(
         StorageEntries.currentRoute,
         setIfValid((value) => {
@@ -105,15 +94,11 @@ export const initRapunzelStorage = () => {
         }),
     );
     getMap(
-        StorageEntries.apiLoaderConfig,
-        setIfValid((value) => {
-            config.apiLoaderConfig = value as Headers;
-        }),
-    );
-    getString(
-        StorageEntries.repository,
-        setIfValid((value) => {
-            config.repository = value as LilithRepo;
+        StorageEntries.config,
+        setIfValid((value: ConfigState) => {
+            Object.keys(value).forEach((key) => {
+                (config as any)[key] = (value as any)[key];
+            });
         }),
     );
 };

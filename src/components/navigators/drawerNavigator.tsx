@@ -40,18 +40,16 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                 backgroundColor: colors.background,
             },
             drawerType: "back",
-
             ...view.viewDrawerOptions,
             header: ({ navigation }) => (
                 <HeaderBar
+                    showSearch={view.header.showSearch}
                     leftMode={view.header.leftMode || HeaderLeftMode.menu}
                     onBack={navigation.goBack}
                     openMenu={navigation.openDrawer}
                     openOptions={() => {}}
                     openSearch={() => {}}
-                    onSearchProcess={(view) => {
-                        navigation.navigate(view);
-                    }}
+                    onSearchProcess={(view) => {}}
                 />
             ),
             drawerIcon: ({ size }) => <Icon size={size} source={view.icon} />,

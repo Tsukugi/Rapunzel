@@ -17,11 +17,13 @@ interface StateValues {
 
 export interface RapunzelSelectProps {
     label: string;
+    initialValue: string;
     list: string[];
     onSelect: (newValue: string) => void;
 }
 export const RapunzelSelect: FC<RapunzelSelectProps> = ({
     label,
+    initialValue,
     list,
     onSelect,
 }) => {
@@ -38,7 +40,13 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
         let isMounted = true;
         let getData = async () => {
             if (!isMounted) return;
-            const firstItem: SelectItem = { _id: `0`, value: list[0] };
+
+            const firstItem: SelectItem = (() => {
+                const index =
+                    list.findIndex((item) => item === initialValue) || 0;
+                return { _id: `${index}`, value: list[index] };
+            })();
+
             setStateValues({
                 ...stateValues,
                 value: firstItem.value,

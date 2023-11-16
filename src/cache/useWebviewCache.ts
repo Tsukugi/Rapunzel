@@ -25,10 +25,7 @@ export const useWebviewCache = ({
     const updateApiLoaderConfig = (key: ApiLoaderKeys, value: string) => {
         const newApiConfig = { ...config.apiLoaderConfig, [key]: value };
         config.apiLoaderConfig = newApiConfig;
-        useRapunzelStorage().setItem(
-            StorageEntries.apiLoaderConfig,
-            newApiConfig,
-        );
+        useRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
     const onCookiesRetrieved = (cookies: Cookies) => {

@@ -1,5 +1,5 @@
 import React from "react";
-import CachedImage from "../cachedImage";
+import CachedImage from "./cachedImage";
 import { VirtualItem } from "./interfaces";
 
 interface ImageItemProps {

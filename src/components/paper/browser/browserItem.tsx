@@ -2,8 +2,8 @@ import { Card, Text } from "react-native-paper";
 import { FC } from "react";
 import { Thumbnail } from "@atsu/lilith";
 import { Dimensions, StyleSheet } from "react-native";
-import { removeValuesInParenthesesAndBrackets } from "../../tools/string";
-import { LocalTheme } from "../../../themes";
+import { LocalTheme } from "../../../../themes";
+import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
 
 export interface BrowseItemWithStyle extends BrowserItemProps {
     style: Record<string, any>;

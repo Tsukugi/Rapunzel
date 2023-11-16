@@ -16,6 +16,7 @@ export interface ViewNavigationData {
     icon: string;
     header: {
         leftMode?: HeaderLeftMode;
+        showSearch?: boolean;
     };
     viewDrawerOptions: Partial<DrawerNavigationOptions>;
 }
@@ -25,7 +26,7 @@ const getViews = (): ViewDict => {
         RapunzelBrowse: {
             component: RapunzelBrowse,
             icon: "card-search-outline",
-            header: {},
+            header: { showSearch: true },
             viewDrawerOptions: {
                 title: "Browse",
             },

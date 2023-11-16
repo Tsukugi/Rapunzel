@@ -1,13 +1,14 @@
 import React, { FC, useEffect, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
-import { BrowseState, useRapunzelStore } from "../store/store";
 import { useRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 import { Thumbnail } from "@atsu/lilith";
-import CoupleItem from "../components/paper/coupleItem";
-import { BrowserItemProps } from "../components/paper/browserItem";
+import { BrowserItemProps } from "../components/paper/browser/browserItem";
+import CoupleItem from "../components/paper/browser/coupleItem";
+import { BrowseState } from "../store/interfaces";
+import { useRapunzelStore } from "../store/store";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 

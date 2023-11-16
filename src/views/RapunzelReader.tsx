@@ -4,9 +4,11 @@ import ImageRenderer from "../components/virtualList/imageItem";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
-import { ReaderState, useRapunzelStore } from "../store/store";
 
 import { DeviceCache } from "../cache/cache";
+import { ReaderState } from "../store/interfaces";
+import { useRapunzelStore } from "../store/store";
+
 interface RapunzelReaderProps {}
 
 // TODO: Add heights from backend to support full image dynamically

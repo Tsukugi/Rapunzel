@@ -1,7 +1,6 @@
 import { TaihouOptions, useState } from "@atsu/taihou";
 import { LilithRepo } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
-import { onHeaderStoreEvents } from "./header";
 import {
     BrowseState,
     ConfigState,
@@ -53,6 +52,4 @@ export const initRapunzelStore = () => {
         bookList: [],
         cachedImages: [],
     });
-
-    onHeaderStoreEvents(RapunzelState);
 };

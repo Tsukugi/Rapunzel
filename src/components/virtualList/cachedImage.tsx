@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
 } from "react-native";
 import { ActivityIndicator, Icon } from "react-native-paper";
-import { LocalTheme } from "../../themes";
+import { LocalTheme } from "../../../themes";
 
 interface EmptyImageComponentProps {
     onPress: () => void;

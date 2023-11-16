@@ -18,13 +18,11 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({}) => {
     const {
         config: [config],
     } = useRapunzelStore();
-    const { setItem } = useRapunzelStorage();
-
     useRouter({ route: ViewNames.RapunzelSettings });
 
     const onSetValueHandler = (value: string) => {
         config.repository = value as LilithRepo;
-        setItem(StorageEntries.repository, value);
+        useRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
     return (
@@ -41,6 +39,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({}) => {
                     />
                     <RapunzelSelect
                         label="Repository"
+                        initialValue={config.repository}
                         list={[LilithRepo.NHentai, LilithRepo.MangaDex]}
                         onSelect={onSetValueHandler}
                     />

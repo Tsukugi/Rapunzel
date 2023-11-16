@@ -7,6 +7,7 @@ export enum StorageEntries {
     currentRoute = "currentRoute",
     apiLoaderConfig = "apiLoaderConfig",
     repository = "repository",
+    config = "config",
 }
 
 export namespace Storage {
