@@ -13,12 +13,14 @@ const CoupleItem: FC<CoupleItemProps> = ({ couple }) => {
                 cover={couple[0]?.cover}
                 thumbnail={couple[0]?.thumbnail}
                 onClick={couple[0]?.onClick}
+                onLongClick={couple[0]?.onLongClick}
                 style={styles.item}
             />
             <BrowseItem
                 cover={couple[1]?.cover}
                 thumbnail={couple[1]?.thumbnail}
                 onClick={couple[1]?.onClick}
+                onLongClick={couple[1]?.onLongClick}
                 style={styles.item}
             />
         </View>

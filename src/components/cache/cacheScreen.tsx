@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DeviceCache } from "../cache/cache";
+import { DeviceCache } from "../../cache/cache";
 import { Button, Card, Text } from "react-native-paper";
 
 const CacheScreen = () => {

@@ -1,9 +1,39 @@
 import { Card, Text } from "react-native-paper";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Thumbnail } from "@atsu/lilith";
 import { Dimensions, StyleSheet } from "react-native";
 import { LocalTheme } from "../../../../themes";
 import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
+
+interface UseTimedEventHandlers {
+    onStart: () => void;
+    onFinish: () => void;
+    onIgnore: () => void;
+}
+
+const useTimedEvent = (delay: number) => {
+    const [timer, setTimer] = useState<number | null>(null);
+    const event = (handlers: Partial<UseTimedEventHandlers>) => {
+        const _handlers: UseTimedEventHandlers = {
+            onStart: () => {},
+            onFinish: () => {},
+            onIgnore: () => {},
+            ...handlers,
+        };
+
+        const id = setTimeout(() => {
+            if (id === timer) {
+                setTimer(null);
+                return _handlers.onFinish();
+            }
+            return _handlers.onIgnore();
+        }, delay);
+        setTimer(id);
+        return _handlers.onStart();
+    };
+
+    return [event];
+};
 
 export interface BrowseItemWithStyle extends BrowserItemProps {
     style: Record<string, any>;
@@ -12,6 +42,7 @@ export interface BrowserItemProps {
     cover: string;
     thumbnail: Thumbnail;
     onClick: (thumbnail: Thumbnail) => void;
+    onLongClick: (thumbnail: Thumbnail) => void;
 }
 
 const BrowseItem: FC<BrowseItemWithStyle> = ({
@@ -19,30 +50,54 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
     cover,
     thumbnail,
     onClick,
+    onLongClick,
 }) => {
     const { colors } = LocalTheme.useTheme();
 
+    const defaultStyle = {
+        backgroundColor: colors.backdrop,
+        color: "white",
+        title: removeValuesInParenthesesAndBrackets(thumbnail.title),
+    };
+    const [titleProps, setTitleProps] = useState(defaultStyle);
+
+    const [onLongPressEvent] = useTimedEvent(3000);
+
     const onPressHandler = () => onClick(thumbnail);
+    const onLongPressHandler = () => {
+        onLongPressEvent({
+            onStart: () =>
+                setTitleProps({
+                    backgroundColor: colors.primary,
+                    color: colors.onPrimary,
+                    title: "Book added to the Library!"
+                }),
+            onFinish: () => setTitleProps(defaultStyle),
+            onIgnore: () => setTitleProps(defaultStyle),
+        });
+        onLongClick(thumbnail);
+    };
     if (!thumbnail) return <Text>Text</Text>;
     return (
         <Card
             style={{ ...styles.container, ...style }}
             onPress={onPressHandler}
+            onLongPress={onLongPressHandler}
         >
             <Card.Cover style={styles.cover} source={{ uri: cover }} />
             <Card.Title
                 titleNumberOfLines={2}
                 style={{
                     ...styles.title,
-                    backgroundColor: colors.backdrop,
+                    backgroundColor: titleProps.backgroundColor,
                 }}
                 titleStyle={{
-                    color: "white",
+                    color: titleProps.color,
                     lineHeight: 14,
                     textAlignVertical: "center",
                     fontSize: 12,
                 }}
-                title={removeValuesInParenthesesAndBrackets(thumbnail.title)}
+                title={titleProps.title}
             />
         </Card>
     );

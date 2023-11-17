@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, FlatList, Text, StyleSheet } from "react-native";
-import { DeviceCache } from "../cache/cache";
+import { DeviceCache } from "../../cache/cache";
 
 interface CachedImagesListProps {}
 

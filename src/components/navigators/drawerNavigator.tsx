@@ -1,20 +1,22 @@
-import React, { FC, useState } from "react";
+import React, { FC } from "react";
 import { Icon } from "react-native-paper";
 
 import {
     DrawerNavigationOptions,
     createDrawerNavigator,
 } from "@react-navigation/drawer";
+
 import HeaderBar from "../paper/header/headerBar";
 import { HeaderLeftMode } from "../paper/interfaces";
 
-import CustomDrawerContent from "./customDrawerContent";
-import { ViewDict, ViewNavigationData } from "./navigation";
 import { useRapunzelStore } from "../../store/store";
 import { LocalTheme } from "../../../themes";
 
+import { ViewDict, ViewNavigationData } from "./navigation";
+import CustomDrawerContent from "./customDrawerContent";
+
 interface DrawerNavigatorProps {
-    views: ViewDict;
+    views: Partial<ViewDict>;
 }
 
 const Drawer = createDrawerNavigator();
@@ -40,6 +42,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                 backgroundColor: colors.background,
             },
             drawerType: "back",
+            swipeEdgeWidth: 150,
             ...view.viewDrawerOptions,
             header: ({ navigation }) => (
                 <HeaderBar

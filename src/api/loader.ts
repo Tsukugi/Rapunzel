@@ -3,7 +3,7 @@ import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
-import { Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
+import { Book, Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
@@ -76,17 +76,42 @@ export const useRapunzelLoader = (
      * @param code Unique id of a book
      * @returns
      */
-    const loadBook = async (code: string) => {
+    const loadFirstChapter = async (code: string) => {
+        RapunzelLog.log("[loadBook] Loading first chapter from code", code);
+        const book = await loadBook(code);
+        if (!book) return null;
+        const promise = await loadChapter(book.chapters[0]);
+        return promise;
+    };
+
+    /**
+     * Loads a book based on its code, and then save it on the state.
+     * @param code Unique id of a book
+     * @returns
+     */
+    const loadBook = async (code: string): Promise<Book | null> => {
         RapunzelLog.log("[loadBook] Loading book with code", code);
         const book = await loader.getBook(code).catch(RapunzelLog.error);
-        if (!book) return null;
-        const firstChapter = await loader
-            .getChapter(book.chapters[0])
-            .catch(RapunzelLog.error);
-        if (!firstChapter) return null;
+        if (!book || book.chapters.length === 0) return null;
 
-        const images = firstChapter.pages.map((page) => page.uri);
         reader.book = book;
+
+        const promise = Promise.resolve(book);
+        return promise;
+    };
+
+    /**
+     * Loads a chapter based on its id, it will automatically download and cache the image list to the Reader state.
+     * @param code Unique id of a book
+     * @returns
+     */
+    const loadChapter = async (id: string) => {
+        RapunzelLog.log("[loadBook] Loading  chapter from id", id);
+        const chapter = await loader.getChapter(id).catch(RapunzelLog.error);
+        if (!chapter) return null;
+
+        const images = chapter.pages.map((page) => page.uri);
+        reader.chapter = chapter;
 
         reader.activeProcessId = getNewId();
 
@@ -152,5 +177,5 @@ export const useRapunzelLoader = (
         return promise;
     };
 
-    return { loadSearch, loadBook };
+    return { loadSearch, loadFirstChapter, loadBook, loadChapter };
 };

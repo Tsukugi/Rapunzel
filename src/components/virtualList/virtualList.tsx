@@ -13,12 +13,14 @@ interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: T, index: number) => VirtualItem<T>;
+    onEndReached?: () => void;
 }
 
 const VirtualList = <T,>({
     data,
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_, index) => data[index],
+    onEndReached = () => {},
 }: VirtualListProps<T>) => {
     const { colors } = LocalTheme.useTheme();
     return (
@@ -33,6 +35,8 @@ const VirtualList = <T,>({
                 keyExtractor={(_, index) => index.toString()}
                 getItemCount={(_data) => _data.length}
                 getItem={getItem}
+                onEndReached={onEndReached}
+                onEndReachedThreshold={200}
             />
         </View>
     );

@@ -4,6 +4,7 @@ import RapunzelBrowse from "../../views/RapunzelBrowse";
 import RapunzelReader from "../../views/RapunzelReader";
 import RapunzelSettings from "../../views/RapunzelSettings";
 import RapunzelWebView from "../../views/RapunzelWebView";
+import RapunzelChapterSelect from "../../views/RapunzelChapterSelect";
 
 //* Dependencies thay may be abstacted to other place
 import { DrawerNavigationOptions } from "@react-navigation/drawer";
@@ -21,8 +22,8 @@ export interface ViewNavigationData {
     viewDrawerOptions: Partial<DrawerNavigationOptions>;
 }
 
-const getViews = (): ViewDict => {
-    const Views: ViewDict = {
+const getViews = (): Partial<ViewDict> => {
+    const Views: Partial<ViewDict> = {
         RapunzelBrowse: {
             component: RapunzelBrowse,
             icon: "card-search-outline",
@@ -55,6 +56,14 @@ const getViews = (): ViewDict => {
             header: {},
             viewDrawerOptions: {
                 title: "WebView",
+            },
+        },
+        RapunzelChapterSelect: {
+            component: RapunzelChapterSelect,
+            icon: "tray",
+            header: {},
+            viewDrawerOptions: {
+                title: "Chapter Select",
             },
         },
     };

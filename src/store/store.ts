@@ -40,8 +40,10 @@ export const initRapunzelStore = () => {
     RapunzelState.reader = useConfig<ReaderState>("reader", {
         activeProcessId: "",
         book: null,
+        chapter: null,
         cachedImages: [],
     });
+
     RapunzelState.header = useConfig<HeaderState>("header", {
         searchValue: "ass",
     });

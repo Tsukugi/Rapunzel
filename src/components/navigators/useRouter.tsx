@@ -1,5 +1,5 @@
+import React from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { FC } from "react";
 import { ViewNames } from "./interfaces";
 import { useRapunzelStore } from "../../store/store";
 import { useRapunzelStorage } from "../../cache/storage";

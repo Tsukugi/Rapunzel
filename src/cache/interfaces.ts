@@ -8,6 +8,7 @@ export enum StorageEntries {
     apiLoaderConfig = "apiLoaderConfig",
     repository = "repository",
     config = "config",
+    library = "library",
 }
 
 export namespace Storage {
