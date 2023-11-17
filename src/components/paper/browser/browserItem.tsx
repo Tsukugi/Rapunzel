@@ -70,14 +70,19 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
                 setTitleProps({
                     backgroundColor: colors.primary,
                     color: colors.onPrimary,
-                    title: "Book added to the Library!"
+                    title: "Book added to the Library!",
                 }),
             onFinish: () => setTitleProps(defaultStyle),
             onIgnore: () => setTitleProps(defaultStyle),
         });
         onLongClick(thumbnail);
     };
-    if (!thumbnail) return <Text>Text</Text>;
+    if (!thumbnail)
+        return (
+            <Card style={{ ...styles.container, ...style }}>
+                <Card.Cover style={styles.cover} source={{ uri: "" }} />
+            </Card>
+        );
     return (
         <Card
             style={{ ...styles.container, ...style }}

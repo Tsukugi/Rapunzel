@@ -59,7 +59,7 @@ export const useRapunzelLoader = (
         setStoreState: (newValue: string[]) => void,
         length: number,
     ) => {
-        let loadedImages = new Array(length).fill(null) as string[];
+        let loadedImages = [] as string[];
         let index = 0;
 
         const onImageLoaded = async (url: string) => {
