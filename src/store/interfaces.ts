@@ -1,10 +1,11 @@
-import { Book, LilithRepo, Thumbnail, Headers, Chapter } from "@atsu/lilith";
+import { Book, LilithRepo, BookBase, Headers, Chapter } from "@atsu/lilith";
 import { UseState } from "@atsu/taihou";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelConfigBase } from "../config/interfaces";
 
 export interface RouterState {
     currentRoute: ViewNames;
+    history: ViewNames[];
 }
 
 export interface HeaderState {
@@ -24,8 +25,8 @@ export interface ConfigState extends RapunzelConfigBase {
 
 export interface BrowseState {
     activeProcessId: string;
-    bookListRecord: Record<string, Thumbnail>; // Key as Ids
-    bookList: Thumbnail[];
+    bookListRecord: Record<string, BookBase>; // Key as Ids
+    bookList: BookBase[];
     cachedImages: string[];
 }
 

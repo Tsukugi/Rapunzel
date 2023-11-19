@@ -3,16 +3,20 @@ import VirtualList from "../components/virtualList/virtualList";
 import { useRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
-import { useRouter } from "../components/navigators/useRouter";
-import { Book, Thumbnail } from "@atsu/lilith";
+import {
+    useRapunzelNavigation,
+    useRouter,
+} from "../components/navigators/useRouter";
+import { Book, BookBase } from "@atsu/lilith";
 import { BrowserItemProps } from "../components/paper/browser/browserItem";
 import CoupleItem from "../components/paper/browser/coupleItem";
 import { BrowseState } from "../store/interfaces";
 import { useRapunzelStore } from "../store/store";
-import { readFileRes } from "react-native-fs";
 import { useRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
 import { RapunzelLog } from "../config/log";
+import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
+import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
@@ -23,6 +27,7 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         browse: [browse, watchBrowse, unwatchBrowse],
     } = useRapunzelStore();
 
+    const { redirect } = useRapunzelNavigation();
     useRouter({ route: ViewNames.RapunzelBrowse });
 
     useEffect(() => {
@@ -42,42 +47,24 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         };
     }, []);
 
-    const onMangaSelectHandler = async (thumbnail: Thumbnail) => {
-        const { loadBook, loadChapter } = useRapunzelLoader();
-        const book = await loadBook(thumbnail.id);
-
-        // We go directly to read the chapter if it's only one
-        if (book?.chapters.length === 1) {
-            loadChapter(book.chapters[0]);
-            navigation.navigate(ViewNames.RapunzelReader);
-        } else {
-            navigation.navigate(ViewNames.RapunzelChapterSelect);
-        }
+    const onMangaSelectHandler = async (bookBase: BookBase) => {
+        const { loadBook } = useRapunzelLoader();
+        const book = await loadBook(bookBase.id);
+        if (!book) return;
+        goToFirstChapterOrSelectChapter({ book, redirect });
     };
 
-    const onMangaSaveHandler = async (thumbnail: Thumbnail) => {
+    const onMangaSaveHandler = async (bookBase: BookBase) => {
         const { loadBook, loadChapter } = useRapunzelLoader();
-        const book = await loadBook(thumbnail.id);
+        const book = await loadBook(bookBase.id);
         if (!book) return null;
 
         // We make available the first chapter beforehand
         if (book?.chapters.length === 1) {
-            loadChapter(book.chapters[0]);
+            loadChapter(book.chapters[0].id);
         }
 
         saveBookToLibrary(book);
-    };
-
-    const saveBookToLibrary = async (book: Book) => {
-        const { instance, setItem } = useRapunzelStorage();
-        const currentLibrary =
-            (await instance.getMapAsync<Record<string, Book>>(
-                StorageEntries.library,
-            )) || {};
-        setItem(StorageEntries.library, {
-            ...currentLibrary,
-            [`${config.repository}.${book.id}`]: book,
-        });
     };
 
     const load = loadedImages.filter((_, index) => index % 2 === 1);
@@ -88,20 +75,22 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
                 const couple: [BrowserItemProps, BrowserItemProps] = [
                     {
                         cover: loadedImages[index * 2].value,
-                        thumbnail: browse.bookList[index * 2],
+                        bookBase: browse.bookList[index * 2],
                         onClick: onMangaSelectHandler,
                         onLongClick: onMangaSaveHandler,
                     },
                     {
                         cover: loadedImages[index * 2 + 1]?.value,
-                        thumbnail: browse.bookList[index * 2 + 1],
+                        bookBase: browse.bookList[index * 2 + 1],
                         onClick: onMangaSelectHandler,
                         onLongClick: onMangaSaveHandler,
                     },
                 ];
                 return <CoupleItem couple={couple} />;
             }}
-            onEndReached={() => RapunzelLog.log("[VirtualList] on end reached!")}
+            onEndReached={() =>
+                RapunzelLog.log("[VirtualList] on end reached!")
+            }
         />
     );
 };

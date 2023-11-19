@@ -61,7 +61,9 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelChapterSelect: {
             component: RapunzelChapterSelect,
             icon: "tray",
-            header: {},
+            header: {
+                leftMode: HeaderLeftMode.back,
+            },
             viewDrawerOptions: {
                 title: "Chapter Select",
             },

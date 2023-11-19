@@ -1,5 +1,8 @@
+import { DrawerNavigationProp } from "@react-navigation/drawer";
+import { ParamListBase } from "@react-navigation/native";
+
 export interface UsesNavigation {
-    navigation: { navigate: (actionName: ViewNames) => void };
+    navigation: DrawerNavigationProp<ParamListBase, string, undefined>;
 }
 
 /*

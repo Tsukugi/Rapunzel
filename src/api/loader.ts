@@ -3,7 +3,7 @@ import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
-import { Book, Sort, Thumbnail, useAPILoader } from "@atsu/lilith";
+import { Book, BookBase, useAPILoader } from "@atsu/lilith";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
@@ -80,7 +80,7 @@ export const useRapunzelLoader = (
         RapunzelLog.log("[loadBook] Loading first chapter from code", code);
         const book = await loadBook(code);
         if (!book) return null;
-        const promise = await loadChapter(book.chapters[0]);
+        const promise = await loadChapter(book.chapters[0].id);
         return promise;
     };
 
@@ -141,7 +141,7 @@ export const useRapunzelLoader = (
             "[loadSearch] Searching for the following",
             searchValue,
         );
-        const data = await loader.search(searchValue, 1, Sort.RECENT);
+        const data = await loader.search(searchValue);
         if (!data || data.results.length === 0) {
             RapunzelLog.error(`[loadSearch] Search returned no results`);
             return null;
@@ -149,7 +149,7 @@ export const useRapunzelLoader = (
         reader.cachedImages = [];
 
         const covers: string[] = [];
-        const bookDict: Record<string, Thumbnail> = {};
+        const bookDict: Record<string, BookBase> = {};
 
         data.results.forEach((manga) => {
             covers.push(manga.cover.uri);

@@ -6,18 +6,23 @@ import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
 import CacheScreen from "../components/cache/cacheScreen";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
-import { useRouter } from "../components/navigators/useRouter";
+import {
+    useRapunzelNavigation,
+    useRouter,
+} from "../components/navigators/useRouter";
 import { useRapunzelStore } from "../store/store";
 import { useRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
 import { RapunzelSelect } from "../components/RapunzelSelect";
 import { removeValuesInParenthesesAndBrackets } from "../tools/string";
-import { useRapunzelLoader } from "../api/loader";
 import { useFocusEffect } from "@react-navigation/native";
+import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
+import { useRapunzelLoader } from "../api/loader";
+import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
 
 interface RapunzelSettingsProps extends UsesNavigation {}
 
-const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
+const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
     const {
         reader: [reader],
         config: [config],
@@ -25,6 +30,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
 
     const [libraryTitles, setLibraryTitles] = useState<Book[]>([]);
 
+    const { redirect } = useRapunzelNavigation();
     useRouter({ route: ViewNames.RapunzelSettings });
 
     useFocusEffect(
@@ -43,14 +49,19 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
         useRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
-    const onLoadHandler = (book: Book) => {
-        reader.book = book; // We go directly to read the chapter if it's only one
-        if (book?.chapters.length === 1) {
-            const { loadChapter } = useRapunzelLoader();
-            loadChapter(book.chapters[0]);
-            navigation.navigate(ViewNames.RapunzelReader);
+    const onLoadHandler = async (book: Book) => {
+        reader.book = book;
+        if (!book) return;
+        if (typeof book.chapters[0] === "string") {
+            const newFormatBook = await useRapunzelLoader().loadBook(
+                book.chapters[0],
+            );
+            if (!newFormatBook) return;
+            reader.book = newFormatBook;
+            saveBookToLibrary(newFormatBook);
+            goToFirstChapterOrSelectChapter({ book: newFormatBook, redirect });
         } else {
-            navigation.navigate(ViewNames.RapunzelChapterSelect);
+            goToFirstChapterOrSelectChapter({ book, redirect });
         }
     };
 

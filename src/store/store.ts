@@ -19,13 +19,14 @@ export const useRapunzelStore = () => {
 };
 
 export const initRapunzelStore = () => {
-    const defaultConfig: Partial<TaihouOptions> = { debug: false };
+    const defaultConfig: Partial<TaihouOptions> = { debug: true };
 
     const useConfig = <T>(name: string, state: T) =>
         useState(state, { ...defaultConfig, name });
 
     RapunzelState.router = useConfig<RouterState>("router", {
         currentRoute: ViewNames.RapunzelBrowse,
+        history: [],
     });
     RapunzelState.config = useConfig<ConfigState>("config", {
         debug: true,

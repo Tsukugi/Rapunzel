@@ -1,6 +1,6 @@
 import { Card, Text } from "react-native-paper";
 import { FC, useState } from "react";
-import { Thumbnail } from "@atsu/lilith";
+import { BookBase } from "@atsu/lilith";
 import { Dimensions, StyleSheet } from "react-native";
 import { LocalTheme } from "../../../../themes";
 import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
@@ -40,15 +40,15 @@ export interface BrowseItemWithStyle extends BrowserItemProps {
 }
 export interface BrowserItemProps {
     cover: string;
-    thumbnail: Thumbnail;
-    onClick: (thumbnail: Thumbnail) => void;
-    onLongClick: (thumbnail: Thumbnail) => void;
+    bookBase: BookBase;
+    onClick: (bookBase: BookBase) => void;
+    onLongClick: (bookBase: BookBase) => void;
 }
 
 const BrowseItem: FC<BrowseItemWithStyle> = ({
     style,
     cover,
-    thumbnail,
+    bookBase,
     onClick,
     onLongClick,
 }) => {
@@ -57,13 +57,15 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
     const defaultStyle = {
         backgroundColor: colors.backdrop,
         color: "white",
-        title: removeValuesInParenthesesAndBrackets(thumbnail.title),
+        title: `(${bookBase.availableLanguages.join(
+            ",",
+        )}) ${removeValuesInParenthesesAndBrackets(bookBase.title)}`,
     };
     const [titleProps, setTitleProps] = useState(defaultStyle);
 
     const [onLongPressEvent] = useTimedEvent(3000);
 
-    const onPressHandler = () => onClick(thumbnail);
+    const onPressHandler = () => onClick(bookBase);
     const onLongPressHandler = () => {
         onLongPressEvent({
             onStart: () =>
@@ -75,9 +77,9 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
             onFinish: () => setTitleProps(defaultStyle),
             onIgnore: () => setTitleProps(defaultStyle),
         });
-        onLongClick(thumbnail);
+        onLongClick(bookBase);
     };
-    if (!thumbnail)
+    if (!bookBase)
         return (
             <Card style={{ ...styles.container, ...style }}>
                 <Card.Cover style={styles.cover} source={{ uri: "" }} />
