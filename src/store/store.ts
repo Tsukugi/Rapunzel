@@ -5,10 +5,15 @@ import {
     BrowseState,
     ConfigState,
     HeaderState,
+    LoadingState,
     ReaderState,
     RouterState,
     Store,
+    TaihouEffect,
+    UseReactTaihou,
 } from "./interfaces";
+
+import { useEffect } from "react";
 
 const RapunzelState = {} as Store;
 export const useRapunzelStore = () => {
@@ -18,17 +23,39 @@ export const useRapunzelStore = () => {
     return RapunzelState;
 };
 
+const getDefaultConfig: () => Partial<TaihouOptions> = () => {
+    return { debug: false };
+};
+
+const useReactConfig = <T>(
+    name: string,
+    initialState: T,
+): UseReactTaihou<T> => {
+    const [state, watch, unwatch] = useState<T>(initialState, {
+        ...getDefaultConfig(),
+        name,
+    });
+
+    const effect: TaihouEffect<T> = (onUpdate) => {
+        useEffect(() => {
+            watch(onUpdate);
+
+            return () => {
+                unwatch(onUpdate);
+            };
+        }, []);
+    };
+
+    return [state, effect];
+};
+
 export const initRapunzelStore = () => {
-    const defaultConfig: Partial<TaihouOptions> = { debug: true };
-
-    const useConfig = <T>(name: string, state: T) =>
-        useState(state, { ...defaultConfig, name });
-
-    RapunzelState.router = useConfig<RouterState>("router", {
+    RapunzelState.router = useReactConfig<RouterState>("router", {
         currentRoute: ViewNames.RapunzelBrowse,
         history: [],
     });
-    RapunzelState.config = useConfig<ConfigState>("config", {
+
+    RapunzelState.config = useReactConfig<ConfigState>("config", {
         debug: true,
         useFallbackExtensionOnDownload: true,
         apiLoaderConfig: {
@@ -38,21 +65,28 @@ export const initRapunzelStore = () => {
         webviewUrl: `https://nhentai.net/`,
         repository: LilithRepo.NHentai,
     });
-    RapunzelState.reader = useConfig<ReaderState>("reader", {
+
+    RapunzelState.reader = useReactConfig<ReaderState>("reader", {
         activeProcessId: "",
         book: null,
         chapter: null,
         cachedImages: [],
     });
 
-    RapunzelState.header = useConfig<HeaderState>("header", {
+    RapunzelState.header = useReactConfig<HeaderState>("header", {
         searchValue: "ass",
     });
 
-    RapunzelState.browse = useConfig<BrowseState>("browse", {
+    RapunzelState.browse = useReactConfig<BrowseState>("browse", {
         activeProcessId: "",
         bookListRecord: {},
         bookList: [],
         cachedImages: [],
+        page: 1,
+    });
+
+    RapunzelState.loader = useReactConfig<LoadingState>("loader", {
+        browse: false,
+        reader: false,
     });
 };

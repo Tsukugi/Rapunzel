@@ -15,27 +15,20 @@ interface RapunzelReaderProps {}
 const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
     const {
-        reader: [reader, watchReader, unwatchReader],
+        reader: [, readerEffect],
     } = useRapunzelStore();
 
     useRouter({ route: ViewNames.RapunzelReader });
 
-    useEffect(() => {
-        const onWatchReader = async ({ cachedImages }: ReaderState) => {
-            setLoadedImages(
-                cachedImages.map((image, index) => ({
-                    id: `${index + 1}`,
-                    index,
-                    value: image,
-                })),
-            );
-        };
-        watchReader(onWatchReader);
-
-        return () => {
-            unwatchReader(onWatchReader);
-        };
-    }, []);
+    readerEffect(({ cachedImages }) => {
+        setLoadedImages(
+            cachedImages.map((image, index) => ({
+                id: `${index + 1}`,
+                index,
+                value: image,
+            })),
+        );
+    });
 
     const onReloadHandler = (item: VirtualItem<string>) => {
         const newUri = ""; // reader.book?.chapters[0].pages[item.index].uri;

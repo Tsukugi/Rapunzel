@@ -1,7 +1,7 @@
 import { Card, Text } from "react-native-paper";
 import { FC, useState } from "react";
 import { BookBase } from "@atsu/lilith";
-import { Dimensions, StyleSheet } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { LocalTheme } from "../../../../themes";
 import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
 
@@ -36,22 +36,30 @@ const useTimedEvent = (delay: number) => {
 };
 
 export interface BrowseItemWithStyle extends BrowserItemProps {
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 export interface BrowserItemProps {
-    cover: string;
-    bookBase: BookBase;
-    onClick: (bookBase: BookBase) => void;
-    onLongClick: (bookBase: BookBase) => void;
+    cover?: string;
+    bookBase: BookBase | null;
+    onClick?: (bookBase: BookBase) => void;
+    onLongClick?: (bookBase: BookBase) => void;
 }
 
 const BrowseItem: FC<BrowseItemWithStyle> = ({
     style,
     cover,
     bookBase,
-    onClick,
-    onLongClick,
+    onClick = () => {},
+    onLongClick = () => {},
 }) => {
+    if (!bookBase) {
+        return (
+            <Card style={{ ...styles.container, ...style }}>
+                <View style={styles.cover}></View>
+            </Card>
+        );
+    }
+
     const { colors } = LocalTheme.useTheme();
 
     const defaultStyle = {
@@ -79,12 +87,7 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
         });
         onLongClick(bookBase);
     };
-    if (!bookBase)
-        return (
-            <Card style={{ ...styles.container, ...style }}>
-                <Card.Cover style={styles.cover} source={{ uri: "" }} />
-            </Card>
-        );
+
     return (
         <Card
             style={{ ...styles.container, ...style }}

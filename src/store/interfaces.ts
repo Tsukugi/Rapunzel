@@ -28,12 +28,22 @@ export interface BrowseState {
     bookListRecord: Record<string, BookBase>; // Key as Ids
     bookList: BookBase[];
     cachedImages: string[];
+    page: number;
 }
 
+export interface LoadingState {
+    browse: boolean;
+    reader: boolean;
+}
+
+export type TaihouEffect<T> = (onUpdate: (newValue: T) => void) => void;
+export type UseReactTaihou<T> = [T, TaihouEffect<T>];
+
 export interface Store {
-    router: UseState<RouterState>;
-    config: UseState<ConfigState>;
-    header: UseState<HeaderState>;
-    reader: UseState<ReaderState>;
-    browse: UseState<BrowseState>;
+    router: UseReactTaihou<RouterState>;
+    config: UseReactTaihou<ConfigState>;
+    header: UseReactTaihou<HeaderState>;
+    reader: UseReactTaihou<ReaderState>;
+    browse: UseReactTaihou<BrowseState>;
+    loader: UseReactTaihou<LoadingState>;
 }

@@ -30,18 +30,18 @@ const HeaderBar = ({
 }: HeaderBarProps) => {
     const {
         header: [header],
+        loader: [, useLoaderEffect],
     } = useRapunzelStore();
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    useLoaderEffect(({ browse, reader }) => setIsLoading(browse || reader));
+
     const onSubmitHandler = (newValue: string) => {
         header.searchValue = newValue;
-        setIsLoading(true);
 
         if (!newValue) return;
         useRapunzelStorage().setItem(StorageEntries.searchText, newValue);
-        useRapunzelLoader()
-            .loadSearch(newValue)
-            .finally(() => setIsLoading(false));
+        useRapunzelLoader().loadSearch(newValue);
     };
 
     const onThemeToggle = () => {

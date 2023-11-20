@@ -3,26 +3,28 @@ import BrowseItem, { BrowserItemProps } from "./browserItem";
 import { Dimensions, StyleSheet, View } from "react-native";
 
 interface CoupleItemProps {
-    couple: [BrowserItemProps, BrowserItemProps];
+    couple: [BrowserItemProps | null, BrowserItemProps | null];
 }
+
+const ItemProvider = ({ item }: { item: BrowserItemProps | null }) => {
+    return item ? (
+        <BrowseItem
+            cover={item.cover}
+            bookBase={item.bookBase}
+            onClick={item.onClick}
+            onLongClick={item.onLongClick}
+            style={styles.item}
+        />
+    ) : (
+        <BrowseItem bookBase={null} />
+    );
+};
 
 const CoupleItem: FC<CoupleItemProps> = ({ couple }) => {
     return (
         <View style={styles.container}>
-            <BrowseItem
-                cover={couple[0]?.cover}
-                bookBase={couple[0]?.bookBase}
-                onClick={couple[0]?.onClick}
-                onLongClick={couple[0]?.onLongClick}
-                style={styles.item}
-            />
-            <BrowseItem
-                cover={couple[1]?.cover}
-                bookBase={couple[1]?.bookBase}
-                onClick={couple[1]?.onClick}
-                onLongClick={couple[1]?.onLongClick}
-                style={styles.item}
-            />
+            <ItemProvider item={couple[0]} />
+            <ItemProvider item={couple[1]} />
         </View>
     );
 };

@@ -53,6 +53,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
         reader.book = book;
         if (!book) return;
         if (typeof book.chapters[0] === "string") {
+            // This functionality is for older versions of chapter, when it was only an ID
             const newFormatBook = await useRapunzelLoader().loadBook(
                 book.chapters[0],
             );

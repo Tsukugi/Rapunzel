@@ -1,9 +1,11 @@
+import { SearchQueryOptions } from "@atsu/lilith/dist/interfaces/base";
 import { DeviceCache, StartLoadingImagesProps } from "../cache/cache";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
 import { Book, BookBase, useAPILoader } from "@atsu/lilith";
+import { BrowseState } from "../store/interfaces";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 const loadImageList = async ({
@@ -38,12 +40,13 @@ export const useRapunzelLoader = (
     const getNewId = () => RandomTools.generateRandomId(10);
 
     const {
+        loader: [loader],
         reader: [reader],
         browse: [browse],
         config: [config],
     } = useRapunzelStore();
 
-    const loader = useAPILoader({
+    const apiLoader = useAPILoader({
         repo: config.repository,
         configurations: {
             headers: config.apiLoaderConfig,
@@ -55,10 +58,7 @@ export const useRapunzelLoader = (
      * @param setStoreState
      * @returns
      */
-    const imageStateLoader = (
-        setStoreState: (newValue: string[]) => void,
-        length: number,
-    ) => {
+    const imageStateLoader = (setStoreState: (newValue: string[]) => void) => {
         let loadedImages = [] as string[];
         let index = 0;
 
@@ -91,7 +91,7 @@ export const useRapunzelLoader = (
      */
     const loadBook = async (code: string): Promise<Book | null> => {
         RapunzelLog.log("[loadBook] Loading book with code", code);
-        const book = await loader.getBook(code).catch(RapunzelLog.error);
+        const book = await apiLoader.getBook(code).catch(RapunzelLog.error);
         if (!book || book.chapters.length === 0) return null;
 
         reader.book = book;
@@ -106,9 +106,18 @@ export const useRapunzelLoader = (
      * @returns
      */
     const loadChapter = async (id: string) => {
+        loader.reader = true;
         RapunzelLog.log("[loadBook] Loading  chapter from id", id);
-        const chapter = await loader.getChapter(id).catch(RapunzelLog.error);
-        if (!chapter) return null;
+        const chapter = await apiLoader.getChapter(id).catch(RapunzelLog.error);
+
+        const onFinish = () => {
+            loader.reader = false;
+        };
+
+        if (!chapter) {
+            onFinish();
+            return null;
+        }
 
         const images = chapter.pages.map((page) => page.uri);
         reader.chapter = chapter;
@@ -120,7 +129,7 @@ export const useRapunzelLoader = (
             data: images,
             onImageLoaded: imageStateLoader((value) => {
                 reader.cachedImages = value;
-            }, images.length),
+            }),
             shouldCancelLoad: (id) => {
                 const cancel = id !== reader.activeProcessId;
                 if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
@@ -128,7 +137,28 @@ export const useRapunzelLoader = (
             },
         });
 
+        promise.finally(onFinish);
         return promise;
+    };
+
+    const getSearch = async (
+        searchValue: string,
+        searchOptions?: Partial<SearchQueryOptions>,
+    ) => {
+        const searchResult = await apiLoader.search(searchValue, searchOptions);
+        if (!searchResult || searchResult.results.length === 0) {
+            RapunzelLog.error(`[loadSearch] Search returned no results`);
+            return null;
+        }
+        const imagesToCache: string[] = [];
+        const bookDict: Record<string, BookBase> = {};
+
+        searchResult.results.forEach((manga) => {
+            imagesToCache.push(manga.cover.uri);
+            bookDict[manga.id] = manga;
+        });
+
+        return { imagesToCache, bookDict, searchResult };
     };
 
     /**
@@ -136,43 +166,63 @@ export const useRapunzelLoader = (
      * @param searchValue
      * @returns
      */
-    const loadSearch = async (searchValue: string) => {
+    const loadSearch = async (
+        searchValue: string,
+        searchOptions?: Partial<SearchQueryOptions>,
+        clean: boolean = true,
+    ) => {
+        if (loader.browse) return;
+        loader.browse = true;
+
+        const onFinish = () => {
+            loader.browse = false;
+        };
+
+        if (clean) {
+            browse.cachedImages = [];
+            browse.bookList = [];
+            browse.bookListRecord = {};
+            browse.activeProcessId = getNewId();
+            browse.page = 1;
+        }
+
         RapunzelLog.log(
             "[loadSearch] Searching for the following",
             searchValue,
         );
-        const data = await loader.search(searchValue);
-        if (!data || data.results.length === 0) {
-            RapunzelLog.error(`[loadSearch] Search returned no results`);
+        const values = await getSearch(searchValue, searchOptions);
+        if (!values) {
+            onFinish();
             return null;
         }
-        reader.cachedImages = [];
 
-        const covers: string[] = [];
-        const bookDict: Record<string, BookBase> = {};
-
-        data.results.forEach((manga) => {
-            covers.push(manga.cover.uri);
-            bookDict[manga.id] = manga;
-        });
-
-        browse.bookList = data.results;
-        browse.bookListRecord = bookDict;
-
-        browse.activeProcessId = getNewId();
+        const { searchResult, imagesToCache, bookDict } = values;
 
         const promise = loadImageList({
             id: browse.activeProcessId,
-            data: covers,
-            onImageLoaded: imageStateLoader((value) => {
-                browse.cachedImages = value;
-            }, covers.length),
+            data: imagesToCache,
+            onImageLoaded: async () => {},
             shouldCancelLoad: (id) => {
                 const cancel = id !== browse.activeProcessId;
                 if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
                 return cancel;
             },
         });
+
+        promise
+            .then((value) => {
+                browse.bookList = [...browse.bookList, ...searchResult.results];
+                browse.bookListRecord = {
+                    ...browse.bookListRecord,
+                    ...bookDict,
+                };
+                browse.cachedImages = [...browse.cachedImages, ...value];
+                if (searchOptions?.page) {
+                    browse.page = searchOptions.page;
+                }
+            })
+            .catch(() => {})
+            .finally(onFinish);
 
         return promise;
     };
