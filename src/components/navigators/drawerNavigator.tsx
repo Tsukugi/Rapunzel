@@ -10,48 +10,48 @@ import {
 import HeaderBar from "../paper/header/headerBar";
 import { HeaderLeftMode } from "../paper/interfaces";
 
-import { useRapunzelStore } from "../../store/store";
 import { LocalTheme } from "../../../themes";
 
-import { ViewDict, ViewNavigationData } from "./navigation";
+import { ViewDict, ViewNavigationData } from "./navigationConfig";
 import CustomDrawerContent from "./customDrawerContent";
-import { UsesNavigation, ViewNames } from "./interfaces";
+import { ViewNames } from "./interfaces";
 import { useRapunzelNavigation } from "./useRouter";
+import { Dimensions, View, ViewStyle } from "react-native";
 
 interface DrawerNavigatorProps {
     views: Partial<ViewDict>;
 }
 
 const Drawer = createDrawerNavigator();
-interface HeaderBarImplProps extends UsesNavigation {
-    view: ViewNavigationData;
-}
 
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     const { colors } = LocalTheme.useTheme();
     const { goBack } = useRapunzelNavigation();
-    const {
-        router: [router],
-    } = useRapunzelStore();
+    const { width } = Dimensions.get("screen");
+    const headerAbsoluteStyle: ViewStyle = {
+        position: "absolute",
+        opacity: 0.5,
+        width: width,
+        top: 20,
+    };
 
     const useOptions = (view: ViewNavigationData): DrawerNavigationOptions => {
         const HeaderBarImpl = ({
             navigation,
-        }: DrawerHeaderProps): ReactNode => {
-            return (
-                <HeaderBar
-                    showSearch={view.header.showSearch}
-                    leftMode={view.header.leftMode || HeaderLeftMode.menu}
-                    onBack={goBack}
-                    openMenu={navigation.openDrawer}
-                    openOptions={() => {}}
-                    openSearch={() => {}}
-                    onSearchProcess={(view) => {}}
-                />
-            );
-        };
+        }: DrawerHeaderProps): ReactNode => (
+            <HeaderBar
+                style={view.headerOptions.absoluteMode && headerAbsoluteStyle}
+                showSearch={view.headerOptions.showSearch}
+                leftMode={view.headerOptions.leftMode || HeaderLeftMode.menu}
+                onBack={goBack}
+                openMenu={navigation.openDrawer}
+                openOptions={() => {}}
+                openSearch={() => {}}
+            />
+        );
 
         return {
+            freezeOnBlur: true,
             drawerActiveTintColor: colors.primary,
             drawerLabelStyle: {
                 color: colors.onBackground,
@@ -67,6 +67,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
             swipeEdgeWidth: 150,
             ...view.viewDrawerOptions,
             header: HeaderBarImpl,
+            drawerItemStyle: !view.viewDrawerOptions && { display: "none" },
             drawerIcon: ({ size }) => <Icon size={size} source={view.icon} />,
         };
     };

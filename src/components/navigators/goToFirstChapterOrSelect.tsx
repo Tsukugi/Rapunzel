@@ -1,13 +1,16 @@
 import { ViewNames } from "./interfaces";
 import { useRapunzelLoader } from "../../api/loader";
 import { Book } from "@atsu/lilith";
-import { RapunzelLog } from "../../config/log";
 
 export interface GoToFirstChapterOrSelectProps {
     book: Book;
     redirect: (to: ViewNames) => void;
 }
 
+/**
+ * Function to navigate to the first chapter of a book or to the chpater selection view.
+ * @param props - The props for the function.
+ */
 export const goToFirstChapterOrSelectChapter = ({
     book,
     redirect,

@@ -1,6 +1,11 @@
 import { Appbar } from "react-native-paper";
-import { useEffect, useState } from "react";
-import { Appearance } from "react-native";
+import { useState } from "react";
+import {
+    Appearance,
+    RegisteredStyle,
+    StyleSheet,
+    ViewStyle,
+} from "react-native";
 
 import { useRapunzelStore } from "../../../store/store";
 import { ViewNames } from "../../navigators/interfaces";
@@ -13,22 +18,22 @@ import PaperSearch from "./search";
 import HeaderLeftBtn, { LeftModeProps } from "./headerLeftBtn";
 import { RapunzelLog } from "../../../config/log";
 interface HeaderBarProps extends LeftModeProps {
+    style?: ViewStyle | false;
     showSearch?: boolean;
     openSearch: () => void;
     openOptions: () => void;
-    onSearchProcess: (view: ViewNames) => void;
 }
 
 const HeaderBar = ({
+    style,
     showSearch,
     leftMode,
     onBack,
     openMenu,
     openOptions,
-    openSearch,
-    onSearchProcess,
 }: HeaderBarProps) => {
     const {
+        reader: [reader],
         header: [header],
         loader: [, useLoaderEffect],
     } = useRapunzelStore();
@@ -53,13 +58,13 @@ const HeaderBar = ({
     };
 
     return (
-        <Appbar.Header>
+        <Appbar.Header style={style}>
             <HeaderLeftBtn
                 onBack={onBack}
                 openMenu={openMenu}
                 leftMode={leftMode}
             />
-            <Appbar.Content title="" />
+            <Appbar.Content mode={"small"} title={reader.book?.title} />
             {showSearch ? (
                 <PaperSearch
                     defaultValue={header.searchValue}

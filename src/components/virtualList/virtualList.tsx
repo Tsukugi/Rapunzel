@@ -24,21 +24,20 @@ const VirtualList = <T,>({
 }: VirtualListProps<T>) => {
     const { colors } = LocalTheme.useTheme();
     return (
-        <View style={styles.container}>
-            <VirtualizedList
-                data={data}
-                initialNumToRender={1}
-                maxToRenderPerBatch={3}
-                windowSize={6}
-                endFillColor={colors.backdrop}
-                renderItem={renderer}
-                keyExtractor={(_, index) => index.toString()}
-                getItemCount={(_data) => _data.length}
-                getItem={getItem}
-                onEndReached={onEndReached}
-                onEndReachedThreshold={200}
-            />
-        </View>
+        <VirtualizedList
+            style={styles.container}
+            data={data}
+            initialNumToRender={1}
+            maxToRenderPerBatch={3}
+            windowSize={6}
+            endFillColor={colors.backdrop}
+            renderItem={renderer}
+            keyExtractor={(_, index) => index.toString()}
+            getItemCount={(_data) => _data.length}
+            getItem={getItem}
+            onEndReached={onEndReached}
+            onEndReachedThreshold={200}
+        />
     );
 };
 

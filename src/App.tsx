@@ -1,7 +1,7 @@
 import React from "react";
 
 import DrawerNavigator from "./components/navigators/drawerNavigator";
-import { Navigation } from "./components/navigators/navigation";
+import { Navigation } from "./components/navigators/navigationConfig";
 
 const Views = Navigation.getViews();
 

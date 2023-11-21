@@ -15,11 +15,16 @@ export type ViewDict = Record<ViewNames, ViewNavigationData>;
 export interface ViewNavigationData {
     component: React.FC<UsesNavigation>;
     icon: string;
-    header: {
+    headerOptions: {
+        absoluteMode?: boolean;
         leftMode?: HeaderLeftMode;
         showSearch?: boolean;
     };
-    viewDrawerOptions: Partial<DrawerNavigationOptions>;
+    /*
+     * If viewDrawerOptions is undefined the screen will not be rendered on the drawer as a drawerItem,
+     * but we can still navigate to it.
+     */
+    viewDrawerOptions?: Partial<DrawerNavigationOptions> | undefined;
 }
 
 const getViews = (): Partial<ViewDict> => {
@@ -27,7 +32,7 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelBrowse: {
             component: RapunzelBrowse,
             icon: "card-search-outline",
-            header: { showSearch: true },
+            headerOptions: { showSearch: true },
             viewDrawerOptions: {
                 title: "Browse",
             },
@@ -35,8 +40,9 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelReader: {
             component: RapunzelReader,
             icon: "book",
-            header: {
+            headerOptions: {
                 leftMode: HeaderLeftMode.back,
+                absoluteMode: true,
             },
             viewDrawerOptions: {
                 title: "Reader",
@@ -45,7 +51,7 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelSettings: {
             component: RapunzelSettings,
             icon: "application-settings",
-            header: {},
+            headerOptions: {},
             viewDrawerOptions: {
                 title: "Settings",
             },
@@ -53,7 +59,7 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelWebView: {
             component: RapunzelWebView,
             icon: "wifi",
-            header: {},
+            headerOptions: {},
             viewDrawerOptions: {
                 title: "WebView",
             },
@@ -61,11 +67,8 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelChapterSelect: {
             component: RapunzelChapterSelect,
             icon: "tray",
-            header: {
+            headerOptions: {
                 leftMode: HeaderLeftMode.back,
-            },
-            viewDrawerOptions: {
-                title: "Chapter Select",
             },
         },
     };

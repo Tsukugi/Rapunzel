@@ -1,5 +1,5 @@
-import React, { FC, HTMLProps, ReactNode } from "react";
-import { SafeAreaView, StatusBar, View } from "react-native";
+import React, { FC, Fragment, HTMLProps, ReactNode } from "react";
+import { StatusBar, View } from "react-native";
 import { LocalTheme } from "../../themes";
 
 interface ContentProps extends HTMLProps<HTMLDivElement> {
@@ -9,16 +9,15 @@ const Content: FC<ContentProps> = ({ children }) => {
     const { colors } = LocalTheme.useTheme();
 
     return (
-        <SafeAreaView
+        <View
             style={{
                 backgroundColor: colors.background,
-                padding: 20,
-                minHeight: 1000,
+                flex: 1,
             }}
         >
             <StatusBar />
             <View>{children}</View>
-        </SafeAreaView>
+        </View>
     );
 };
 
