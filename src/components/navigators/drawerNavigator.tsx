@@ -66,7 +66,8 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
             drawerType: "back",
             swipeEdgeWidth: 150,
             ...view.viewDrawerOptions,
-            header: HeaderBarImpl,
+            headerShown: !view.headerOptions.hideReader,
+            header: !view.headerOptions.hideReader ? HeaderBarImpl : undefined,
             drawerItemStyle: !view.viewDrawerOptions && { display: "none" },
             drawerIcon: ({ size }) => <Icon size={size} source={view.icon} />,
         };

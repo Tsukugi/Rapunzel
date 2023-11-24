@@ -48,8 +48,8 @@ const PinchableImage: React.FC<PinchableBoxProps> = ({
             image.height || width * 1.4,
         );
         return {
-            width: scaledWidth * savedScale.value,
-            height: scaledHeight * savedScale.value,
+            width: scaledWidth * scale.value,
+            height: scaledHeight * scale.value,
         };
     });
 

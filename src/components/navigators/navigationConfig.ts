@@ -12,14 +12,17 @@ import { HeaderLeftMode } from "../paper/interfaces";
 
 export type ViewDict = Record<ViewNames, ViewNavigationData>;
 
+interface HeaderOptions {
+    hideReader: boolean;
+    absoluteMode: boolean;
+    leftMode: HeaderLeftMode;
+    showSearch: boolean;
+}
+
 export interface ViewNavigationData {
     component: React.FC<UsesNavigation>;
     icon: string;
-    headerOptions: {
-        absoluteMode?: boolean;
-        leftMode?: HeaderLeftMode;
-        showSearch?: boolean;
-    };
+    headerOptions: Partial<HeaderOptions>;
     /*
      * If viewDrawerOptions is undefined the screen will not be rendered on the drawer as a drawerItem,
      * but we can still navigate to it.
@@ -41,8 +44,7 @@ const getViews = (): Partial<ViewDict> => {
             component: RapunzelReader,
             icon: "book",
             headerOptions: {
-                leftMode: HeaderLeftMode.back,
-                absoluteMode: true,
+                hideReader: true,
             },
             viewDrawerOptions: {
                 title: "Reader",
