@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useState } from "react";
 import { List } from "react-native-paper";
-import { Book, LilithRepo } from "@atsu/lilith";
+import { Book, LilithLanguage, LilithRepo } from "@atsu/lilith";
 
 import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
@@ -44,8 +44,12 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
         }, []),
     );
 
-    const onSetValueHandler = (value: string) => {
-        config.repository = value as LilithRepo;
+    const onSetValueHandlerRepository = (value: string[]) => {
+        config.repository = value[0] as LilithRepo;
+        useRapunzelStorage().setItem(StorageEntries.config, config);
+    };
+    const onSetValueHandlerLanguages = (value: string[]) => {
+        config.languages = value as LilithLanguage[];
         useRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
@@ -80,9 +84,15 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
                     />
                     <RapunzelSelect
                         label="Repository"
-                        initialValue={config.repository}
+                        initialValue={[config.repository]}
                         list={[LilithRepo.NHentai, LilithRepo.MangaDex]}
-                        onSelect={onSetValueHandler}
+                        onSelect={onSetValueHandlerRepository}
+                    />
+                    <RapunzelSelect
+                        label="Languages"
+                        initialValue={[LilithLanguage.english]}
+                        list={Object.values(LilithLanguage)}
+                        onSelect={onSetValueHandlerLanguages}
                     />
                 </List.Accordion>
                 <List.Accordion title="Device and Cache" id="2">

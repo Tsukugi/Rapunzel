@@ -1,5 +1,5 @@
 import { TaihouOptions, useState } from "@atsu/taihou";
-import { LilithRepo } from "@atsu/lilith";
+import { LilithLanguage, LilithRepo } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
     BrowseState,
@@ -64,6 +64,7 @@ export const initRapunzelStore = () => {
         },
         webviewUrl: `https://nhentai.net/`,
         repository: LilithRepo.NHentai,
+        languages: [LilithLanguage.english, LilithLanguage.spanish],
     });
 
     RapunzelState.reader = useReactConfig<ReaderState>("reader", {
@@ -74,7 +75,7 @@ export const initRapunzelStore = () => {
     });
 
     RapunzelState.header = useReactConfig<HeaderState>("header", {
-        searchValue: "ass",
+        searchValue: "",
     });
 
     RapunzelState.browse = useReactConfig<BrowseState>("browse", {

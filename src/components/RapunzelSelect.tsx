@@ -2,6 +2,7 @@ import { useState, useEffect, FC } from "react";
 import { StyleProp, TextStyle } from "react-native";
 import { PaperSelect } from "react-native-paper-select";
 import { LocalTheme } from "../../themes";
+import { SelectionCallback } from "react-native-paper-select/lib/typescript/interface/paperSelect.interface";
 
 interface SelectItem {
     _id: string;
@@ -17,9 +18,9 @@ interface StateValues {
 
 export interface RapunzelSelectProps {
     label: string;
-    initialValue: string;
+    initialValue: string[];
     list: string[];
-    onSelect: (newValue: string) => void;
+    onSelect: (newValue: string[]) => void;
 }
 export const RapunzelSelect: FC<RapunzelSelectProps> = ({
     label,
@@ -41,16 +42,17 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
         let getData = async () => {
             if (!isMounted) return;
 
-            const firstItem: SelectItem = (() => {
-                const index =
-                    list.findIndex((item) => item === initialValue) || 0;
-                return { _id: `${index}`, value: list[index] };
-            })();
+            const initialItems: SelectItem[] = list
+                .filter((item) => initialValue.includes(item))
+                .map((item, index) => ({
+                    _id: `${index}`,
+                    value: item,
+                }));
 
             setStateValues({
                 ...stateValues,
-                value: firstItem.value,
-                selectedList: [firstItem],
+                value: initialItems.map((item) => item.value).join(", "),
+                selectedList: initialItems,
             });
         };
 
@@ -59,6 +61,16 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
             isMounted = false;
         };
     }, []);
+
+    const onSelectionHandler: SelectionCallback = (values) => {
+        setStateValues({
+            ...stateValues,
+            value: values.text,
+            selectedList: values.selectedList,
+            error: "",
+        });
+        onSelect(values.selectedList.map((item) => item.value));
+    };
 
     const style: StyleProp<TextStyle> = {
         backgroundColor: colors.background,
@@ -77,20 +89,12 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
             textInputStyle={style}
             label={label}
             value={stateValues.value}
-            onSelection={(value: any) => {
-                setStateValues({
-                    ...stateValues,
-                    value: value.text,
-                    selectedList: value.selectedList,
-                    error: "",
-                });
-                onSelect(value.text);
-            }}
+            onSelection={onSelectionHandler}
             arrayList={[...stateValues.list]}
             hideSearchBox={true}
             selectedArrayList={[...stateValues.selectedList]}
             errorText={stateValues.error}
-            multiEnable={false}
+            multiEnable={true}
         />
     );
 };

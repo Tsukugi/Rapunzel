@@ -1,6 +1,5 @@
 import React, { PropsWithChildren } from "react";
 import {
-    View,
     VirtualizedList,
     StyleSheet,
     ListRenderItem,

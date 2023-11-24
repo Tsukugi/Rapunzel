@@ -1,5 +1,11 @@
-import { Book, LilithRepo, BookBase, Headers, Chapter } from "@atsu/lilith";
-import { UseState } from "@atsu/taihou";
+import {
+    Book,
+    LilithRepo,
+    BookBase,
+    Headers,
+    Chapter,
+    LilithLanguage,
+} from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelConfigBase } from "../config/interfaces";
 
@@ -15,12 +21,13 @@ export interface ReaderState {
     activeProcessId: string;
     book: Book | null;
     chapter: Chapter | null;
-    cachedImages: string[];
+    cachedImages: RapunzelImage[];
 }
 export interface ConfigState extends RapunzelConfigBase {
     apiLoaderConfig: Headers;
     webviewUrl: string;
     repository: LilithRepo;
+    languages: LilithLanguage[];
 }
 
 export interface BrowseState {
@@ -46,4 +53,10 @@ export interface Store {
     reader: UseReactTaihou<ReaderState>;
     browse: UseReactTaihou<BrowseState>;
     loader: UseReactTaihou<LoadingState>;
+}
+
+export interface RapunzelImage {
+    uri: string;
+    width: number | null;
+    height: number | null;
 }

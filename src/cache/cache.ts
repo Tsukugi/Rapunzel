@@ -4,19 +4,35 @@ import { RapunzelLog } from "../config/log";
 import { PromiseTools } from "../tools/promise";
 import { RandomTools } from "../tools/random";
 
+/**
+ * Constant representing the path to the directory used for caching images.
+ * Uses the React Native File System's Document Directory.
+ */
 const ImageCacheDirectory = RNFS.DocumentDirectoryPath;
 
-type Extension = ".jpg" | ".jpeg" | ".png" | ".gif"; // Fallback extensions to try
+/**
+ * Type representing supported image file extensions.
+ */
+type Extension = ".jpg" | ".jpeg" | ".png" | ".gif";
+
+/**
+ * Array containing supported image file extensions in the order of preference for fallbacks.
+ */
 const SupportedExtensions: Extension[] = [".jpg", ".png", ".jpeg", ".gif"];
 
 interface RequestImageWithFallback {
     url: string;
     downloadHandler: (url: string) => Promise<{ statusCode: number }>;
 }
+/**
+ * Asynchronously downloads an image with fallback mechanisms in case the initial download fails.
+ * @param {RequestImageWithFallback} props - The properties needed for downloading an image with fallback.
+ * @returns {Promise<string | null>} - A Promise that resolves to the URL of the successfully downloaded image. Returns null if all fallbacks fail.
+ */
 const downloadImageWithFallback = async ({
     url,
     downloadHandler,
-}: RequestImageWithFallback) => {
+}: RequestImageWithFallback): Promise<string | null> => {
     let extensionIndex = 0;
 
     const downloadWithExtension = (extensionIndex: number) =>
@@ -30,7 +46,7 @@ const downloadImageWithFallback = async ({
                     RapunzelLog.warn(
                         `[downloadImageWithFallback] Retrying download with ${SupportedExtensions[nextFallbackIndex]} for ${url}`,
                     );
-                    await downloadWithExtension(nextFallbackIndex);
+                    onSuccess(await downloadWithExtension(nextFallbackIndex));
                 }
             };
 
@@ -67,10 +83,16 @@ const downloadImageWithFallback = async ({
 };
 
 const getRandomDelay = () => Math.floor(Math.random() * (200 - 100 + 1)) + 100;
+
 interface DownloadAndCacheImageProps {
     uri: string;
     onImageCached?: (path: string) => void;
 }
+/**
+ * Asynchronously downloads and caches an image. If the image is already cached, returns the local path immediately.
+ * @param {DownloadAndCacheImageProps} props - The properties needed for downloading and caching an image.
+ * @returns {Promise<string>} - A Promise that resolves to the local path of the cached or newly downloaded image.
+ */
 const downloadAndCacheImage = async ({
     uri,
     onImageCached = (path) => {},
@@ -112,9 +134,15 @@ const downloadAndCacheImage = async ({
     return result;
 };
 
+/**
+ * Generates the full path for a file in the ImageCacheDirectory based on the provided filename.
+ * @param {string} filename - The name of the file for which to generate the cache path.
+ * @returns {string} - The full path to the file in the ImageCacheDirectory.
+ */
 const getCachePath = (filename: string) => {
     return `${ImageCacheDirectory}/${filename}`;
 };
+
 export interface StartLoadingImagesProps {
     id?: string;
     data: string[];
@@ -122,6 +150,13 @@ export interface StartLoadingImagesProps {
     shouldCancelLoad: (id: string) => boolean;
 }
 
+/**
+ * Asynchronously starts loading a list of images, downloading and caching each image in the provided data array.
+ * @param {StartLoadingImagesProps} props - The properties needed for starting the image loading process.
+ * @returns {Promise<string[]>} - A Promise that resolves to an array of indexes representing the loaded images.
+ * The indexes are the URLs of the loaded images. If the loading process is interrupted or encounters an error,
+ * the Promise may resolve with fewer indexes.
+ */
 const startLoadingImages = async ({
     id = RandomTools.generateRandomId(10),
     data,
@@ -152,6 +187,10 @@ const startLoadingImages = async ({
     return indexes;
 };
 
+/**
+ * Asynchronously clears a specific file by deleting it.
+ * @param {string} filePath - The path to the file to be deleted.
+ */
 const clearSpecificFile = async (filePath: string) => {
     try {
         const exists = await RNFS.exists(filePath);
@@ -167,6 +206,13 @@ const clearSpecificFile = async (filePath: string) => {
     }
 };
 
+/**
+ * Asynchronously redownloads and caches an image, replacing the existing image file at the specified filePath.
+ * @param {string} filePath - The path to the existing image file that will be replaced.
+ * @param {string} imageUri - The URI of the image to be redownloaded and cached.
+ * @param {(localImagePath: string) => void} onImageCached - A callback function called when the image is successfully cached, providing the local image path.
+ * @returns {Promise<string | null>} - A Promise that resolves to the local image path after redownloading and caching. Returns null if the imageUri is falsy.
+ */
 const redownloadImage = async (
     filePath: string,
     imageUri: string,
@@ -181,6 +227,11 @@ const redownloadImage = async (
     return image;
 };
 
+/**
+ * Asynchronously calculates the size of the ImageCacheDirectory in megabytes.
+ * @returns {Promise<number>} - A Promise that resolves to the size of the cache directory in megabytes.
+ * If an error occurs during the process, the Promise is rejected with the error, and 0 is returned.
+ */
 const calculateCacheSize = async (): Promise<number> => {
     try {
         const cachePath = ImageCacheDirectory; // Get the path to the cache directory
@@ -199,6 +250,10 @@ const calculateCacheSize = async (): Promise<number> => {
     }
 };
 
+/**
+ * Asynchronously clears the contents of the ImageCacheDirectory by removing all cached files.
+ * @returns {Promise<void>} - A Promise that resolves once the cache is successfully cleared.
+ */
 const clearCache = async (): Promise<void> => {
     try {
         const cachePath = ImageCacheDirectory;
@@ -214,6 +269,11 @@ const clearCache = async (): Promise<void> => {
     }
 };
 
+/**
+ * Asynchronously lists the URIs of cached images in the ImageCacheDirectory.
+ * @returns {Promise<string[]>} - A Promise that resolves to an array of image URIs for the cached images.
+ * If no cached images are found or an error occurs, an empty array is returned.
+ */
 const listCachedImages = async (): Promise<string[]> => {
     try {
         const files = await RNFS.readDir(ImageCacheDirectory);

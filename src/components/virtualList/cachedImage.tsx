@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { ActivityIndicator, Icon } from "react-native-paper";
 import { LocalTheme } from "../../../themes";
+import PinchableImage from "./pinchableImage";
+import { RapunzelImage } from "../../store/interfaces";
 
 interface EmptyImageComponentProps {
     onPress: () => void;
@@ -34,46 +36,42 @@ const LoadingComponent = () => {
     );
 };
 
-interface CachedImageProps extends ImageProps {
-    source: { uri: string };
-    onClick: (uri: string) => void;
+interface CachedImageProps extends Partial<ImageProps> {
+    image: RapunzelImage;
+    onClick: (image: RapunzelImage) => void;
 }
 
 const CachedImage: React.FC<CachedImageProps> = ({
-    source: { uri },
+    image,
     onClick,
     ...props
 }) => {
     const [loading, setLoading] = useState(false);
 
     const { colors } = LocalTheme.useTheme();
+
     return (
-        <TouchableOpacity>
-            <View
-                style={{
-                    ...styles.container,
-                    backgroundColor: colors.background,
-                }}
-            >
-                {uri === null ? (
-                    loading ? (
-                        <LoadingComponent />
-                    ) : (
-                        <EmptyImageComponent onPress={() => onClick(uri)} />
-                    )
+        <View
+            style={{
+                ...styles.container,
+                backgroundColor: colors.background,
+            }}
+        >
+            {image.uri === null ? (
+                loading ? (
+                    <LoadingComponent />
                 ) : (
-                    <Image
-                        {...props}
-                        onError={() => {}}
-                        onLoadStart={() => setLoading(true)}
-                        onLoadEnd={() => setLoading(false)}
-                        source={{ uri: "file://" + uri }}
-                        style={styles.image}
-                        resizeMode="contain"
-                    />
-                )}
-            </View>
-        </TouchableOpacity>
+                    <EmptyImageComponent onPress={() => onClick(image)} />
+                )
+            ) : (
+                <PinchableImage
+                    {...props}
+                    onLoadStart={() => setLoading(true)}
+                    onLoadEnd={() => setLoading(false)}
+                    image={image}
+                />
+            )}
+        </View>
     );
 };
 
@@ -85,7 +83,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     image: {
-        width: width,
+        minWidth: width,
         minHeight: width * 1.4,
     },
 });

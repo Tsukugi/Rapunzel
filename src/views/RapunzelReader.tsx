@@ -6,14 +6,16 @@ import { ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 
 import { DeviceCache } from "../cache/cache";
-import { ReaderState } from "../store/interfaces";
+import { RapunzelImage } from "../store/interfaces";
 import { useRapunzelStore } from "../store/store";
 
 interface RapunzelReaderProps {}
 
 // TODO: Add heights from backend to support full image dynamically
 const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
-    const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
+    const [loadedImages, setLoadedImages] = useState<
+        VirtualItem<RapunzelImage>[]
+    >([]);
     const {
         reader: [, readerEffect],
     } = useRapunzelStore();
@@ -30,17 +32,11 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
         );
     });
 
-    const onReloadHandler = (item: VirtualItem<string>) => {
-        const newUri = ""; // reader.book?.chapters[0].pages[item.index].uri;
-        if (!newUri) return;
-        DeviceCache.redownloadImage(item.value, newUri, () => {});
-    };
-
     return (
         <VirtualList
             data={loadedImages}
             renderer={({ item }) => (
-                <ImageRenderer item={item} onClick={onReloadHandler} />
+                <ImageRenderer item={item} onClick={() => {}} />
             )}
         />
     );
