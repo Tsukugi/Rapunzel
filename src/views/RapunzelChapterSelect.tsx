@@ -11,6 +11,8 @@ import { useRapunzelLoader } from "../api/loader";
 import { RapunzelLog } from "../config/log";
 import { useFocusEffect } from "@react-navigation/native";
 import { Book, ChapterBase } from "@atsu/lilith";
+import { getLocaleEmoji } from "../tools/locales";
+import { removeValuesInParenthesesAndBrackets } from "../tools/string";
 
 interface ItemListProps {
     chapters: ChapterBase[];
@@ -20,9 +22,14 @@ const ItemList = ({ chapters }: ItemListProps) => {
 
     const getTitle = (index: number) => {
         const chapter = chapters[index];
-        return chapter.title
-            ? `(${chapter.language}) ${chapter.title}`
-            : `(${chapter.language}) Chapter ${chapter.chapterNumber}: (Untitled)`;
+
+        const language = getLocaleEmoji(chapter.language);
+        if (chapter.title) {
+            const title = removeValuesInParenthesesAndBrackets(chapter.title);
+            return `${language} ${title}`;
+        } else {
+            return `${language} Chapter ${chapter.chapterNumber}: (Untitled)`;
+        }
     };
 
     const onPressChapter = async (item: string) => {

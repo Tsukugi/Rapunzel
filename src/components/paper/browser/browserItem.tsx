@@ -4,6 +4,7 @@ import { BookBase } from "@atsu/lilith";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { LocalTheme } from "../../../../themes";
 import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
+import { getLocaleEmoji } from "../../../tools/locales";
 
 interface UseTimedEventHandlers {
     onStart: () => void;
@@ -62,12 +63,15 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
 
     const { colors } = LocalTheme.useTheme();
 
+    const languages = bookBase.availableLanguages.map((lang) =>
+        getLocaleEmoji(lang),
+    );
+    const title = removeValuesInParenthesesAndBrackets(bookBase.title);
+
     const defaultStyle = {
         backgroundColor: colors.backdrop,
         color: "white",
-        title: `(${bookBase.availableLanguages.join(
-            ",",
-        )}) ${removeValuesInParenthesesAndBrackets(bookBase.title)}`,
+        title: `${languages.join("")} ${title}`,
     };
     const [titleProps, setTitleProps] = useState(defaultStyle);
 
