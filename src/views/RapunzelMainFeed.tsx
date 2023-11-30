@@ -3,7 +3,6 @@ import VirtualList from "../components/virtualList/virtualList";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
-    useRapunzelNavigation,
     useRouter,
 } from "../components/navigators/useRouter";
 
@@ -12,13 +11,10 @@ import { useRapunzelStore } from "../store/store";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRapunzelLoader } from "../api/loader";
 import { RapunzelLog } from "../config/log";
-import CoupleItem from "../components/paper/browser/coupleItem";
-import { BookBase } from "@atsu/lilith";
-import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
-import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
 import BrowseItem, {
     BrowserItemProps,
 } from "../components/paper/browser/browserItem";
+import { useVirtualList } from "../tools/virtualList";
 
 interface RapunzelMainFeedProps {}
 
@@ -35,8 +31,6 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({}) => {
         }, []),
     );
 
-    const { redirect } = useRapunzelNavigation();
-
     useRouter({ route: ViewNames.RapunzelMainFeed });
 
     useLoadingEffect(({ latest }) => {
@@ -52,37 +46,12 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({}) => {
         );
     });
 
-    const onMangaSelectHandler = async (bookBase: BookBase) => {
-        const { loadBook } = useRapunzelLoader();
-        const book = await loadBook(bookBase.id);
-        if (!book) return;
-        goToFirstChapterOrSelectChapter({ book, redirect });
-    };
-
-    const onMangaSaveHandler = async (bookBase: BookBase) => {
-        const { loadBook, loadChapter } = useRapunzelLoader();
-        const book = await loadBook(bookBase.id);
-        if (!book) return null;
-
-        // We make available the first chapter beforehand
-        if (book?.chapters.length === 1) {
-            loadChapter(book.chapters[0].id);
-        }
-
-        saveBookToLibrary(book);
-    };
-
-    const feedCouple = (index: number): BrowserItemProps | null => {
-        if (!latestBooks.bookList[index]) return null;
-        return {
-            cover: loadedImages[index].value,
-            bookBase: latestBooks.bookList[index],
-            onClick: onMangaSelectHandler,
-            onLongClick: onMangaSaveHandler,
-        };
-    };
+    const { getVirtualItemProps } = useVirtualList();
 
     const onEndReachedHandler = () => {
+        const {
+            latest: [latestBooks],
+        } = useRapunzelStore();
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     };
 
@@ -108,7 +77,9 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({}) => {
     return (
         <VirtualList
             data={loadedImages}
-            renderer={({ index }) => <ItemProvider item={feedCouple(index)} />}
+            renderer={({ index }) => (
+                <ItemProvider item={getVirtualItemProps(index, loadedImages)} />
+            )}
             onEndReached={onEndReachedHandler}
         />
     );

@@ -3,16 +3,11 @@ import VirtualList from "../components/virtualList/virtualList";
 import { useRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
-import {
-    useRapunzelNavigation,
-    useRouter,
-} from "../components/navigators/useRouter";
-import { BookBase } from "@atsu/lilith";
+import { useRouter } from "../components/navigators/useRouter";
 import { BrowserItemProps } from "../components/paper/browser/browserItem";
 import CoupleItem from "../components/paper/browser/coupleItem";
 import { useRapunzelStore } from "../store/store";
-import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
-import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
+import { useVirtualList } from "../tools/virtualList";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
@@ -24,7 +19,6 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         browse: [browseState],
     } = useRapunzelStore();
 
-    const { redirect } = useRapunzelNavigation();
     useRouter({ route: ViewNames.RapunzelBrowse });
 
     useLoadingEffect(({ browse }) => {
@@ -39,25 +33,7 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         );
     });
 
-    const onMangaSelectHandler = async (bookBase: BookBase) => {
-        const { loadBook } = useRapunzelLoader();
-        const book = await loadBook(bookBase.id);
-        if (!book) return;
-        goToFirstChapterOrSelectChapter({ book, redirect });
-    };
-
-    const onMangaSaveHandler = async (bookBase: BookBase) => {
-        const { loadBook, loadChapter } = useRapunzelLoader();
-        const book = await loadBook(bookBase.id);
-        if (!book) return null;
-
-        // We make available the first chapter beforehand
-        if (book?.chapters.length === 1) {
-            loadChapter(book.chapters[0].id);
-        }
-
-        saveBookToLibrary(book);
-    };
+    const { getVirtualItemProps } = useVirtualList();
 
     const onEndReachedHandler = () => {
         useRapunzelLoader().loadSearch(
@@ -69,15 +45,8 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         );
     };
 
-    const feedCouple = (index: number): BrowserItemProps | null => {
-        if (!browseState.bookList[index]) return null;
-        return {
-            cover: loadedImages[index].value,
-            bookBase: browseState.bookList[index],
-            onClick: onMangaSelectHandler,
-            onLongClick: onMangaSaveHandler,
-        };
-    };
+    const feedCouple = (index: number): BrowserItemProps | null =>
+        getVirtualItemProps(index, loadedImages);
 
     /**
      * We filter even images so we have half of the elements but each will have both as [odd, even]
