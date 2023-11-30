@@ -35,11 +35,11 @@ const HeaderBar = ({
     const {
         reader: [reader],
         header: [header],
-        loader: [, useLoaderEffect],
+        loading: [, useLoadingEffect],
     } = useRapunzelStore();
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    useLoaderEffect(({ browse, reader }) => setIsLoading(browse || reader));
+    useLoadingEffect(({ browse, reader }) => setIsLoading(browse || reader));
 
     const onSubmitHandler = (newValue: string) => {
         header.searchValue = newValue;

@@ -13,14 +13,13 @@ import CoupleItem from "../components/paper/browser/coupleItem";
 import { useRapunzelStore } from "../store/store";
 import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
 import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
-import { RapunzelLog } from "../config/log";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
 const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
     const {
-        loader: [loader, useLoaderEffect],
+        loading: [, useLoadingEffect],
         header: [header],
         browse: [browseState],
     } = useRapunzelStore();
@@ -28,7 +27,7 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const { redirect } = useRapunzelNavigation();
     useRouter({ route: ViewNames.RapunzelBrowse });
 
-    useLoaderEffect(({ browse }) => {
+    useLoadingEffect(({ browse }) => {
         if (browse) return;
 
         setLoadedImages(
@@ -80,10 +79,13 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         };
     };
 
-    const load = loadedImages.filter((_, index) => index % 2 === 1);
+    /**
+     * We filter even images so we have half of the elements but each will have both as [odd, even]
+     */
+    const oddImagesOnly = loadedImages.filter((_, index) => index % 2 === 1);
     return (
-        <VirtualList<string>
-            data={load}
+        <VirtualList
+            data={oddImagesOnly}
             renderer={({ index }) => (
                 <CoupleItem
                     couple={[feedCouple(index * 2), feedCouple(index * 2 + 1)]}

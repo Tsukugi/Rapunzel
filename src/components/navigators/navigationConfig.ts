@@ -9,6 +9,7 @@ import RapunzelChapterSelect from "../../views/RapunzelChapterSelect";
 //* Dependencies thay may be abstacted to other place
 import { DrawerNavigationOptions } from "@react-navigation/drawer";
 import { HeaderLeftMode } from "../paper/interfaces";
+import RapunzelMainFeed from "../../views/RapunzelMainFeed";
 
 export type ViewDict = Record<ViewNames, ViewNavigationData>;
 
@@ -32,6 +33,16 @@ export interface ViewNavigationData {
 
 const getViews = (): Partial<ViewDict> => {
     const Views: Partial<ViewDict> = {
+        RapunzelMainFeed: {
+            component: RapunzelMainFeed,
+            icon: "home",
+            headerOptions: {
+                hideReader: true,
+            },
+            viewDrawerOptions: {
+                title: "Feed",
+            },
+        },
         RapunzelBrowse: {
             component: RapunzelBrowse,
             icon: "card-search-outline",

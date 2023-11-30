@@ -2,10 +2,13 @@ import { TaihouOptions, useState } from "@atsu/taihou";
 import { LilithLanguage, LilithRepo } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
+    BookBaseList,
     BrowseState,
     ConfigState,
     HeaderState,
+    LatestBooksState,
     LoadingState,
+    PopularBooksState,
     ReaderState,
     RouterState,
     Store,
@@ -78,16 +81,31 @@ export const initRapunzelStore = () => {
         searchValue: "",
     });
 
-    RapunzelState.browse = useReactConfig<BrowseState>("browse", {
+    const getDefaultBookBaseList = (): BookBaseList => ({
         activeProcessId: "",
         bookListRecord: {},
         bookList: [],
         cachedImages: [],
+    });
+
+    RapunzelState.browse = useReactConfig<BrowseState>("browse", {
+        ...getDefaultBookBaseList(),
         page: 1,
     });
 
-    RapunzelState.loader = useReactConfig<LoadingState>("loader", {
+    RapunzelState.latest = useReactConfig<LatestBooksState>("popular", {
+        ...getDefaultBookBaseList(),
+        page: 1,
+    });
+
+    RapunzelState.popular = useReactConfig<PopularBooksState>("popular", {
+        ...getDefaultBookBaseList(),
+    });
+
+    RapunzelState.loading = useReactConfig<LoadingState>("loader", {
         browse: false,
         reader: false,
+        latest: false,
+        popular: false,
     });
 };

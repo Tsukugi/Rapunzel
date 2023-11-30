@@ -2,7 +2,7 @@ import {
     Book,
     LilithRepo,
     BookBase,
-    Headers,
+    LilithHeaders,
     Chapter,
     LilithLanguage,
 } from "@atsu/lilith";
@@ -24,35 +24,48 @@ export interface ReaderState {
     cachedImages: RapunzelImage[];
 }
 export interface ConfigState extends RapunzelConfigBase {
-    apiLoaderConfig: Headers;
+    apiLoaderConfig: LilithHeaders;
     webviewUrl: string;
     repository: LilithRepo;
     languages: LilithLanguage[];
 }
 
-export interface BrowseState {
+export interface BookBaseList {
     activeProcessId: string;
     bookListRecord: Record<string, BookBase>; // Key as Ids
     bookList: BookBase[];
     cachedImages: string[];
+}
+
+export interface BrowseState extends BookBaseList {
+    page: number;
+}
+
+export interface PopularBooksState extends BookBaseList {}
+
+export interface LatestBooksState extends BookBaseList {
     page: number;
 }
 
 export interface LoadingState {
     browse: boolean;
     reader: boolean;
+    popular: boolean;
+    latest: boolean;
 }
 
 export type TaihouEffect<T> = (onUpdate: (newValue: T) => void) => void;
 export type UseReactTaihou<T> = [T, TaihouEffect<T>];
 
 export interface Store {
-    router: UseReactTaihou<RouterState>;
+    loading: UseReactTaihou<LoadingState>;
     config: UseReactTaihou<ConfigState>;
+    router: UseReactTaihou<RouterState>;
     header: UseReactTaihou<HeaderState>;
     reader: UseReactTaihou<ReaderState>;
     browse: UseReactTaihou<BrowseState>;
-    loader: UseReactTaihou<LoadingState>;
+    latest: UseReactTaihou<LatestBooksState>;
+    popular: UseReactTaihou<PopularBooksState>;
 }
 
 export interface RapunzelImage {

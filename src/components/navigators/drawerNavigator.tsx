@@ -76,7 +76,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     return (
         <Drawer.Navigator
             drawerContent={CustomDrawerContent}
-            initialRouteName={ViewNames.RapunzelBrowse}
+            initialRouteName={ViewNames.RapunzelMainFeed}
         >
             {Object.values(views).map((view, index) => (
                 <Drawer.Screen

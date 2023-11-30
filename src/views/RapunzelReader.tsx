@@ -11,7 +11,6 @@ import { useRapunzelStore } from "../store/store";
 
 interface RapunzelReaderProps {}
 
-// TODO: Add heights from backend to support full image dynamically
 const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
     const [loadedImages, setLoadedImages] = useState<
         VirtualItem<RapunzelImage>[]

@@ -1,16 +1,16 @@
 import { Image } from "react-native";
-import { Book, BookBase, useAPILoader } from "@atsu/lilith";
+import { Book, BookBase, SearchResult, useAPILoader } from "@atsu/lilith";
 
-import {
-    SearchQueryOptions,
-    SearchResult,
-} from "@atsu/lilith/dist/interfaces/base";
 import { DeviceCache, StartLoadingImagesProps } from "../cache/cache";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
 import { RapunzelImage } from "../store/interfaces";
+import {
+    BookListResults,
+    SearchQueryOptions,
+} from "@atsu/lilith/dist/repo/base/interfaces";
 
 interface LoadImageListProps extends StartLoadingImagesProps {}
 /**
@@ -72,17 +72,22 @@ export const useRapunzelLoader = () => {
     const getNewId = () => RandomTools.generateRandomId(10);
 
     const {
-        loader: [loader],
+        loading: [loading],
         reader: [reader],
         browse: [browse],
         config: [config],
+        latest: [latest],
+        popular: [popular],
     } = useRapunzelStore();
 
     const apiLoader = useAPILoader({
         repo: config.repository,
-        configurations: {
+        config: {
             headers: config.apiLoaderConfig,
-            debug: config.debug,
+            options: {
+                debug: config.debug,
+                requiredLanguages: config.languages,
+            },
         },
     });
 
@@ -149,9 +154,7 @@ export const useRapunzelLoader = () => {
         RapunzelLog.log("[loadBook] Loading book with code", code);
 
         // Retrieve the book information from the API, including language preferences from the configuration
-        const book = await apiLoader
-            .getBook(code, config.languages)
-            .catch(RapunzelLog.error);
+        const book = await apiLoader.getBook(code).catch(RapunzelLog.error);
 
         // If book retrieval fails or the book has no chapters, return null
         if (!book || book.chapters.length === 0) {
@@ -173,7 +176,7 @@ export const useRapunzelLoader = () => {
      */
     const loadChapter = async (id: string): Promise<string[]> => {
         // Set the loader.reader flag to true to indicate that a chapter is being loaded
-        loader.reader = true;
+        loading.reader = true;
 
         RapunzelLog.log("[loadBook] Loading chapter from id", id);
 
@@ -182,7 +185,7 @@ export const useRapunzelLoader = () => {
 
         // Define a callback to execute when the chapter loading process finishes
         const onFinish = () => {
-            loader.reader = false;
+            loading.reader = false;
         };
 
         if (!chapter) {
@@ -220,25 +223,19 @@ export const useRapunzelLoader = () => {
         return promise;
     };
 
-    interface LoaderSearchResult {
-        imagesToCache: string[];
-        bookDict: Record<string, BookBase>;
-        searchResult: SearchResult;
-    }
     /**
      * Performs a search using the provided search value and options, loading data from an API.
      * @param {string} searchValue - The search query value.
      * @param {Partial<SearchQueryOptions>} [searchOptions] - Optional search query options.
-     * @returns {Promise<LoaderSearchResult | null>} - A Promise that resolves to an object containing search results, images to cache, and a dictionary of books. Returns null if no results are found.
+     * @returns {Promise<SearchResult | null>} - A Promise that resolves to an object containing search results, images to cache, and a dictionary of books. Returns null if no results are found.
      */
     const getSearch = async (
         searchValue: string,
         searchOptions?: Partial<SearchQueryOptions>,
-    ): Promise<LoaderSearchResult | null> => {
+    ): Promise<SearchResult | null> => {
         // Perform a search using the apiLoader, including requiredLanguages from the configuration
         const searchResult = await apiLoader.search(searchValue, {
             ...searchOptions,
-            requiredLanguages: config.languages,
         });
 
         // If no search results or the results array is empty, log an error and return null
@@ -247,18 +244,26 @@ export const useRapunzelLoader = () => {
             return null;
         }
 
+        return searchResult;
+    };
+
+    interface BookBaseData {
+        imagesToCache: string[];
+        bookDict: Record<string, BookBase>;
+    }
+    const getBookBaseData = (bookBaseList: BookBase[]): BookBaseData => {
         // Initialize arrays and dictionary to store images to cache and book information
         const imagesToCache: string[] = [];
         const bookDict: Record<string, BookBase> = {};
 
         // Iterate through search results and populate imagesToCache and bookDict
-        searchResult.results.forEach((manga) => {
+        bookBaseList.forEach((manga) => {
             imagesToCache.push(manga.cover.uri);
             bookDict[manga.id] = manga;
         });
 
         // Return an object containing imagesToCache, bookDict, and searchResult
-        return { imagesToCache, bookDict, searchResult };
+        return { imagesToCache, bookDict };
     };
 
     /**
@@ -275,14 +280,14 @@ export const useRapunzelLoader = () => {
         clean: boolean = true,
     ): Promise<string[]> => {
         // If not cleaning and a search is already in progress, return an empty array
-        if (!clean && loader.browse) return [];
+        if (!clean && loading.browse) return [];
 
         // Set the loader.browse flag to true to indicate that a search is in progress
-        loader.browse = true;
+        loading.browse = true;
 
         // Define a callback to execute when the search process finishes, either successfully or not
         const onFinish = () => {
-            loader.browse = false;
+            loading.browse = false;
         };
 
         // If cleaning, reset Browse state variables
@@ -300,15 +305,20 @@ export const useRapunzelLoader = () => {
         );
 
         // Perform the search and retrieve book information, image URIs, and book dictionary
-        const values = await getSearch(searchValue, searchOptions);
+        const searchResult: SearchResult | null = await getSearch(
+            searchValue,
+            searchOptions,
+        );
 
         // If no search results, finish and return an empty array
-        if (!values) {
+        if (!searchResult) {
             onFinish();
             return [];
         }
 
-        const { searchResult, imagesToCache, bookDict } = values;
+        const { imagesToCache, bookDict } = getBookBaseData(
+            searchResult.results,
+        );
 
         // Load images asynchronously using loadImageList utility
         const promise = loadImageList({
@@ -346,5 +356,91 @@ export const useRapunzelLoader = () => {
         return promise;
     };
 
-    return { loadSearch, loadFirstChapter, loadBook, loadChapter };
+    const getLatestBooks = async (
+        page: number = 1,
+        clean: boolean = true,
+    ): Promise<string[]> => {
+        // If not cleaning and a search is already in progress, return an empty array
+        if (!clean && loading.latest) return [];
+
+        // Set the loader.browse flag to true to indicate that a search is in progress
+        loading.latest = true;
+
+        // Define a callback to execute when the search process finishes, either successfully or not
+        const onFinish = () => {
+            loading.latest = false;
+        };
+
+        // If cleaning, reset Browse state variables
+        if (clean) {
+            latest.cachedImages = [];
+            latest.bookList = [];
+            latest.bookListRecord = {};
+            latest.activeProcessId = getNewId();
+            latest.page = 1;
+        }
+
+        RapunzelLog.log("[getLatestBooks] Retrieving latest books");
+
+        // Perform the search and retrieve book information, image URIs, and book dictionary
+        const bookListResults: BookListResults = await apiLoader.getLatestBooks(
+            page,
+        );
+
+        // If no search results, finish and return an empty array
+        if (!bookListResults) {
+            onFinish();
+            return [];
+        }
+
+        const { imagesToCache, bookDict } = getBookBaseData(
+            bookListResults.results,
+        );
+
+        // Load images asynchronously using loadImageList utility
+        const promise = loadImageList({
+            id: latest.activeProcessId,
+            data: imagesToCache,
+            onImageLoaded: async () => {},
+            shouldCancelLoad: (id) => {
+                const cancel = id !== latest.activeProcessId;
+                if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
+                return cancel;
+            },
+        });
+
+        // Handle the result of the image loading process
+        promise
+            .then(async (value) => {
+                // Update the LatestBooks state with search results and loaded images
+                latest.bookList = [
+                    ...latest.bookList,
+                    ...bookListResults.results,
+                ];
+                latest.bookListRecord = {
+                    ...latest.bookListRecord,
+                    ...bookDict,
+                };
+
+                latest.cachedImages = [...latest.cachedImages, ...value];
+
+                // If a specific page is provided in searchOptions, update the latest page
+                if (page) {
+                    latest.page = page;
+                }
+            })
+            .catch(() => {})
+            .finally(onFinish);
+
+        // Return the Promise for further handling, if needed
+        return promise;
+    };
+
+    return {
+        loadSearch,
+        loadFirstChapter,
+        loadBook,
+        loadChapter,
+        getLatestBooks,
+    };
 };

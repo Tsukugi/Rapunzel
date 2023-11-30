@@ -36,18 +36,22 @@ const useTimedEvent = (delay: number) => {
     return [event];
 };
 
-export interface BrowseItemWithStyle extends BrowserItemProps {
-    style?: Record<string, any>;
+export interface StyleProps {
+    style: Record<string, any>;
+    coverStyle: Record<string, any>;
+    titleStyle: Record<string, any>;
 }
-export interface BrowserItemProps {
+export interface BrowserItemProps extends Partial<StyleProps> {
     cover?: string;
     bookBase: BookBase | null;
     onClick?: (bookBase: BookBase) => void;
     onLongClick?: (bookBase: BookBase) => void;
 }
 
-const BrowseItem: FC<BrowseItemWithStyle> = ({
+const BrowseItem: FC<BrowserItemProps> = ({
     style,
+    coverStyle,
+    titleStyle,
     cover,
     bookBase,
     onClick = () => {},
@@ -98,18 +102,23 @@ const BrowseItem: FC<BrowseItemWithStyle> = ({
             onPress={onPressHandler}
             onLongPress={onLongPressHandler}
         >
-            <Card.Cover style={styles.cover} source={{ uri: cover }} />
+            <Card.Cover
+                style={{ ...styles.cover, ...coverStyle }}
+                source={{ uri: cover }}
+            />
             <Card.Title
                 titleNumberOfLines={2}
                 style={{
                     ...styles.title,
                     backgroundColor: titleProps.backgroundColor,
+                    ...titleStyle,
                 }}
                 titleStyle={{
                     color: titleProps.color,
                     lineHeight: 14,
                     textAlignVertical: "center",
                     fontSize: 12,
+                    ...titleStyle,
                 }}
                 title={titleProps.title}
             />
@@ -135,6 +144,7 @@ const styles = StyleSheet.create({
     },
 
     title: {
+        width: width,
         bottom: 0,
         position: "absolute",
     },
