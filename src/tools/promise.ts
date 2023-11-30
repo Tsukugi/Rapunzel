@@ -6,7 +6,7 @@ interface RecursivePromisesProps<T> {
     onPromiseSettled?: (result: T) => Promise<void>;
 }
 
-const recursivePromiseChain = <T>({
+const recursivePromiseChain = async <T>({
     promises,
     numLevels = promises.length - 1,
     onPromiseSettled = async (result: T) => {
@@ -29,15 +29,13 @@ const recursivePromiseChain = <T>({
         Promise.resolve([] as PromiseType<T>[]),
     );
 
-    return promiseChain.then((results) => {
-        return recursivePromiseChain({
-            promises: newPromises,
-            numLevels: numLevels - 1,
-            onPromiseSettled: onPromiseSettled,
-        }).then((nextLevelPromises) => {
-            return [...results, ...nextLevelPromises];
-        });
+    const results = await promiseChain;
+    const nextLevelPromises = await recursivePromiseChain({
+        promises: newPromises,
+        numLevels: numLevels - 1,
+        onPromiseSettled: onPromiseSettled,
     });
+    return [...results, ...nextLevelPromises];
 };
 
 export const PromiseTools = { recursivePromiseChain };
