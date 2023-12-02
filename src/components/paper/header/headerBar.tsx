@@ -49,7 +49,7 @@ const HeaderBar = ({
                 openMenu={openMenu}
                 leftMode={leftMode}
             />
-            <Appbar.Content mode={"small"} title={reader.book?.title} />
+            <Appbar.Content mode={"small"} title={""} />
             {showSearch ? (
                 <PaperSearch
                     defaultValue={header.searchValue}

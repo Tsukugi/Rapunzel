@@ -1,33 +1,35 @@
-import React, { FC, useCallback, useState } from "react";
+import React, { FC, useState } from "react";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
-import { List } from "react-native-paper";
+import { Button, Card, List, Text } from "react-native-paper";
 import { useRapunzelStore } from "../store/store";
 import { useRapunzelLoader } from "../api/loader";
 import { RapunzelLog } from "../config/log";
-import { useFocusEffect } from "@react-navigation/native";
 import { Book } from "@atsu/lilith";
 import { getLocaleEmoji } from "../tools/locales";
 import { removeValuesInParenthesesAndBrackets } from "../tools/string";
 import VirtualList from "../components/virtualList/virtualList";
+import { Dimensions } from "react-native";
+import { LocalTheme } from "../../themes";
 
+const { width } = Dimensions.get("screen");
 interface RapunzelChapterSelectProps extends UsesNavigation {}
 const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
     navigation,
 }) => {
+    const { colors, dark } = LocalTheme.useTheme();
     const [managedBook, setManagedbook] = useState<Book | null>(null);
 
     const {
         reader: [reader],
+        loading: [, loadingEffect],
     } = useRapunzelStore();
 
     useRouter({ route: ViewNames.RapunzelChapterSelect, navigation });
 
-    useFocusEffect(
-        useCallback(() => {
-            setManagedbook(reader.book);
-        }, []),
-    );
+    loadingEffect(() => {
+        setManagedbook(reader.book);
+    });
 
     if (!managedBook) {
         RapunzelLog.log("[RapunzelChapterSelect] No chapters found");
@@ -52,6 +54,7 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
     };
 
     const onEndReachedHandler = () => {
+        RapunzelLog.log("[onEndReachedHandler] Reached");
         if (!reader.book) {
             RapunzelLog.log("[onEndReachedHandler] No chapters found");
             return null;
@@ -69,22 +72,57 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
         );
     };
 
+    const backdropOpacity = dark ? "0.5" : "0.2";
+    const cardHeight = 200;
+
     return (
-        <VirtualList
-            data={managedBook.chapters.map((chapter, index) => {
-                return { id: chapter.id, index, value: chapter };
-            })}
-            renderer={({ item, index }) => {
-                return (
-                    <List.Item
-                        key={index}
-                        title={getTitle(index)}
-                        onPress={() => onChapterSelectHandler(item.id)}
-                    />
-                );
-            }}
-            onEndReached={onEndReachedHandler}
-        />
+        <>
+            <Card style={{ position: "relative" }}>
+                <Card.Cover
+                    source={{ uri: managedBook.cover.uri }}
+                    style={{ height: cardHeight }}
+                />
+
+                <Card.Content
+                    style={{
+                        position: "absolute",
+                        zIndex: 2,
+                        width,
+                        height: cardHeight,
+                        backgroundColor: `rgba(0.5, 0.5, 0.5, ${backdropOpacity})`,
+                    }}
+                >
+                    <Text variant="titleLarge">{""}</Text>
+                    <Text variant="titleLarge" numberOfLines={2}>
+                        {managedBook.title}
+                    </Text>
+                    <Text variant="bodyMedium">{managedBook.author}</Text>
+                    <Text variant="bodyMedium" numberOfLines={2}>
+                        {managedBook.tags.map((val) => val.name).join(" ")}
+                    </Text>
+                    <Text variant="bodyMedium">
+                        {managedBook.availableLanguages
+                            .map((lang) => getLocaleEmoji(lang))
+                            .join(" ")}
+                    </Text>
+                </Card.Content>
+            </Card>
+            <VirtualList
+                data={managedBook.chapters.map((chapter, index) => {
+                    return { id: chapter.id, index, value: chapter };
+                })}
+                renderer={({ item, index }) => {
+                    return (
+                        <List.Item
+                            key={index}
+                            title={getTitle(index)}
+                            onPress={() => onChapterSelectHandler(item.id)}
+                        />
+                    );
+                }}
+                onEndReached={onEndReachedHandler}
+            />
+        </>
     );
 };
 

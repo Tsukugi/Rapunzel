@@ -3,6 +3,7 @@ import { VirtualizedList, StyleSheet, ListRenderItem } from "react-native";
 import { VirtualItem } from "./interfaces";
 import Item from "./item";
 import { LocalTheme } from "../../../themes";
+import { RapunzelLog } from "../../config/log";
 
 interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
@@ -15,7 +16,9 @@ const VirtualList = <T,>({
     data,
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_data, index) => _data[index],
-    onEndReached = () => {},
+    onEndReached = () => {
+        RapunzelLog.log("[onEndReached]: Reached");
+    },
 }: VirtualListProps<T>) => {
     const { colors } = LocalTheme.useTheme();
     return (

@@ -143,7 +143,15 @@ export const useRapunzelLoader = () => {
             loading.browse = false;
         };
 
-        // Log information about the start of the book loading process
+        if (clean) {
+            reader.chapterPage = 1;
+        }
+
+        if (options.chapterList?.page) {
+            RapunzelLog.log(
+                `[loadBook] Loading chapterList "page": ${options.chapterList.page}`,
+            );
+        }
         RapunzelLog.log("[loadBook] Loading book with code", code);
 
         // Retrieve the book information from the API, including language preferences from the configuration
@@ -157,21 +165,18 @@ export const useRapunzelLoader = () => {
         }
 
         // Update the Reader state with the loaded book
-        let newBook: Book | null = reader.book;
         if (clean) {
-            newBook = book;
+            reader.book = book;
         } else {
-            newBook = {
+            reader.book = {
                 ...book,
-                chapters: [...(newBook?.chapters || []), ...book.chapters],
+                chapters: [...(reader.book?.chapters || []), ...book.chapters],
             };
 
             if (options.chapterList && options.chapterList.page) {
                 reader.chapterPage = options.chapterList.page;
             }
         }
-        reader.book = newBook;
-
         // Return a resolved Promise with the loaded book for further handling, if needed
         const promise = Promise.resolve(book);
 

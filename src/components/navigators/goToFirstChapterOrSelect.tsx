@@ -7,7 +7,7 @@ export interface GoToFirstChapterOrSelectProps extends UsesNavigation {
 }
 
 /**
- * Function to navigate to the first chapter of a book or to the chpater selection view.
+ * Function to navigate to the first chapter of a book or to the chapter selection view.
  * @param props - The props for the function.
  */
 export const goToFirstChapterOrSelectChapter = ({
