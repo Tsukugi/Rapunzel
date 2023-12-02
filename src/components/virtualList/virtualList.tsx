@@ -1,9 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import {
-    VirtualizedList,
-    StyleSheet,
-    ListRenderItem,
-} from "react-native";
+import { VirtualizedList, StyleSheet, ListRenderItem } from "react-native";
 import { VirtualItem } from "./interfaces";
 import Item from "./item";
 import { LocalTheme } from "../../../themes";
@@ -11,14 +7,14 @@ import { LocalTheme } from "../../../themes";
 interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
     renderer?: ListRenderItem<VirtualItem<T>>;
-    getItem?: (data: T, index: number) => VirtualItem<T>;
+    getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
     onEndReached?: () => void;
 }
 
 const VirtualList = <T,>({
     data,
     renderer = ({ item }) => <Item value={item.value as string} />,
-    getItem = (_, index) => data[index],
+    getItem = (_data, index) => _data[index],
     onEndReached = () => {},
 }: VirtualListProps<T>) => {
     const { colors } = LocalTheme.useTheme();

@@ -36,9 +36,7 @@ const getViews = (): Partial<ViewDict> => {
         RapunzelMainFeed: {
             component: RapunzelMainFeed,
             icon: "home",
-            headerOptions: {
-                hideReader: true,
-            },
+            headerOptions: { showSearch: true },
             viewDrawerOptions: {
                 title: "Feed",
             },

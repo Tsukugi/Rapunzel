@@ -1,17 +1,16 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import ImageRenderer from "../components/virtualList/imageItem";
 import { VirtualItem } from "../components/virtualList/interfaces";
-import { ViewNames } from "../components/navigators/interfaces";
+import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 
-import { DeviceCache } from "../cache/cache";
 import { RapunzelImage } from "../store/interfaces";
 import { useRapunzelStore } from "../store/store";
 
-interface RapunzelReaderProps {}
+interface RapunzelReaderProps extends UsesNavigation {}
 
-const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
+const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<
         VirtualItem<RapunzelImage>[]
     >([]);
@@ -19,7 +18,7 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({}) => {
         reader: [, readerEffect],
     } = useRapunzelStore();
 
-    useRouter({ route: ViewNames.RapunzelReader });
+    useRouter({ route: ViewNames.RapunzelReader, navigation });
 
     readerEffect(({ cachedImages }) => {
         setLoadedImages(

@@ -1,18 +1,18 @@
 import React from "react";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { UsesNavigation, ViewNames } from "./interfaces";
 import { useRapunzelStore } from "../../store/store";
 import { useRapunzelStorage } from "../../cache/storage";
 import { StorageEntries } from "../../cache/interfaces";
-import { RapunzelLog } from "../../config/log";
+import { BackHandler } from "react-native";
 
-interface UseRouterProps {
+interface UseRouterProps extends UsesNavigation {
     route: ViewNames;
 }
 
 const HomeRoute = ViewNames.RapunzelBrowse;
 
-export const useRouter = ({ route }: UseRouterProps) => {
+export const useRouter = ({ route, navigation }: UseRouterProps) => {
     const {
         router: [router],
     } = useRapunzelStore();
@@ -28,29 +28,20 @@ export const useRouter = ({ route }: UseRouterProps) => {
             useRapunzelStorage().setItem(StorageEntries.currentRoute, route);
         }, []),
     );
-};
 
-const removeLastElement = <T,>(arr: T[]): T[] => {
-    if (arr.length === 0) {
-        return arr; // Return the original array if it's empty
-    }
-    return arr.slice(0, -1); // Use slice to create a new array without the last element
-};
+    useFocusEffect(
+        React.useCallback(() => {
+            const onBackPress = () => {
+                navigation.goBack();
+                return true;
+            };
 
-export const useRapunzelNavigation = () => {
-    const navigation = useNavigation();
-    const {
-        router: [router],
-    } = useRapunzelStore();
-    return {
-        goBack: () => {
-            router.history = removeLastElement(router.history);
-            const lastRoute =
-                router.history[router.history.length - 1] || HomeRoute;
-            navigation.navigate(lastRoute as never);
-        },
-        redirect: (to: ViewNames) => {
-            navigation.navigate(to as never);
-        },
-    };
+            const subscription = BackHandler.addEventListener(
+                "hardwareBackPress",
+                onBackPress,
+            );
+
+            return () => subscription.remove();
+        }, []),
+    );
 };

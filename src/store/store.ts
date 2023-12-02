@@ -75,6 +75,7 @@ export const initRapunzelStore = () => {
         book: null,
         chapter: null,
         cachedImages: [],
+        chapterPage: 1,
     });
 
     RapunzelState.header = useReactConfig<HeaderState>("header", {
@@ -86,6 +87,7 @@ export const initRapunzelStore = () => {
         bookListRecord: {},
         bookList: [],
         cachedImages: [],
+        cachedImagesRecord: {},
     });
 
     RapunzelState.browse = useReactConfig<BrowseState>("browse", {

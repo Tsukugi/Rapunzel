@@ -1,10 +1,8 @@
 import React, { FC, useCallback, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import { VirtualItem } from "../components/virtualList/interfaces";
-import { ViewNames } from "../components/navigators/interfaces";
-import {
-    useRouter,
-} from "../components/navigators/useRouter";
+import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
+import { useRouter } from "../components/navigators/useRouter";
 
 import { useRapunzelStore } from "../store/store";
 
@@ -16,9 +14,9 @@ import BrowseItem, {
 } from "../components/paper/browser/browserItem";
 import { useVirtualList } from "../tools/virtualList";
 
-interface RapunzelMainFeedProps {}
+interface RapunzelMainFeedProps extends UsesNavigation {}
 
-const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({}) => {
+const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
     const {
         latest: [latestBooks],
@@ -31,33 +29,27 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({}) => {
         }, []),
     );
 
-    useRouter({ route: ViewNames.RapunzelMainFeed });
+    useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useLoadingEffect(({ latest }) => {
-        if (latest) return;
-
-        RapunzelLog.log(latestBooks.cachedImages.length);
+    useLoadingEffect(() => {
         setLoadedImages(
-            latestBooks.cachedImages.map((image, index) => ({
-                id: latestBooks.bookList[index].id,
+            latestBooks.cachedImages.map(({ id, url }, index) => ({
+                id,
                 index,
-                value: image,
+                value: url,
             })),
         );
     });
 
-    const { getVirtualItemProps } = useVirtualList();
+    const { getVirtualItemProps } = useVirtualList({ navigation });
 
     const onEndReachedHandler = () => {
-        const {
-            latest: [latestBooks],
-        } = useRapunzelStore();
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     };
 
     const ItemProvider = ({ item }: { item: BrowserItemProps | null }) => {
         const style = {
-            height: 600,
+            height: 500,
         };
         return item ? (
             <BrowseItem
@@ -77,9 +69,16 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({}) => {
     return (
         <VirtualList
             data={loadedImages}
-            renderer={({ index }) => (
-                <ItemProvider item={getVirtualItemProps(index, loadedImages)} />
-            )}
+            renderer={({ index }) => {
+                const { id } = loadedImages[index];
+                return (
+                    <ItemProvider
+                        item={getVirtualItemProps(
+                            latestBooks.bookListRecord[id],
+                        )}
+                    />
+                );
+            }}
             onEndReached={onEndReachedHandler}
         />
     );

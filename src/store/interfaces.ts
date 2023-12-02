@@ -22,6 +22,7 @@ export interface ReaderState {
     book: Book | null;
     chapter: Chapter | null;
     cachedImages: RapunzelImage[];
+    chapterPage: number;
 }
 export interface ConfigState extends RapunzelConfigBase {
     apiLoaderConfig: LilithHeaders;
@@ -32,11 +33,16 @@ export interface ConfigState extends RapunzelConfigBase {
 
 export interface BookBaseList {
     activeProcessId: string;
-    bookListRecord: Record<string, BookBase>; // Key as Ids
     bookList: BookBase[];
-    cachedImages: string[];
+    bookListRecord: Record<string, BookBase>; // Key as Ids
+    cachedImages: CachedImage[];
+    cachedImagesRecord: Record<string, string>; // Key as Ids // Should be deprecated soon
 }
 
+export interface CachedImage {
+    id: string;
+    url: string;
+}
 export interface BrowseState extends BookBaseList {
     page: number;
 }

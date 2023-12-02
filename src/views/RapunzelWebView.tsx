@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import WebView from "react-native-webview";
 import { useRouter } from "../components/navigators/useRouter";
-import { ViewNames } from "../components/navigators/interfaces";
+import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import CookieManager from "@react-native-cookies/cookies";
 import {
     WebviewInjectJavascript,
@@ -11,12 +11,12 @@ import { useRapunzelStore } from "../store/store";
 import { Snackbar } from "react-native-paper";
 import { StyleSheet } from "react-native";
 
-interface RapunzelWebViewProps {}
+interface RapunzelWebViewProps extends UsesNavigation {}
 
 const useDataSavedText = (key: string, value: string) => `${key}: ${value}`;
 
 const useWebKit = true;
-const RapunzelWebView: FC<RapunzelWebViewProps> = ({}) => {
+const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
     const {
         config: [config],
     } = useRapunzelStore();
@@ -38,7 +38,7 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({}) => {
         setHideTimeoutId(id);
     };
 
-    useRouter({ route: ViewNames.RapunzelWebView });
+    useRouter({ route: ViewNames.RapunzelWebView, navigation });
 
     const { onCookiesRetrieved, onUserAgentRetrieved } = useWebviewCache({
         onCookieUpdate: (key, value) =>

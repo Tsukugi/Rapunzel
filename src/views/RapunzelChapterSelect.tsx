@@ -1,10 +1,6 @@
 import React, { FC, useCallback, useState } from "react";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
-import {
-    useRapunzelNavigation,
-    useRouter,
-} from "../components/navigators/useRouter";
-import ScrollContent from "../components/scrollContent";
+import { useRouter } from "../components/navigators/useRouter";
 import { List } from "react-native-paper";
 import { useRapunzelStore } from "../store/store";
 import { useRapunzelLoader } from "../api/loader";
@@ -13,37 +9,63 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Book, ChapterBase } from "@atsu/lilith";
 import { getLocaleEmoji } from "../tools/locales";
 import { removeValuesInParenthesesAndBrackets } from "../tools/string";
+import VirtualList from "../components/virtualList/virtualList";
 
-interface ItemListProps {
+interface ChapterListProps {
     chapters: ChapterBase[];
+    onChapterSelect: (id: string) => void;
 }
-const ItemList = ({ chapters }: ItemListProps) => {
-    const { redirect } = useRapunzelNavigation();
+const ChapterList = ({ chapters, onChapterSelect }: ChapterListProps) => {
+    const {
+        reader: [reader],
+    } = useRapunzelStore();
 
     const getTitle = (index: number) => {
         const chapter = chapters[index];
-
         const language = getLocaleEmoji(chapter.language);
         if (chapter.title) {
             const title = removeValuesInParenthesesAndBrackets(chapter.title);
-            return `${language} ${title}`;
+            return `${language} ${chapter.chapterNumber} ${title}`;
         } else {
             return `${language} Chapter ${chapter.chapterNumber}: (Untitled)`;
         }
     };
 
-    const onPressChapter = async (item: string) => {
-        const { loadChapter } = useRapunzelLoader();
-        loadChapter(item);
-        redirect(ViewNames.RapunzelReader);
+    const onEndReachedHandler = () => {
+        if (!reader.book) {
+            RapunzelLog.log("[onEndReachedHandler] No chapters found");
+            return null;
+        }
+        useRapunzelLoader().loadBook(
+            reader.book.id,
+            {
+                chapterList: {
+                    page: reader.chapterPage + 1,
+                    size: 50,
+                    orderBy: "desc",
+                },
+            },
+            false,
+        );
     };
-    return chapters.map((item, index) => (
-        <List.Item
-            key={index}
-            title={getTitle(index)}
-            onPress={() => onPressChapter(item.id)}
-        ></List.Item>
-    ));
+
+    return (
+        <VirtualList
+            data={chapters.map((chapter, index) => {
+                return { id: chapter.id, index, value: chapter };
+            })}
+            renderer={({ item, index }) => {
+                return (
+                    <List.Item
+                        key={index}
+                        title={getTitle(index)}
+                        onPress={() => onChapterSelect(item.id)}
+                    />
+                );
+            }}
+            onEndReached={onEndReachedHandler}
+        />
+    );
 };
 
 interface RapunzelChapterSelectProps extends UsesNavigation {}
@@ -56,7 +78,7 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
         reader: [reader],
     } = useRapunzelStore();
 
-    useRouter({ route: ViewNames.RapunzelChapterSelect });
+    useRouter({ route: ViewNames.RapunzelChapterSelect, navigation });
 
     useFocusEffect(
         useCallback(() => {
@@ -69,10 +91,17 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
         return null;
     }
 
+    const onChapterSelectHandler = (id: string) => {
+        const { loadChapter } = useRapunzelLoader();
+        loadChapter(id);
+        navigation.navigate(ViewNames.RapunzelReader);
+    };
+
     return (
-        <ScrollContent>
-            <ItemList chapters={managedBook.chapters} />
-        </ScrollContent>
+        <ChapterList
+            chapters={managedBook.chapters}
+            onChapterSelect={onChapterSelectHandler}
+        />
     );
 };
 

@@ -15,8 +15,11 @@ import { LocalTheme } from "../../../themes";
 import { ViewDict, ViewNavigationData } from "./navigationConfig";
 import CustomDrawerContent from "./customDrawerContent";
 import { ViewNames } from "./interfaces";
-import { useRapunzelNavigation } from "./useRouter";
-import { Dimensions, View, ViewStyle } from "react-native";
+import { Dimensions, ViewStyle } from "react-native";
+import { useRapunzelStore } from "../../store/store";
+import { useRapunzelStorage } from "../../cache/storage";
+import { useRapunzelLoader } from "../../api/loader";
+import { StorageEntries } from "../../cache/interfaces";
 
 interface DrawerNavigatorProps {
     views: Partial<ViewDict>;
@@ -25,8 +28,12 @@ interface DrawerNavigatorProps {
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
+    const {
+        header: [header],
+        router: [router],
+    } = useRapunzelStore();
+
     const { colors } = LocalTheme.useTheme();
-    const { goBack } = useRapunzelNavigation();
     const { width } = Dimensions.get("screen");
     const headerAbsoluteStyle: ViewStyle = {
         position: "absolute",
@@ -38,17 +45,39 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     const useOptions = (view: ViewNavigationData): DrawerNavigationOptions => {
         const HeaderBarImpl = ({
             navigation,
-        }: DrawerHeaderProps): ReactNode => (
-            <HeaderBar
-                style={view.headerOptions.absoluteMode && headerAbsoluteStyle}
-                showSearch={view.headerOptions.showSearch}
-                leftMode={view.headerOptions.leftMode || HeaderLeftMode.menu}
-                onBack={goBack}
-                openMenu={navigation.openDrawer}
-                openOptions={() => {}}
-                openSearch={() => {}}
-            />
-        );
+        }: DrawerHeaderProps): ReactNode => {
+            const onSubmitHandler = async (newValue: string) => {
+                header.searchValue = newValue;
+                useRapunzelStorage().setItem(
+                    StorageEntries.searchText,
+                    newValue,
+                );
+
+                if (!newValue) return;
+
+                await useRapunzelLoader().loadSearch(newValue);
+
+                if (router.currentRoute != ViewNames.RapunzelBrowse) {
+                    navigation.navigate(ViewNames.RapunzelBrowse);
+                }
+            };
+            return (
+                <HeaderBar
+                    style={
+                        view.headerOptions.absoluteMode && headerAbsoluteStyle
+                    }
+                    showSearch={view.headerOptions.showSearch}
+                    leftMode={
+                        view.headerOptions.leftMode || HeaderLeftMode.menu
+                    }
+                    onBack={navigation.goBack}
+                    onSubmit={onSubmitHandler}
+                    openMenu={navigation.openDrawer}
+                    openOptions={() => {}}
+                    openSearch={() => {}}
+                />
+            );
+        };
 
         return {
             freezeOnBlur: true,
@@ -64,7 +93,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                 backgroundColor: colors.background,
             },
             drawerType: "back",
-            swipeEdgeWidth: 150,
+            swipeEdgeWidth: width,
             ...view.viewDrawerOptions,
             headerShown: !view.headerOptions.hideReader,
             header: !view.headerOptions.hideReader ? HeaderBarImpl : undefined,
@@ -77,6 +106,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
         <Drawer.Navigator
             drawerContent={CustomDrawerContent}
             initialRouteName={ViewNames.RapunzelMainFeed}
+            backBehavior={"history"}
         >
             {Object.values(views).map((view, index) => (
                 <Drawer.Screen

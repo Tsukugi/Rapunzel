@@ -19,21 +19,19 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         browse: [browseState],
     } = useRapunzelStore();
 
-    useRouter({ route: ViewNames.RapunzelBrowse });
+    useRouter({ route: ViewNames.RapunzelBrowse, navigation });
 
-    useLoadingEffect(({ browse }) => {
-        if (browse) return;
-
+    useLoadingEffect(() => {
         setLoadedImages(
-            browseState.cachedImages.map((image, index) => ({
-                id: browseState.bookList[index].id,
+            browseState.cachedImages.map(({ id, url }, index) => ({
+                id,
                 index,
-                value: image,
+                value: url,
             })),
         );
     });
 
-    const { getVirtualItemProps } = useVirtualList();
+    const { getVirtualItemProps } = useVirtualList({ navigation });
 
     const onEndReachedHandler = () => {
         useRapunzelLoader().loadSearch(
@@ -45,21 +43,32 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         );
     };
 
-    const feedCouple = (index: number): BrowserItemProps | null =>
-        getVirtualItemProps(index, loadedImages);
-
     /**
      * We filter even images so we have half of the elements but each will have both as [odd, even]
      */
-    const oddImagesOnly = loadedImages.filter((_, index) => index % 2 === 1);
+    const oddImagesOnly = loadedImages.filter((item) => item.index % 2 === 1);
+
     return (
         <VirtualList
             data={oddImagesOnly}
-            renderer={({ index }) => (
-                <CoupleItem
-                    couple={[feedCouple(index * 2), feedCouple(index * 2 + 1)]}
-                />
-            )}
+            renderer={({ index }) => {
+                const [leftId, rightId] = [
+                    loadedImages[index * 2].id,
+                    loadedImages[index * 2 + 1].id,
+                ];
+                return (
+                    <CoupleItem
+                        couple={[
+                            getVirtualItemProps(
+                                browseState.bookListRecord[leftId],
+                            ),
+                            getVirtualItemProps(
+                                browseState.bookListRecord[rightId],
+                            ),
+                        ]}
+                    />
+                );
+            }}
             onEndReached={onEndReachedHandler}
         />
     );

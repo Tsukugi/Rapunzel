@@ -6,10 +6,7 @@ import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
 import CacheScreen from "../components/cache/cacheScreen";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
-import {
-    useRapunzelNavigation,
-    useRouter,
-} from "../components/navigators/useRouter";
+import { useRouter } from "../components/navigators/useRouter";
 import { useRapunzelStore } from "../store/store";
 import { useRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
@@ -22,7 +19,7 @@ import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
 
 interface RapunzelSettingsProps extends UsesNavigation {}
 
-const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
+const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
     const {
         reader: [reader],
         config: [config],
@@ -30,8 +27,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
 
     const [libraryTitles, setLibraryTitles] = useState<Book[]>([]);
 
-    const { redirect } = useRapunzelNavigation();
-    useRouter({ route: ViewNames.RapunzelSettings });
+    useRouter({ route: ViewNames.RapunzelSettings, navigation });
 
     useFocusEffect(
         useCallback(() => {
@@ -60,13 +56,26 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = () => {
             // This functionality is for older versions of chapter, when it was only an ID
             const newFormatBook = await useRapunzelLoader().loadBook(
                 book.chapters[0],
+                {
+                    chapterList: {
+                        page: 1,
+                        size: 50,
+                        orderBy: "desc",
+                    },
+                },
             );
             if (!newFormatBook) return;
             reader.book = newFormatBook;
             saveBookToLibrary(newFormatBook);
-            goToFirstChapterOrSelectChapter({ book: newFormatBook, redirect });
+            goToFirstChapterOrSelectChapter({
+                book: newFormatBook,
+                navigation,
+            });
         } else {
-            goToFirstChapterOrSelectChapter({ book, redirect });
+            goToFirstChapterOrSelectChapter({
+                book,
+                navigation,
+            });
         }
     };
 

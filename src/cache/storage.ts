@@ -8,7 +8,6 @@ import {
 } from "./interfaces";
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
-import { Headers, LilithRepo } from "@atsu/lilith";
 import { RapunzelLog } from "../config/log";
 import { ConfigState } from "../store/interfaces";
 

@@ -1,10 +1,9 @@
-import { ViewNames } from "./interfaces";
+import { UsesNavigation, ViewNames } from "./interfaces";
 import { useRapunzelLoader } from "../../api/loader";
 import { Book } from "@atsu/lilith";
 
-export interface GoToFirstChapterOrSelectProps {
+export interface GoToFirstChapterOrSelectProps extends UsesNavigation {
     book: Book;
-    redirect: (to: ViewNames) => void;
 }
 
 /**
@@ -13,13 +12,13 @@ export interface GoToFirstChapterOrSelectProps {
  */
 export const goToFirstChapterOrSelectChapter = ({
     book,
-    redirect,
+    navigation,
 }: GoToFirstChapterOrSelectProps) => {
     if (book?.chapters.length === 1) {
         const { loadChapter } = useRapunzelLoader();
         loadChapter(book.chapters[0].id);
-        redirect(ViewNames.RapunzelReader);
+        navigation.navigate(ViewNames.RapunzelReader);
     } else {
-        redirect(ViewNames.RapunzelChapterSelect);
+        navigation.navigate(ViewNames.RapunzelChapterSelect);
     }
 };

@@ -1,18 +1,8 @@
 import { Appbar } from "react-native-paper";
 import { useState } from "react";
-import {
-    Appearance,
-    RegisteredStyle,
-    StyleSheet,
-    ViewStyle,
-} from "react-native";
+import { Appearance, ViewStyle } from "react-native";
 
 import { useRapunzelStore } from "../../../store/store";
-import { ViewNames } from "../../navigators/interfaces";
-
-import { useRapunzelStorage } from "../../../cache/storage";
-import { useRapunzelLoader } from "../../../api/loader";
-import { StorageEntries } from "../../../cache/interfaces";
 
 import PaperSearch from "./search";
 import HeaderLeftBtn, { LeftModeProps } from "./headerLeftBtn";
@@ -22,6 +12,7 @@ interface HeaderBarProps extends LeftModeProps {
     showSearch?: boolean;
     openSearch: () => void;
     openOptions: () => void;
+    onSubmit: (searchText: string) => void;
 }
 
 const HeaderBar = ({
@@ -31,23 +22,17 @@ const HeaderBar = ({
     onBack,
     openMenu,
     openOptions,
+    onSubmit,
 }: HeaderBarProps) => {
     const {
         reader: [reader],
         header: [header],
         loading: [, useLoadingEffect],
     } = useRapunzelStore();
+
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useLoadingEffect(({ browse, reader }) => setIsLoading(browse || reader));
-
-    const onSubmitHandler = (newValue: string) => {
-        header.searchValue = newValue;
-
-        if (!newValue) return;
-        useRapunzelStorage().setItem(StorageEntries.searchText, newValue);
-        useRapunzelLoader().loadSearch(newValue);
-    };
 
     const onThemeToggle = () => {
         const newTheme =
@@ -69,7 +54,7 @@ const HeaderBar = ({
                 <PaperSearch
                     defaultValue={header.searchValue}
                     isLoading={isLoading}
-                    onSubmit={onSubmitHandler}
+                    onSubmit={onSubmit}
                 />
             ) : null}
             <Appbar.Action icon="theme-light-dark" onPress={onThemeToggle} />
