@@ -1,4 +1,4 @@
-package com.nhentaireact;
+package com.rapunzel;
 
 import android.app.Application;
 import com.facebook.react.PackageList;

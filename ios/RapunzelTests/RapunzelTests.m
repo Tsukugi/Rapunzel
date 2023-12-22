@@ -7,11 +7,11 @@
 #define TIMEOUT_SECONDS 600
 #define TEXT_TO_LOOK_FOR @"Welcome to React"
 
-@interface NHentaiReactTests : XCTestCase
+@interface RapunzelTests : XCTestCase
 
 @end
 
-@implementation NHentaiReactTests
+@implementation RapunzelTests
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL (^)(UIView *view))test
 {

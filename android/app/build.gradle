@@ -73,9 +73,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.nhentaireact"
+    namespace "com.rapunzel"
     defaultConfig {
-        applicationId "com.nhentaireact"
+        applicationId "com.rapunzel"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -25,7 +25,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'NHentaiReact' do
+target 'Rapunzel' do
   config = use_native_modules!
 
   # Flags change depending on the env values.
@@ -45,7 +45,7 @@ target 'NHentaiReact' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'NHentaiReactTests' do
+  target 'RapunzelTests' do
     inherit! :complete
     # Pods for testing
   end
