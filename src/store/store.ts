@@ -2,9 +2,11 @@ import { TaihouOptions, useState } from "@atsu/taihou";
 import { LilithLanguage, LilithRepo } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
+    AutoFetchWebview,
     BookBaseList,
     BrowseState,
     ConfigState,
+    EAutoFetchWebviewStep,
     HeaderState,
     LatestBooksState,
     LoadingState,
@@ -95,7 +97,7 @@ export const initRapunzelStore = () => {
         page: 1,
     });
 
-    RapunzelState.latest = useReactConfig<LatestBooksState>("popular", {
+    RapunzelState.latest = useReactConfig<LatestBooksState>("latest", {
         ...getDefaultBookBaseList(),
         page: 1,
     });
@@ -104,10 +106,17 @@ export const initRapunzelStore = () => {
         ...getDefaultBookBaseList(),
     });
 
-    RapunzelState.loading = useReactConfig<LoadingState>("loader", {
+    RapunzelState.loading = useReactConfig<LoadingState>("loading", {
         browse: false,
         reader: false,
         latest: false,
         popular: false,
     });
+
+    RapunzelState.autoFetchWebview = useReactConfig<AutoFetchWebview>(
+        "autoFetchWebview",
+        {
+            step: EAutoFetchWebviewStep.Standby,
+        },
+    );
 };

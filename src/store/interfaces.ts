@@ -60,6 +60,18 @@ export interface LoadingState {
     latest: boolean;
 }
 
+export enum EAutoFetchWebviewStep {
+    Standby,
+    Started,
+    WaitForData,
+    ValidData,
+    Finished,
+}
+
+export interface AutoFetchWebview {
+    step: EAutoFetchWebviewStep;
+}
+
 export type TaihouEffect<T> = (onUpdate: (newValue: T) => void) => void;
 export type UseReactTaihou<T> = [T, TaihouEffect<T>];
 
@@ -72,6 +84,7 @@ export interface Store {
     browse: UseReactTaihou<BrowseState>;
     latest: UseReactTaihou<LatestBooksState>;
     popular: UseReactTaihou<PopularBooksState>;
+    autoFetchWebview: UseReactTaihou<AutoFetchWebview>;
 }
 
 export interface RapunzelImage {

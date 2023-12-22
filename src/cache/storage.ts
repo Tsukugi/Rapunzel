@@ -80,12 +80,12 @@ export const initRapunzelStorage = () => {
         return onLoadValue;
     };
 
-    getString(
-        StorageEntries.searchText,
-        setIfValid((value) => {
-            header.searchValue = value;
-        }),
-    );
+    // getString(
+    //     StorageEntries.searchText,
+    //     setIfValid((value) => {
+    //         header.searchValue = value;
+    //     }),
+    // );
     getString(
         StorageEntries.currentRoute,
         setIfValid((value) => {

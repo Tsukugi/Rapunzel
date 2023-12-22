@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
@@ -8,24 +8,45 @@ import { useRapunzelStore } from "../store/store";
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useRapunzelLoader } from "../api/loader";
-import { RapunzelLog } from "../config/log";
 import BrowseItem, {
     BrowserItemProps,
 } from "../components/paper/browser/browserItem";
 import { useVirtualList } from "../tools/virtualList";
+import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
+import { EAutoFetchWebviewStep } from "../store/interfaces";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
 const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
     const {
+        config: [config],
         latest: [latestBooks],
+        autoFetchWebview: [autoFetchWebview],
         loading: [, useLoadingEffect],
     } = useRapunzelStore();
 
+    useEffect(() => {
+        const { restartProcess, startProcess } = useAutoFetchWebviewData({
+            navigation,
+        });
+
+        const loadData = async () => {
+            const canStart = await restartProcess(config);
+            canStart && startProcess(config);
+        };
+
+        loadData();
+    }, []);
+
     useFocusEffect(
         useCallback(() => {
-            useRapunzelLoader().getLatestBooks();
+            const isSafeToLoad = [EAutoFetchWebviewStep.Finished].includes(
+                autoFetchWebview.step,
+            );
+            if (isSafeToLoad) {
+                useRapunzelLoader().getLatestBooks();
+            }
         }, []),
     );
 

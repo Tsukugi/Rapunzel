@@ -10,6 +10,7 @@ import {
 import { useRapunzelStore } from "../store/store";
 import { Snackbar } from "react-native-paper";
 import { StyleSheet } from "react-native";
+import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 
 interface RapunzelWebViewProps extends UsesNavigation {}
 
@@ -28,6 +29,9 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
     const onDismissSnackBar = () => setVisible(!visible);
 
     const onWebviewUpdate = (value: string) => {
+        const { onDataSuccess } = useAutoFetchWebviewData({ navigation });
+
+        onDataSuccess(config);
         if (!config.debug) return;
         setScrapInfoMessage(value);
         setVisible(true);
