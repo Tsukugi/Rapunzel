@@ -8,12 +8,10 @@ import { useRapunzelStore } from "../store/store";
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useRapunzelLoader } from "../api/loader";
-import BrowseItem, {
-    BrowserItemProps,
-} from "../components/paper/browser/browserItem";
 import { useVirtualList } from "../tools/virtualList";
 import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 import { EAutoFetchWebviewStep } from "../store/interfaces";
+import MainFeedItem from "../components/paper/item/mainFeedItem";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -62,29 +60,13 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         );
     });
 
-    const { getVirtualItemProps } = useVirtualList({ navigation });
+    const { getVirtualItemProps } = useVirtualList({
+        navigation,
+        forceAllLanguages: true,
+    });
 
     const onEndReachedHandler = () => {
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
-    };
-
-    const ItemProvider = ({ item }: { item: BrowserItemProps | null }) => {
-        const style = {
-            height: 500,
-        };
-        return item ? (
-            <BrowseItem
-                cover={item.cover}
-                bookBase={item.bookBase}
-                onClick={item.onClick}
-                onLongClick={item.onLongClick}
-                style={style}
-                coverStyle={{ ...style, marginTop: 5 }}
-                titleStyle={{ fontSize: 16, lineHeight: 20, height: 70 }}
-            />
-        ) : (
-            <BrowseItem bookBase={null} />
-        );
     };
 
     return (
@@ -93,7 +75,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
             renderer={({ index }) => {
                 const { id } = loadedImages[index];
                 return (
-                    <ItemProvider
+                    <MainFeedItem
                         item={getVirtualItemProps(
                             latestBooks.bookListRecord[id],
                         )}

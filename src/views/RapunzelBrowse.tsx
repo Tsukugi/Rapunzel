@@ -4,8 +4,7 @@ import { useRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
-import { BrowserItemProps } from "../components/paper/browser/browserItem";
-import CoupleItem from "../components/paper/browser/coupleItem";
+import CoupleItem from "../components/paper/item/coupleItem";
 import { useRapunzelStore } from "../store/store";
 import { useVirtualList } from "../tools/virtualList";
 

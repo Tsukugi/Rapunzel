@@ -1,5 +1,11 @@
 import { Image } from "react-native";
-import { Book, BookBase, SearchResult, useAPILoader } from "@atsu/lilith";
+import {
+    Book,
+    BookBase,
+    SearchResult,
+    useAPILoader,
+    LilithLanguage,
+} from "@atsu/lilith";
 
 import { DeviceCache, StartLoadingImagesProps } from "../cache/cache";
 import { RapunzelLog } from "../config/log";
@@ -69,7 +75,16 @@ const getImageSize = async (uri: string): Promise<RapunzelImage> => {
     );
 };
 
-export const useRapunzelLoader = () => {
+interface UseRapunzelLoaderProps {
+    useAllLanguages: boolean;
+}
+
+export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
+    const { useAllLanguages }: UseRapunzelLoaderProps = {
+        useAllLanguages: false,
+        ...props,
+    };
+
     const getNewId = () => RandomTools.generateRandomId(10);
 
     const {
@@ -87,7 +102,9 @@ export const useRapunzelLoader = () => {
             headers: config.apiLoaderConfig,
             options: {
                 debug: config.debug,
-                requiredLanguages: config.languages,
+                requiredLanguages: useAllLanguages
+                    ? Object.values(LilithLanguage)
+                    : config.languages,
             },
         },
     });

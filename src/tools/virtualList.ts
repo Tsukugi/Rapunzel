@@ -1,16 +1,22 @@
-import { BookBase } from "@atsu/lilith";
+import { BookBase, LilithLanguage } from "@atsu/lilith";
 import { useRapunzelLoader } from "../api/loader";
 import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
 import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
-import { BrowserItemProps } from "../components/paper/browser/browserItem";
-import { VirtualItem } from "../components/virtualList/interfaces";
+import { BrowserItemProps } from "../components/paper/item/browserItem";
 import { UsesNavigation } from "../components/navigators/interfaces";
 
-export interface UuseVirtualListProps extends UsesNavigation {}
+export interface UuseVirtualListProps extends UsesNavigation {
+    forceAllLanguages?: boolean;
+}
 
-export const useVirtualList = ({ navigation }: UuseVirtualListProps) => {
+export const useVirtualList = ({
+    navigation,
+    forceAllLanguages = false,
+}: UuseVirtualListProps) => {
     const onMangaSelectHandler = async (bookBase: BookBase) => {
-        const { loadBook } = useRapunzelLoader();
+        const { loadBook } = useRapunzelLoader({
+            useAllLanguages: forceAllLanguages,
+        });
         const book = await loadBook(bookBase.id, {
             chapterList: {
                 page: 1,
@@ -26,7 +32,9 @@ export const useVirtualList = ({ navigation }: UuseVirtualListProps) => {
     };
 
     const onMangaSaveHandler = async (bookBase: BookBase) => {
-        const { loadBook, loadChapter } = useRapunzelLoader();
+        const { loadBook, loadChapter } = useRapunzelLoader({
+            useAllLanguages: forceAllLanguages,
+        });
         const book = await loadBook(bookBase.id, {
             /**
              * No Need for much chapters to load when saving

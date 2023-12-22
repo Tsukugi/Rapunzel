@@ -5,36 +5,8 @@ import { Dimensions, StyleSheet, View } from "react-native";
 import { LocalTheme } from "../../../../themes";
 import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
 import { getLocaleEmoji } from "../../../tools/locales";
-
-interface UseTimedEventHandlers {
-    onStart: () => void;
-    onFinish: () => void;
-    onIgnore: () => void;
-}
-
-const useTimedEvent = (delay: number) => {
-    const [timer, setTimer] = useState<number | null>(null);
-    const event = (handlers: Partial<UseTimedEventHandlers>) => {
-        const _handlers: UseTimedEventHandlers = {
-            onStart: () => {},
-            onFinish: () => {},
-            onIgnore: () => {},
-            ...handlers,
-        };
-
-        const id = setTimeout(() => {
-            if (id === timer) {
-                setTimer(null);
-                return _handlers.onFinish();
-            }
-            return _handlers.onIgnore();
-        }, delay);
-        setTimer(id);
-        return _handlers.onStart();
-    };
-
-    return [event];
-};
+import { RapunzelLog } from "../../../config/log";
+import { useTimedEvent } from "../../../tools/useTimedEvent";
 
 export interface StyleProps {
     style: Record<string, any>;
@@ -77,22 +49,36 @@ const BrowseItem: FC<BrowserItemProps> = ({
         color: "white",
         title: `${languages.join("")} ${title}`,
     };
+
     const [titleProps, setTitleProps] = useState(defaultStyle);
 
     const [onLongPressEvent] = useTimedEvent(3000);
 
-    const onPressHandler = () => onClick(bookBase);
+    const onPressHandler = () => {
+        RapunzelLog.log("[BrowseItem.onPressHandler]");
+        onClick(bookBase);
+    };
     const onLongPressHandler = () => {
         onLongPressEvent({
-            onStart: () =>
+            onStart: () => {
+                RapunzelLog.log("[BrowseItem.onLongPressEvent.onStart]");
                 setTitleProps({
                     backgroundColor: colors.primary,
                     color: colors.onPrimary,
                     title: "Book added to the Library!",
-                }),
-            onFinish: () => setTitleProps(defaultStyle),
-            onIgnore: () => setTitleProps(defaultStyle),
+                });
+                RapunzelLog.log(titleProps.title);
+            },
+            onFinish: () => {
+                RapunzelLog.log("[BrowseItem.onLongPressEvent.onFinish]");
+                setTitleProps(defaultStyle);
+            },
+            onIgnore: () => {
+                RapunzelLog.log("[BrowseItem.onLongPressEvent.onIgnore]");
+                setTitleProps(defaultStyle);
+            },
         });
+        RapunzelLog.log("[BrowseItem.onLongPressEvent.onLongClick]");
         onLongClick(bookBase);
     };
 
