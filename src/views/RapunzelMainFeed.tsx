@@ -12,14 +12,21 @@ import { useVirtualList } from "../tools/virtualList";
 import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 import { EAutoFetchWebviewStep } from "../store/interfaces";
 import MainFeedItem from "../components/paper/item/mainFeedItem";
+import { Text } from "react-native-paper";
+import { RapunzelLog } from "../config/log";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
 const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
+    const [loadedTrendingBookImages, setLoadedTrendingBookImages] = useState<
+        VirtualItem<string>[]
+    >([]);
+
     const {
         config: [config],
         latest: [latestBooks],
+        trending: [trendingBooks],
         autoFetchWebview: [autoFetchWebview],
         loading: [, useLoadingEffect],
     } = useRapunzelStore();
@@ -43,6 +50,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                 autoFetchWebview.step,
             );
             if (isSafeToLoad) {
+                useRapunzelLoader().getTrendingBooks();
                 useRapunzelLoader().getLatestBooks();
             }
         }, []),
@@ -50,14 +58,33 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useLoadingEffect(() => {
-        setLoadedImages(
-            latestBooks.cachedImages.map(({ id, url }, index) => ({
-                id,
-                index,
-                value: url,
-            })),
-        );
+    useLoadingEffect((isCurrentlyLoading) => {
+        !isCurrentlyLoading.trending &&
+            (() => {
+                const images = trendingBooks.cachedImages.map(
+                    ({ id, url }, index) => ({
+                        id,
+                        index,
+                        value: url,
+                    }),
+                );
+                RapunzelLog.warn({ trendingBooks });
+
+                setLoadedTrendingBookImages(images);
+            })();
+        !isCurrentlyLoading.latest &&
+            (() => {
+                const images = latestBooks.cachedImages.map(
+                    ({ id, url }, index) => ({
+                        id,
+                        index,
+                        value: url,
+                    }),
+                );
+                RapunzelLog.warn({ latestBooks });
+
+                setLoadedImages(images);
+            })();
     });
 
     const { getVirtualItemProps } = useVirtualList({
@@ -70,20 +97,46 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     };
 
     return (
-        <VirtualList
-            data={loadedImages}
-            renderer={({ index }) => {
-                const { id } = loadedImages[index];
-                return (
-                    <MainFeedItem
-                        item={getVirtualItemProps(
-                            latestBooks.bookListRecord[id],
-                        )}
-                    />
-                );
-            }}
-            onEndReached={onEndReachedHandler}
-        />
+        <>
+            <VirtualList
+                options={{ horizontal: true }}
+                style={{ maxHeight: 300, marginBottom: 5 }}
+                data={loadedTrendingBookImages}
+                renderer={({ index }) => {
+                    const { id } = loadedTrendingBookImages[index];
+                    return (
+                        <MainFeedItem
+                            style={{
+                                style: { width: 150 },
+                                coverStyle: { width: 150 },
+                            }}
+                            item={getVirtualItemProps(
+                                trendingBooks.bookListRecord[id],
+                            )}
+                        />
+                    );
+                }}
+                onEndReached={onEndReachedHandler}
+            />
+            <VirtualList
+                data={loadedImages}
+                renderer={({ index }) => {
+                    const { id } = loadedImages[index];
+                    return (
+                        <MainFeedItem
+                            style={{
+                                style: { height: 500 },
+                                coverStyle: { height: 500 },
+                            }}
+                            item={getVirtualItemProps(
+                                latestBooks.bookListRecord[id],
+                            )}
+                        />
+                    );
+                }}
+                onEndReached={onEndReachedHandler}
+            />
+        </>
     );
 };
 export default RapunzelMainFeed;

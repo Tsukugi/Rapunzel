@@ -93,7 +93,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                 backgroundColor: colors.background,
             },
             drawerType: "back",
-            swipeEdgeWidth: width,
+            swipeEdgeWidth: 0,
             ...view.viewDrawerOptions,
             headerShown: !view.headerOptions.hideReader,
             header: !view.headerOptions.hideReader ? HeaderBarImpl : undefined,

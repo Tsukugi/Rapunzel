@@ -56,7 +56,7 @@ export interface LatestBooksState extends BookBaseList {
 export interface LoadingState {
     browse: boolean;
     reader: boolean;
-    popular: boolean;
+    trending: boolean;
     latest: boolean;
 }
 
@@ -83,7 +83,7 @@ export interface Store {
     reader: UseReactTaihou<ReaderState>;
     browse: UseReactTaihou<BrowseState>;
     latest: UseReactTaihou<LatestBooksState>;
-    popular: UseReactTaihou<PopularBooksState>;
+    trending: UseReactTaihou<PopularBooksState>;
     autoFetchWebview: UseReactTaihou<AutoFetchWebview>;
 }
 

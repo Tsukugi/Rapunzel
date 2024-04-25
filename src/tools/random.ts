@@ -8,7 +8,10 @@ const generateRandomId = (length: number): string => {
     }
     return randomId;
 };
+const getRandomElementFromArray = <T>(items: T[]) =>
+    items[Math.floor(Math.random() * items.length)];
 
 export const RandomTools = {
     generateRandomId,
+    getRandomElementFromArray,
 };

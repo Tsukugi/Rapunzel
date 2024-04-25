@@ -4,9 +4,15 @@ import { VirtualItem } from "./interfaces";
 import Item from "./item";
 import { LocalTheme } from "../../../themes";
 import { RapunzelLog } from "../../config/log";
+import { useDebugBorders } from "../../tools/debugBorder";
+import { useRapunzelStore } from "../../store/store";
 
 interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
+    style?: Record<string, any>;
+    options?: {
+        horizontal: boolean;
+    };
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
     onEndReached?: () => void;
@@ -14,16 +20,30 @@ interface VirtualListProps<T> extends PropsWithChildren {
 
 const VirtualList = <T,>({
     data,
+    style,
+    options,
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_data, index) => _data[index],
     onEndReached = () => {
         RapunzelLog.log("[onEndReached]: Reached");
     },
 }: VirtualListProps<T>) => {
+    const {
+        config: [config],
+    } = useRapunzelStore();
+
     const { colors } = LocalTheme.useTheme();
+
+    const innerOptions = { horizontal: false, ...options };
+
     return (
         <VirtualizedList
-            style={styles.container}
+            horizontal={innerOptions.horizontal}
+            style={{
+                ...styles.container,
+                ...style,
+                ...useDebugBorders(config.debug),
+            }}
             data={data}
             initialNumToRender={1}
             maxToRenderPerBatch={3}

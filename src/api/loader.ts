@@ -93,7 +93,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         browse: [browse],
         config: [config],
         latest: [latest],
-        popular: [popular],
+        trending: [popular],
     } = useRapunzelStore();
 
     const apiLoader = useAPILoader({
@@ -449,7 +449,11 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onImageLoaded: async () => {},
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;
-                if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
+                if (cancel)
+                    RapunzelLog.log(
+                        "[getLatestBooks.loadImagelist.shouldCancelLoad] Skipping id ",
+                        id,
+                    );
                 return cancel;
             },
         });
@@ -486,10 +490,94 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         return promise;
     };
 
+    const getTrendingBooks = async (
+        clean: boolean = true,
+    ): Promise<string[]> => {
+        // If not cleaning and a search is already in progress, return an empty array
+        if (!clean && loading.trending) return [];
+
+        // Set the loader.browse flag to true to indicate that a search is in progress
+        loading.trending = true;
+
+        // Define a callback to execute when the search process finishes, either successfully or not
+        const onFinish = () => {
+            loading.trending = false;
+        };
+
+        // If cleaning, reset Browse state variables
+        if (clean) {
+            popular.cachedImages = [];
+            popular.cachedImagesRecord = {};
+            popular.bookList = [];
+            popular.bookListRecord = {};
+            popular.activeProcessId = getNewId();
+        }
+
+        RapunzelLog.log("[getTrendingBooks] Retrieving latest books");
+
+        // Perform the search and retrieve book information, image URIs, and book dictionary
+        const bookListResults: BookListResults = {
+            page: 1,
+            results: await apiLoader.getTrendingBooks(),
+        };
+
+        // If no search results, finish and return an empty array
+        if (!bookListResults) {
+            onFinish();
+            return [];
+        }
+
+        const { imagesToCache, bookDict, imageDict, imageList } =
+            getBookBaseData(bookListResults.results);
+
+        // Load images asynchronously using loadImageList utility
+        const promise = loadImageList({
+            id: popular.activeProcessId,
+            data: imagesToCache,
+            onImageLoaded: async () => {},
+            shouldCancelLoad: (id) => {
+                const cancel = id !== popular.activeProcessId;
+                if (cancel)
+                    RapunzelLog.log(
+                        "[getTrendingBooks.loadImagelist.shouldCancelLoad] Skipping id ",
+                        id,
+                    );
+                return cancel;
+            },
+        });
+
+        // Handle the result of the image loading process
+        promise
+            .then((value) => {
+                // Update the LatestBooks state with search results and loaded images
+                popular.bookList = [
+                    ...popular.bookList,
+                    ...bookListResults.results,
+                ];
+                popular.bookListRecord = {
+                    ...popular.bookListRecord,
+                    ...bookDict,
+                };
+
+                popular.cachedImagesRecord = {
+                    ...popular.cachedImagesRecord,
+                    ...imageDict,
+                };
+
+                popular.cachedImages = [...popular.cachedImages, ...imageList];
+            })
+            .catch(() => {})
+            .finally(onFinish);
+
+        // Return the Promise for further handling, if needed
+        return promise;
+    };
+
     return {
         loadSearch,
         loadBook,
         loadChapter,
         getLatestBooks,
+        getTrendingBooks,
     };
 };

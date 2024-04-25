@@ -27,7 +27,8 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
             return false;
         }
         try {
-            await useRapunzelLoader().getLatestBooks(); // Test a request, should be small
+            await useRapunzelLoader().getTrendingBooks(); // Test a request, should be small
+           
             RapunzelLog.log(
                 "[useAutoFetchWebviewData.validateData] Data seems valid",
             );

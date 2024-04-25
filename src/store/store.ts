@@ -102,7 +102,7 @@ export const initRapunzelStore = () => {
         page: 1,
     });
 
-    RapunzelState.popular = useReactConfig<PopularBooksState>("popular", {
+    RapunzelState.trending = useReactConfig<PopularBooksState>("trending", {
         ...getDefaultBookBaseList(),
     });
 
@@ -110,7 +110,7 @@ export const initRapunzelStore = () => {
         browse: false,
         reader: false,
         latest: false,
-        popular: false,
+        trending: false,
     });
 
     RapunzelState.autoFetchWebview = useReactConfig<AutoFetchWebview>(
