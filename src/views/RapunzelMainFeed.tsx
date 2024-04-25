@@ -14,6 +14,8 @@ import { EAutoFetchWebviewStep } from "../store/interfaces";
 import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { Text } from "react-native-paper";
 import { RapunzelLog } from "../config/log";
+import { FlatList, View } from "react-native";
+import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -96,32 +98,26 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     };
 
+    const imagesWithTrending = [
+        { id: "Trending", index: 0, value: null },
+        ...loadedImages,
+    ];
+
     return (
         <>
             <VirtualList
-                options={{ horizontal: true }}
-                style={{ maxHeight: 300, marginBottom: 5 }}
-                data={loadedTrendingBookImages}
+                data={imagesWithTrending}
                 renderer={({ index }) => {
-                    const { id } = loadedTrendingBookImages[index];
-                    return (
-                        <MainFeedItem
-                            style={{
-                                style: { width: 150 },
-                                coverStyle: { width: 150 },
-                            }}
-                            item={getVirtualItemProps(
-                                trendingBooks.bookListRecord[id],
-                            )}
-                        />
-                    );
-                }}
-                onEndReached={onEndReachedHandler}
-            />
-            <VirtualList
-                data={loadedImages}
-                renderer={({ index }) => {
-                    const { id } = loadedImages[index];
+                    if (index === 0) {
+                        return (
+                            <TrendingBooksFeed
+                                virtualItems={loadedTrendingBookImages}
+                                getVirtualItemPropsHandler={getVirtualItemProps}
+                            />
+                        );
+                    }
+
+                    const { id } = imagesWithTrending[index];
                     return (
                         <MainFeedItem
                             style={{

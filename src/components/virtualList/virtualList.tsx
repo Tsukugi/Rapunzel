@@ -10,9 +10,6 @@ import { useRapunzelStore } from "../../store/store";
 interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
     style?: Record<string, any>;
-    options?: {
-        horizontal: boolean;
-    };
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
     onEndReached?: () => void;
@@ -21,7 +18,6 @@ interface VirtualListProps<T> extends PropsWithChildren {
 const VirtualList = <T,>({
     data,
     style,
-    options,
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_data, index) => _data[index],
     onEndReached = () => {
@@ -34,11 +30,9 @@ const VirtualList = <T,>({
 
     const { colors } = LocalTheme.useTheme();
 
-    const innerOptions = { horizontal: false, ...options };
 
     return (
         <VirtualizedList
-            horizontal={innerOptions.horizontal}
             style={{
                 ...styles.container,
                 ...style,
