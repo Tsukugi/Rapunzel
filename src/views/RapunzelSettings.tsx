@@ -1,5 +1,5 @@
-import React, { FC, useCallback, useState } from "react";
-import { List, Text } from "react-native-paper";
+import React, { FC } from "react";
+import { List } from "react-native-paper";
 import { Book, LilithLanguage, LilithRepo } from "@atsu/lilith";
 
 import ScrollContent from "../components/scrollContent";
@@ -11,15 +11,9 @@ import { useRapunzelStore } from "../store/store";
 import { useRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
 import { RapunzelSelect } from "../components/RapunzelSelect";
-import { removeValuesInParenthesesAndBrackets } from "../tools/string";
-import { useFocusEffect } from "@react-navigation/native";
 import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
 import { useRapunzelLoader } from "../api/loader";
 import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
-import CoupleItem from "../components/paper/item/coupleItem";
-import VirtualList from "../components/virtualList/virtualList";
-import { useVirtualList } from "../tools/virtualList";
-import MainFeedItem from "../components/paper/item/mainFeedItem";
 
 interface RapunzelSettingsProps extends UsesNavigation {}
 
@@ -29,20 +23,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
         config: [config],
     } = useRapunzelStore();
 
-    const [libraryTitles, setLibraryTitles] = useState<Book[]>([]);
-
     useRouter({ route: ViewNames.RapunzelSettings, navigation });
-
-    useFocusEffect(
-        useCallback(() => {
-            (async () => {
-                const library = await useRapunzelStorage().instance.getMapAsync(
-                    StorageEntries.library,
-                );
-                setLibraryTitles(Object.values(library || {}));
-            })();
-        }, []),
-    );
 
     const onSetValueHandlerRepository = (value: string[]) => {
         config.repository = value[0] as LilithRepo;
@@ -83,17 +64,6 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
         }
     };
 
-    const virtualItems = libraryTitles.map((item, index) => ({
-        id: `${index}`,
-        index,
-        value: item,
-    }));
-
-    const { getVirtualItemProps } = useVirtualList({
-        navigation,
-        forceAllLanguages: true,
-    });
-
     return (
         <ScrollContent>
             <List.AccordionGroup>
@@ -122,30 +92,6 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
                 <List.Accordion title="Device and Cache" id="2">
                     <CacheScreen />
                 </List.Accordion>
-                <Text>{`Number of titles in Library: ${libraryTitles.length}`}</Text>
-                <VirtualList
-                    data={virtualItems}
-                    renderer={({ index }) => {
-                        return (
-                            <MainFeedItem
-                                style={{
-                                    style: { height: 500 },
-                                    coverStyle: { height: 500 },
-                                }}
-                                item={getVirtualItemProps(libraryTitles[index])}
-                            />
-                        );
-                    }}
-                />
-                {/* {libraryTitles.map((book, index) => (
-                        <List.Item
-                            key={index}
-                            title={removeValuesInParenthesesAndBrackets(
-                                book.title,
-                            )}
-                            onPress={() => onLoadHandler(book)}
-                        />
-                    ))} */}
             </List.AccordionGroup>
         </ScrollContent>
     );
