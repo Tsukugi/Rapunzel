@@ -15,6 +15,7 @@ export enum ViewNames {
     RapunzelSettings = "RapunzelSettings",
     RapunzelChapterSelect = "RapunzelChapterSelect",
     RapunzelMainFeed = "RapunzelMainFeed",
+    RapunzelLibrary = "RapunzelLibrary",
 }
 
 export type ViewNameKeys = keyof typeof ViewNames;

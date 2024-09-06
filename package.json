@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@atsu/lilith": "github:Tsukugi/Lilith",
-        "@atsu/taihou": "^0.3.2",
+        "@atsu/taihou": "^0.4.0",
         "@react-native-cookies/cookies": "^6.2.1",
         "@react-navigation/drawer": "^6.6.6",
         "@react-navigation/native": "^6.1.9",

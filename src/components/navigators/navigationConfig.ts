@@ -10,6 +10,7 @@ import RapunzelChapterSelect from "../../views/RapunzelChapterSelect";
 import { DrawerNavigationOptions } from "@react-navigation/drawer";
 import { HeaderLeftMode } from "../paper/interfaces";
 import RapunzelMainFeed from "../../views/RapunzelMainFeed";
+import RapunzelLibrary from "../../views/RapunzelLibrary";
 
 export type ViewDict = Record<ViewNames, ViewNavigationData>;
 
@@ -80,6 +81,17 @@ const getViews = (): Partial<ViewDict> => {
             icon: "tray",
             headerOptions: {
                 leftMode: HeaderLeftMode.back,
+            },
+        },
+        RapunzelLibrary: {
+            component: RapunzelLibrary,
+            icon: "tab-search",
+            headerOptions: {
+                showSearch: true,
+                leftMode: HeaderLeftMode.back,
+            },
+            viewDrawerOptions: {
+                title: "Library",
             },
         },
     };
