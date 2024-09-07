@@ -14,11 +14,17 @@ import RapunzelLibrary from "../../views/RapunzelLibrary";
 
 export type ViewDict = Record<ViewNames, ViewNavigationData>;
 
+export enum SearchBehaviour {
+    SendSearchRequest = "SendSearchRequest",
+    FilterLibrary = "FilterLibrary",
+}
+
 interface HeaderOptions {
     hideReader: boolean;
     absoluteMode: boolean;
     leftMode: HeaderLeftMode;
     showSearch: boolean;
+    searchBehaivour: SearchBehaviour;
 }
 
 export interface ViewNavigationData {
@@ -89,6 +95,7 @@ const getViews = (): Partial<ViewDict> => {
             headerOptions: {
                 showSearch: true,
                 leftMode: HeaderLeftMode.back,
+                searchBehaivour: SearchBehaviour.FilterLibrary,
             },
             viewDrawerOptions: {
                 title: "Library",

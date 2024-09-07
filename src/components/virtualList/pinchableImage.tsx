@@ -27,7 +27,6 @@ const PinchableImage: React.FC<PinchableBoxProps> = ({
         })
         .onEnd(() => {
             savedScale.value = scale.value;
-            console.log(savedScale.value);
         });
 
     const animatedStyle = useAnimatedStyle(() => {

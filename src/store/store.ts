@@ -9,6 +9,7 @@ import {
     EAutoFetchWebviewStep,
     HeaderState,
     LatestBooksState,
+    LibraryState,
     LoadingState,
     PopularBooksState,
     ReaderState,
@@ -95,6 +96,11 @@ export const initRapunzelStore = () => {
     RapunzelState.browse = useReactConfig<BrowseState>("browse", {
         ...getDefaultBookBaseList(),
         page: 1,
+    });
+
+    RapunzelState.library = useReactConfig<LibraryState>("library", {
+        saved: {},
+        rendered: [],
     });
 
     RapunzelState.latest = useReactConfig<LatestBooksState>("latest", {

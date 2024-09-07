@@ -293,13 +293,13 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const imageList: CachedImage[] = [];
 
         // Iterate through search results and populate imagesToCache and bookDict
-        bookBaseList.forEach((manga) => {
-            imagesToCache.push(manga.cover.uri);
-            bookDict[manga.id] = manga;
-            imageDict[manga.id] = manga.cover.uri;
+        bookBaseList.forEach((book) => {
+            imagesToCache.push(book.cover.uri);
+            bookDict[book.id] = book;
+            imageDict[book.id] = book.cover.uri;
             imageList.push({
-                id: manga.id,
-                url: manga.cover.uri,
+                id: book.id,
+                url: book.cover.uri,
             });
         });
 

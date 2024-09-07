@@ -13,7 +13,7 @@ import { StorageEntries } from "../cache/interfaces";
 import { RapunzelSelect } from "../components/RapunzelSelect";
 import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
 import { useRapunzelLoader } from "../api/loader";
-import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
+import { useLibrary } from "../components/cache/library";
 
 interface RapunzelSettingsProps extends UsesNavigation {}
 
@@ -51,7 +51,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
             );
             if (!newFormatBook) return;
             reader.book = newFormatBook;
-            saveBookToLibrary(newFormatBook);
+            useLibrary().saveBookToLibrary(newFormatBook);
             goToFirstChapterOrSelectChapter({
                 book: newFormatBook,
                 navigation,

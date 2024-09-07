@@ -12,7 +12,11 @@ import { HeaderLeftMode } from "../paper/interfaces";
 
 import { LocalTheme } from "../../../themes";
 
-import { ViewDict, ViewNavigationData } from "./navigationConfig";
+import {
+    SearchBehaviour,
+    ViewDict,
+    ViewNavigationData,
+} from "./navigationConfig";
 import CustomDrawerContent from "./customDrawerContent";
 import { ViewNames } from "./interfaces";
 import { Dimensions, ViewStyle } from "react-native";
@@ -20,6 +24,7 @@ import { useRapunzelStore } from "../../store/store";
 import { useRapunzelStorage } from "../../cache/storage";
 import { useRapunzelLoader } from "../../api/loader";
 import { StorageEntries } from "../../cache/interfaces";
+import { RapunzelLog } from "../../config/log";
 
 interface DrawerNavigatorProps {
     views: Partial<ViewDict>;
@@ -30,6 +35,7 @@ const Drawer = createDrawerNavigator();
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     const {
         header: [header],
+        library: [library],
         router: [router],
     } = useRapunzelStore();
 
@@ -46,7 +52,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
         const HeaderBarImpl = ({
             navigation,
         }: DrawerHeaderProps): ReactNode => {
-            const onSubmitHandler = async (newValue: string) => {
+            const onRequestSearch = async (newValue: string) => {
                 header.searchValue = newValue;
                 useRapunzelStorage().setItem(
                     StorageEntries.searchText,
@@ -61,6 +67,55 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                     navigation.navigate(ViewNames.RapunzelBrowse);
                 }
             };
+            const onLibraryFilterSearch = async (newValue: string) => {
+                header.searchValue = newValue;
+                useRapunzelStorage().setItem(
+                    StorageEntries.searchText,
+                    newValue,
+                );
+
+                if (!newValue) {
+                    library.rendered = Object.keys(library.saved);
+                    return;
+                }
+
+                const newRendered = Object.keys(library.saved).filter((id) => {
+                    const titleMatch = library.saved[id].title
+                        .toLowerCase()
+                        .includes(newValue.toLowerCase());
+                    const authorMatch = library.saved[id].author
+                        .toLowerCase()
+                        .includes(newValue.toLowerCase());
+                    const tagsMatch = !!library.saved[id].tags.find((tag) =>
+                        tag.name.toLowerCase().includes(newValue.toLowerCase()),
+                    );
+
+                    const match = titleMatch || authorMatch || tagsMatch;
+
+                    if (match) {
+                        RapunzelLog.log({
+                            id,
+                            authorMatch,
+                            tagsMatch,
+                            titleMatch,
+                        });
+                    }
+
+                    return match;
+                });
+
+                if (newRendered.length > 0) library.rendered = newRendered;
+            };
+
+            const searchSubmitBehaviour = (() => {
+                switch (view.headerOptions.searchBehaivour) {
+                    default:
+                        return onRequestSearch;
+                    case SearchBehaviour.FilterLibrary:
+                        return onLibraryFilterSearch;
+                }
+            })();
+
             return (
                 <HeaderBar
                     style={
@@ -71,7 +126,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                         view.headerOptions.leftMode || HeaderLeftMode.menu
                     }
                     onBack={navigation.goBack}
-                    onSubmit={onSubmitHandler}
+                    onSubmit={searchSubmitBehaviour}
                     openMenu={navigation.openDrawer}
                     openOptions={() => {}}
                     openSearch={() => {}}

@@ -1,6 +1,6 @@
 # Welcome to Rapunzel!
 
-A manga reader made in React Native that supports multiple sources.
+A reader made in React Native for books that supports multiple sources.
 
 ## Dependencies
 

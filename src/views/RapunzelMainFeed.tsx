@@ -8,14 +8,13 @@ import { useRapunzelStore } from "../store/store";
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useRapunzelLoader } from "../api/loader";
-import { useVirtualList } from "../tools/virtualList";
+import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 import { EAutoFetchWebviewStep } from "../store/interfaces";
 import MainFeedItem from "../components/paper/item/mainFeedItem";
-import { Text } from "react-native-paper";
 import { RapunzelLog } from "../config/log";
-import { FlatList, View } from "react-native";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
+import { useDebouncedCallback } from "use-debounce";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -33,28 +32,31 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         loading: [, useLoadingEffect],
     } = useRapunzelStore();
 
-    useEffect(() => {
+    const loadWebViewAccess = async () => {
         const { restartProcess, startProcess } = useAutoFetchWebviewData({
             navigation,
         });
+        const canStart = await restartProcess(config);
+        canStart && startProcess(config);
+    };
 
-        const loadData = async () => {
-            const canStart = await restartProcess(config);
-            canStart && startProcess(config);
-        };
+    const loadMainFeed = () => {
+        const isSafeToLoad = [EAutoFetchWebviewStep.Finished].includes(
+            autoFetchWebview.step,
+        );
+        if (isSafeToLoad) {
+            useRapunzelLoader().getTrendingBooks();
+            useRapunzelLoader().getLatestBooks();
+        }
+    };
 
-        loadData();
+    useEffect(() => {
+        loadWebViewAccess();
     }, []);
 
     useFocusEffect(
         useCallback(() => {
-            const isSafeToLoad = [EAutoFetchWebviewStep.Finished].includes(
-                autoFetchWebview.step,
-            );
-            if (isSafeToLoad) {
-                useRapunzelLoader().getTrendingBooks();
-                useRapunzelLoader().getLatestBooks();
-            }
+            loadMainFeed();
         }, []),
     );
 
@@ -89,13 +91,22 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
             })();
     });
 
-    const { getVirtualItemProps } = useVirtualList({
+    const { getVirtualItemProps } = useVirtualListEvents({
         navigation,
         forceAllLanguages: true,
     });
 
-    const onEndReachedHandler = () => {
+    const debouncedStartReached = useDebouncedCallback(() => {
+        loadMainFeed();
+    }, 1000);
+    const debouncedEndReached = useDebouncedCallback(() => {
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
+    }, 1000);
+    const onStartReachedHandler = () => {
+        debouncedStartReached();
+    };
+    const onEndReachedHandler = () => {
+        debouncedEndReached();
     };
 
     const imagesWithTrending = [
@@ -130,6 +141,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                         />
                     );
                 }}
+                onStartReached={onStartReachedHandler}
                 onEndReached={onEndReachedHandler}
             />
         </>

@@ -7,14 +7,14 @@ interface ImageItemProps {
     item: VirtualItem<RapunzelImage>;
     handleImageLoadStart?: () => void;
     handleImageLoad?: () => void;
-    onClick: (item: VirtualItem<RapunzelImage>) => void;
+    onClick?: (item: VirtualItem<RapunzelImage>) => void;
 }
 
 const ImageItem: React.FC<ImageItemProps> = ({
     item,
     handleImageLoadStart,
     handleImageLoad,
-    onClick,
+    onClick = (item) => {},
 }): React.JSX.Element => {
     const onClickHandler = () => onClick(item);
     return (

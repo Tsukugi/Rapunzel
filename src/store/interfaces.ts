@@ -48,6 +48,10 @@ export interface BrowseState extends BookBaseList {
 }
 
 export interface PopularBooksState extends BookBaseList {}
+export interface LibraryState {
+    saved: Record<string, Book>;
+    rendered: string[];
+}
 
 export interface LatestBooksState extends BookBaseList {
     page: number;
@@ -84,6 +88,7 @@ export interface Store {
     browse: UseReactTaihou<BrowseState>;
     latest: UseReactTaihou<LatestBooksState>;
     trending: UseReactTaihou<PopularBooksState>;
+    library: UseReactTaihou<LibraryState>;
     autoFetchWebview: UseReactTaihou<AutoFetchWebview>;
 }
 

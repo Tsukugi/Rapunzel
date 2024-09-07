@@ -13,6 +13,7 @@ interface VirtualListProps<T> extends PropsWithChildren {
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
     onEndReached?: () => void;
+    onStartReached?: () => void;
 }
 
 const VirtualList = <T,>({
@@ -23,13 +24,15 @@ const VirtualList = <T,>({
     onEndReached = () => {
         RapunzelLog.log("[onEndReached]: Reached");
     },
+    onStartReached = () => {
+        RapunzelLog.log("[onStartReached]: Reached");
+    },
 }: VirtualListProps<T>) => {
     const {
         config: [config],
     } = useRapunzelStore();
 
     const { colors } = LocalTheme.useTheme();
-
 
     return (
         <VirtualizedList
@@ -39,14 +42,15 @@ const VirtualList = <T,>({
                 ...useDebugBorders(config.debug),
             }}
             data={data}
-            initialNumToRender={1}
-            maxToRenderPerBatch={3}
+            initialNumToRender={3}
+            maxToRenderPerBatch={6}
             windowSize={6}
             endFillColor={colors.backdrop}
             renderItem={renderer}
             keyExtractor={(_, index) => index.toString()}
             getItemCount={(_data) => _data.length}
             getItem={getItem}
+            onStartReached={onStartReached}
             onEndReached={onEndReached}
             onEndReachedThreshold={200}
         />

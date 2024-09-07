@@ -10,6 +10,7 @@ import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelLog } from "../config/log";
 import { ConfigState } from "../store/interfaces";
+import { Book } from "@atsu/lilith";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
@@ -60,12 +61,20 @@ export const useRapunzelStorage = (): UseStorage => {
 export const initRapunzelStorage = () => {
     RapunzelStorage.instance = new MMKVLoader().initialize();
 
-    const { getBool, getString, getInt, getArray, getMap, getItem } =
-        RapunzelStorage.instance;
+    const {
+        getBool,
+        getString,
+        getInt,
+        getArray,
+        getMap,
+        getItem,
+        getMapAsync,
+    } = RapunzelStorage.instance;
 
     const {
         config: [config],
         header: [header],
+        library: [library],
         router: [router],
     } = useRapunzelStore();
 
@@ -98,6 +107,15 @@ export const initRapunzelStorage = () => {
             Object.keys(value).forEach((key) => {
                 (config as any)[key] = (value as any)[key];
             });
+        }),
+    );
+
+    getMap<Record<string, Book>>(
+        StorageEntries.library,
+        setIfValid((storedLibrary: Record<string, Book>) => {
+            if (!storedLibrary) return;
+            library.saved = storedLibrary;
+            library.rendered = Object.keys(storedLibrary);
         }),
     );
 };

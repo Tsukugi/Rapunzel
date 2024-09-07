@@ -6,7 +6,7 @@ import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 import CoupleItem from "../components/paper/item/coupleItem";
 import { useRapunzelStore } from "../store/store";
-import { useVirtualList } from "../tools/virtualList";
+import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
@@ -30,7 +30,7 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         );
     });
 
-    const { getVirtualItemProps } = useVirtualList({ navigation });
+    const { getVirtualItemProps } = useVirtualListEvents({ navigation });
 
     const onEndReachedHandler = () => {
         useRapunzelLoader().loadSearch(

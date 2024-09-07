@@ -1,19 +1,27 @@
-import { BookBase, LilithLanguage } from "@atsu/lilith";
+import { BookBase } from "@atsu/lilith";
 import { useRapunzelLoader } from "../api/loader";
-import { saveBookToLibrary } from "../components/cache/saveBookToLibrary";
+import { useLibrary } from "../components/cache/library";
 import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
 import { BrowserItemProps } from "../components/paper/item/browserItem";
 import { UsesNavigation } from "../components/navigators/interfaces";
 
-export interface UuseVirtualListProps extends UsesNavigation {
+export interface UseVirtualListProps extends UsesNavigation {
     forceAllLanguages?: boolean;
+    onClick?: BookEvent;
+    onLongClick?: BookEvent;
 }
 
-export const useVirtualList = ({
+type BookEvent = (bookBase: BookBase) => Promise<void>;
+
+export const useVirtualListEvents = ({
     navigation,
     forceAllLanguages = false,
-}: UuseVirtualListProps) => {
-    const onMangaSelectHandler = async (bookBase: BookBase) => {
+    onClick,
+    onLongClick,
+}: UseVirtualListProps) => {
+    const { saveBookToLibrary, removeBookFromLibrary } = useLibrary();
+
+    const onBookSelectHandler: BookEvent = async (bookBase: BookBase) => {
         const { loadBook } = useRapunzelLoader({
             useAllLanguages: forceAllLanguages,
         });
@@ -31,7 +39,7 @@ export const useVirtualList = ({
         });
     };
 
-    const onMangaSaveHandler = async (bookBase: BookBase) => {
+    const onBookSaveHandler: BookEvent = async (bookBase: BookBase) => {
         const { loadBook, loadChapter } = useRapunzelLoader({
             useAllLanguages: forceAllLanguages,
         });
@@ -44,7 +52,7 @@ export const useVirtualList = ({
                 size: 10,
             },
         });
-        if (!book) return null;
+        if (!book) return;
 
         // We make available the first chapter beforehand
         if (book?.chapters.length === 1) {
@@ -52,6 +60,12 @@ export const useVirtualList = ({
         }
 
         saveBookToLibrary(book);
+    };
+
+    const onRemoveFromLibraryHandler: BookEvent = async (
+        bookBase: BookBase,
+    ) => {
+        await removeBookFromLibrary(bookBase);
     };
 
     const getVirtualItemProps = (
@@ -62,10 +76,15 @@ export const useVirtualList = ({
         return {
             cover: bookBase.cover.uri,
             bookBase,
-            onClick: onMangaSelectHandler,
-            onLongClick: onMangaSaveHandler,
+            onClick: onClick || onBookSelectHandler,
+            onLongClick: onLongClick || onBookSaveHandler,
         };
     };
 
-    return { getVirtualItemProps };
+    return {
+        getVirtualItemProps,
+        onBookSaveHandler,
+        onBookSelectHandler,
+        onRemoveFromLibraryHandler,
+    };
 };
