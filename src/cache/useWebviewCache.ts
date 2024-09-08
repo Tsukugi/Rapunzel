@@ -50,7 +50,15 @@ export const useWebviewCache = ({
 };
 
 export const WebviewInjectJavascript = {
+    tryRemoveAds: `setTimeout(function () {
+        document.querySelectorAll("script:not([src*='nhentai'])").forEach(el=> el.parentNode.removeChild(el));
+        document.querySelectorAll("link:not([href*='nhentai'])").forEach(el=> el.parentNode.removeChild(el));
+        var ad = document.querySelector("section.advertisement");
+        if(ad){ ad.parentNode.removeChild(ad); }
+        var style = document.querySelector("body > style");
+        if(style){ style.parentNode.removeChild(style); }
+    }, 10);`,
     getUserAgent: `setTimeout(function () {
         window.ReactNativeWebView.postMessage(JSON.stringify({userAgent: navigator.userAgent}))
-      }, 1000)`,
+    }, 1000);`,
 };

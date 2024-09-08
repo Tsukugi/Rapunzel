@@ -62,15 +62,20 @@ export const initRapunzelStore = () => {
     });
 
     RapunzelState.config = useReactConfig<ConfigState>("config", {
-        debug: true,
-        useFallbackExtensionOnDownload: true,
+        debug: false,
+        useFallbackExtensionOnDownload: false,
         apiLoaderConfig: {
             "User-Agent": "",
             cookie: "",
         },
         webviewUrl: `https://nhentai.net/`,
         repository: LilithRepo.NHentai,
-        languages: [LilithLanguage.english, LilithLanguage.spanish],
+        languages: [
+            LilithLanguage.english,
+            LilithLanguage.spanish,
+            LilithLanguage.japanese,
+            LilithLanguage.mandarin,
+        ],
     });
 
     RapunzelState.reader = useReactConfig<ReaderState>("reader", {

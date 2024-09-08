@@ -22,13 +22,12 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const validateData = async ({ apiLoaderConfig }: ConfigState) => {
         if (!apiLoaderConfig["User-Agent"] || !apiLoaderConfig.cookie) {
             RapunzelLog.log(
-                "[useAutoFetchWebviewData.validateData] Not enough data",
+                `[useAutoFetchWebviewData.validateData] Not enough data ${JSON.stringify(apiLoaderConfig)}`,
             );
             return false;
         }
         try {
             await useRapunzelLoader().getTrendingBooks(); // Test a request, should be small
-           
             RapunzelLog.log(
                 "[useAutoFetchWebviewData.validateData] Data seems valid",
             );

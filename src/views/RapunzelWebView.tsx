@@ -11,6 +11,7 @@ import { useRapunzelStore } from "../store/store";
 import { Snackbar } from "react-native-paper";
 import { StyleSheet } from "react-native";
 import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
+import { RapunzelLog } from "../config/log";
 
 interface RapunzelWebViewProps extends UsesNavigation {}
 
@@ -53,25 +54,27 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
 
     return (
         <>
-            <Snackbar
-                style={styles.container}
-                visible={visible}
-                onDismiss={onDismissSnackBar}
-            >
-                {scrapInfoMessage}
-            </Snackbar>
             <WebView
-                injectedJavaScript={WebviewInjectJavascript.getUserAgent}
+                userAgent="Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.3"
+                injectedJavaScript={
+                    WebviewInjectJavascript.tryRemoveAds +
+                    WebviewInjectJavascript.getUserAgent
+                }
                 onNavigationStateChange={() =>
-                    CookieManager.get(config.webviewUrl, useWebKit).then(
-                        onCookiesRetrieved,
-                    )
+                    CookieManager.get(config.webviewUrl, useWebKit)
+                        .then(onCookiesRetrieved)
+                        .catch((err) => RapunzelLog.warn(err))
                 }
                 onMessage={onUserAgentRetrieved}
                 sharedCookiesEnabled={true}
-                style={{ width: 400, height: 500 }}
+                style={{ width: 380, height: 500 }}
                 originWhitelist={["*"]}
-                source={{ uri: config.webviewUrl }}
+                source={{
+                    uri: config.webviewUrl,
+                    headers: {
+                        "X-Requested-With": "Chrome Mobile",
+                    },
+                }}
             />
         </>
     );

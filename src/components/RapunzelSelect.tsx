@@ -38,29 +38,19 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
     });
 
     useEffect(() => {
-        let isMounted = true;
-        let getData = async () => {
-            if (!isMounted) return;
+        const initialItems: SelectItem[] = list
+            .filter((item) => initialValue.includes(item))
+            .map((item, index) => ({
+                _id: `${index}`,
+                value: item,
+            }));
 
-            const initialItems: SelectItem[] = list
-                .filter((item) => initialValue.includes(item))
-                .map((item, index) => ({
-                    _id: `${index}`,
-                    value: item,
-                }));
-
-            setStateValues({
-                ...stateValues,
-                value: initialItems.map((item) => item.value).join(", "),
-                selectedList: initialItems,
-            });
-        };
-
-        getData();
-        return () => {
-            isMounted = false;
-        };
-    }, []);
+        setStateValues({
+            ...stateValues,
+            value: initialItems.map((item) => item.value).join(", "),
+            selectedList: initialItems,
+        });
+    }, [initialValue]);
 
     const onSelectionHandler: SelectionCallback = (values) => {
         setStateValues({

@@ -9,8 +9,6 @@ import { useRapunzelStore } from "../store/store";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRapunzelLoader } from "../api/loader";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
-import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
-import { EAutoFetchWebviewStep } from "../store/interfaces";
 import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { RapunzelLog } from "../config/log";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
@@ -25,34 +23,16 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     >([]);
 
     const {
-        config: [config],
         latest: [latestBooks],
         trending: [trendingBooks],
-        autoFetchWebview: [autoFetchWebview],
-        loading: [, useLoadingEffect],
+        loading: [loading, useLoadingEffect],
     } = useRapunzelStore();
 
-    const loadWebViewAccess = async () => {
-        const { restartProcess, startProcess } = useAutoFetchWebviewData({
-            navigation,
-        });
-        const canStart = await restartProcess(config);
-        canStart && startProcess(config);
-    };
-
     const loadMainFeed = () => {
-        const isSafeToLoad = [EAutoFetchWebviewStep.Finished].includes(
-            autoFetchWebview.step,
-        );
-        if (isSafeToLoad) {
-            useRapunzelLoader().getTrendingBooks();
-            useRapunzelLoader().getLatestBooks();
-        }
+        const { getLatestBooks, getTrendingBooks } = useRapunzelLoader();
+        !loading.trending && getTrendingBooks();
+        !loading.latest && getLatestBooks();
     };
-
-    useEffect(() => {
-        loadWebViewAccess();
-    }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -97,9 +77,11 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     });
 
     const debouncedStartReached = useDebouncedCallback(() => {
-        loadMainFeed();
+        //loadMainFeed();
     }, 1000);
     const debouncedEndReached = useDebouncedCallback(() => {
+        if (loading.latest) return;
+
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     }, 1000);
     const onStartReachedHandler = () => {

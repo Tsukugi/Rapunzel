@@ -101,6 +101,7 @@ export const initRapunzelStorage = () => {
             router.currentRoute = value as ViewNames;
         }),
     );
+
     getMap(
         StorageEntries.config,
         setIfValid((value: ConfigState) => {

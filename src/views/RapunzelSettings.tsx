@@ -84,7 +84,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
                     />
                     <RapunzelSelect
                         label="Languages"
-                        initialValue={[LilithLanguage.english]}
+                        initialValue={config.languages}
                         list={Object.values(LilithLanguage)}
                         onSelect={onSetValueHandlerLanguages}
                     />
