@@ -16,7 +16,7 @@ export const goToFirstChapterOrSelectChapter = ({
 }: GoToFirstChapterOrSelectProps) => {
     if (book?.chapters.length === 1) {
         const { loadChapter } = useRapunzelLoader();
-        loadChapter(book.chapters[0].id);
+        loadChapter(book.id, book.chapters[0].id);
         navigation.navigate(ViewNames.RapunzelReader);
     } else {
         navigation.navigate(ViewNames.RapunzelChapterSelect);

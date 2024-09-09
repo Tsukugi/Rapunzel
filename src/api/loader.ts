@@ -7,7 +7,6 @@ import {
     LilithLanguage,
 } from "@atsu/lilith";
 
-import { DeviceCache, StartLoadingImagesProps } from "../cache/cache";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
@@ -18,38 +17,12 @@ import {
     GetBookOptions,
     SearchQueryOptions,
 } from "@atsu/lilith/dist/repo/base/interfaces";
-
-interface LoadImageListProps extends StartLoadingImagesProps {}
-/**
- * Asynchronously loads images using the provided data and options.
- * @param {LoadImageListProps} props - The properties needed for loading images, extends StartLoadingImagesProps.
- * @returns {Promise<string[]>} - A Promise that resolves to an array of indexes representing the loaded images. If no images are loaded, an empty array is returned.
- */
-const loadImageList = async ({
-    id = RandomTools.generateRandomId(10),
-    data,
-    onImageLoaded,
-    shouldCancelLoad,
-}: LoadImageListProps): Promise<string[]> => {
-    if (data.length === 0) return [];
-
-    const imageSet = data.filter((data) => !!data);
-    RapunzelLog.log(
-        `[loadImageList]: Start loading images, size ${imageSet.length}, id ${id}`,
-    );
-
-    try {
-        const indexes = await DeviceCache.startLoadingImages({
-            id,
-            data: imageSet,
-            onImageLoaded,
-            shouldCancelLoad,
-        });
-        return indexes;
-    } catch (error) {
-        return [];
-    }
-};
+import {
+    DownloadBookProps,
+    RapunzelCache,
+    StaticLibraryPaths,
+} from "../cache/useRapunzelCache";
+import { CacheUtils } from "../cache/CacheUtils";
 
 /**
  * Retrieves the sizes (width and height) of images from the provided URIs using asynchronous calls.
@@ -203,17 +176,22 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
     /**
      * Loads a chapter based on its id, automatically downloading and caching the image list to the Reader state.
-     * @param {string} id - Unique id of a chapter.
+     * @param {string} chapterId - Unique id of a chapter.
      * @returns {Promise<string[] >} - A Promise that resolves to an array of cached image paths corresponding to the loaded images. Returns null if the chapter loading fails.
      */
-    const loadChapter = async (id: string): Promise<string[]> => {
+    const loadChapter = async (
+        bookId: string,
+        chapterId: string,
+    ): Promise<string[]> => {
         // Set the loader.reader flag to true to indicate that a chapter is being loaded
         loading.reader = true;
 
-        RapunzelLog.log("[loadBook] Loading chapter from id", id);
+        RapunzelLog.log("[loadBook] Loading chapter from id", chapterId);
 
         // Retrieve the chapter information from the API
-        const chapter = await apiLoader.getChapter(id).catch(RapunzelLog.error);
+        const chapter = await apiLoader
+            .getChapter(chapterId)
+            .catch(RapunzelLog.error);
 
         // Define a callback to execute when the chapter loading process finishes
         const onFinish = () => {
@@ -233,9 +211,16 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         reader.activeProcessId = getNewId();
 
         // Load images asynchronously using loadImageList utility
-        const promise = loadImageList({
+        const promise = RapunzelCache.downloadImageList({
             id: reader.activeProcessId,
             data: images,
+            downloadPath: `${StaticLibraryPaths.ReadBooks}/${config.repository}/${bookId}/${chapterId}`,
+            onFileNaming: ({ index }) =>
+                CacheUtils.getFileName({
+                    book: bookId,
+                    pageNumber: index + 1,
+                    extension: CacheUtils.getExtensionFromUri(images[index]),
+                }),
             onImageLoaded: imageStateLoader(async (value) => {
                 // Update the Reader state with the cached images and their sizes
                 reader.cachedImages = await getImageListSizes(value);
@@ -362,9 +347,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             getBookBaseData(searchResult.results);
 
         // Load images asynchronously using loadImageList utility
-        const promise = loadImageList({
+        const promise = RapunzelCache.downloadImageList({
             id: browse.activeProcessId,
+            downloadPath: StaticLibraryPaths.SearchResults,
             data: imagesToCache,
+            onFileNaming: ({ index }) =>
+                CacheUtils.getFileName({
+                    book: imageList[index].id,
+                    chapter: "cover",
+                    extension: CacheUtils.getExtensionFromUri(
+                        imageList[index].url,
+                    ),
+                }),
             onImageLoaded: async () => {},
             shouldCancelLoad: (id) => {
                 const cancel = id !== browse.activeProcessId;
@@ -443,9 +437,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             getBookBaseData(bookListResults.results);
 
         // Load images asynchronously using loadImageList utility
-        const promise = loadImageList({
+        const promise = RapunzelCache.downloadImageList({
             id: latest.activeProcessId,
             data: imagesToCache,
+            downloadPath: StaticLibraryPaths.LatestBooks,
+            onFileNaming: ({ index }) =>
+                CacheUtils.getFileName({
+                    book: imageList[index].id,
+                    chapter: "cover",
+                    extension: CacheUtils.getExtensionFromUri(
+                        imageList[index].url,
+                    ),
+                }),
             onImageLoaded: async () => {},
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;
@@ -531,9 +534,19 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             getBookBaseData(bookListResults.results);
 
         // Load images asynchronously using loadImageList utility
-        const promise = loadImageList({
+        const promise = RapunzelCache.downloadImageList({
             id: popular.activeProcessId,
             data: imagesToCache,
+            downloadPath: StaticLibraryPaths.Trending,
+            onFileNaming: ({ index }) =>
+                CacheUtils.getFileName({
+                    book: imageList[index].id,
+                    chapter: "cover",
+                    pageNumber: index + 1,
+                    extension: CacheUtils.getExtensionFromUri(
+                        imageList[index].url,
+                    ),
+                }),
             onImageLoaded: async () => {},
             shouldCancelLoad: (id) => {
                 const cancel = id !== popular.activeProcessId;

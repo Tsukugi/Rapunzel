@@ -16,12 +16,11 @@ interface RapunzelLibraryProps extends UsesNavigation {}
 const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
     const {
         loading: [, useLoadingEffect],
-        header: [header],
         library: [library],
     } = useRapunzelStore();
 
-    const updateLibraryFromStorage = async () => {
-        const storedLibrary = await useRapunzelStorage().instance.getMapAsync<
+    const updateLibraryFromStorage = () => {
+        const storedLibrary = useRapunzelStorage().instance.getMap<
             Record<string, Book>
         >(StorageEntries.library);
         if (!storedLibrary) return;
@@ -47,6 +46,7 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
             library.rendered = library.rendered.filter(
                 (id) => id !== bookBase.id,
             );
+            updateLibraryFromStorage();
             return await removePromise;
         },
     });

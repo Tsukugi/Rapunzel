@@ -52,7 +52,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                         value: url,
                     }),
                 );
-                RapunzelLog.warn({ trendingBooks });
+                RapunzelLog.warn({ trendingBooks: images.map((i) => i.id) });
 
                 setLoadedTrendingBookImages(images);
             })();
@@ -65,7 +65,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                         value: url,
                     }),
                 );
-                RapunzelLog.warn({ latestBooks });
+                RapunzelLog.warn({ latestBooks: images.map((i) => i.id) });
 
                 setLoadedImages(images);
             })();

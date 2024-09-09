@@ -3,17 +3,22 @@ import "react-native";
 import { test, describe, jest, expect } from "@jest/globals";
 
 const size = 52428800; // 50 MB in bytes
-const cachePath = "cache";
+const cachePath = "RapunzelLibrary";
 const imageName = "image.jpg";
 const bookId = "123123";
 const testDomain = "testdomain.net";
 
-const useLocalFilename = (mockPrefix = "") =>
-    `${bookId}.${mockPrefix}${imageName}`;
+const useLocalFilename = (mockPrefix = "") => {
+    if (!mockPrefix) return imageName;
+    return `${mockPrefix}.${imageName}`;
+};
+const usePath = () => {
+    return `${cachePath}/${bookId}`;
+};
 const useDomainFilename = (mockPrefix = "") =>
-    `${testDomain}/${bookId}/${mockPrefix}${imageName}`;
+    `${testDomain}/${bookId}/${useLocalFilename(mockPrefix)}`;
 const useLocalFullPathFilename = (mockPrefix = "") =>
-    `file://${cachePath}/${useLocalFilename(mockPrefix)}`;
+    `file://${usePath()}/${useLocalFilename(mockPrefix)}`;
 
 const usePromise = <T,>(returnValue: T): Promise<T> =>
     new Promise((res) => res(returnValue));
@@ -27,7 +32,7 @@ jest.mock("react-native-fs", () => ({
         usePromise([
             {
                 name: useLocalFilename(),
-                path: cachePath,
+                path: `${cachePath}/${bookId}`,
             },
         ]),
     downloadFile: (options: object) => ({
@@ -44,11 +49,6 @@ describe("Use device cache", () => {
     test("Calculate cache size", async () => {
         const size = await DeviceCache.calculateCacheSize();
         expect(size).toEqual(50);
-    });
-
-    test("Get cache path", async () => {
-        const cachePathToTest = DeviceCache.getCachePath(imageName);
-        expect(cachePathToTest).toBe(`${cachePath}/${imageName}`);
     });
 
     test("Download with fallback", async () => {
@@ -70,6 +70,8 @@ describe("Use device cache", () => {
     test("Download and cache image", async () => {
         const image = await DeviceCache.downloadAndCacheImage({
             uri: `${testDomain}/${bookId}/${imageName}`,
+            downloadPath: `${cachePath}/${bookId}`,
+            imageFileName: `${imageName}`,
             onImageCached: (path) => {
                 expect(path).toEqual(useLocalFullPathFilename());
             },
@@ -85,8 +87,9 @@ describe("Use device cache", () => {
 
     test("Redownload Image", async () => {
         const images = await DeviceCache.redownloadImage(
-            cachePath,
+            usePath(),
             useDomainFilename(),
+            useLocalFilename(),
             (uri) => {
                 expect(uri).toEqual(useLocalFullPathFilename());
             },
@@ -104,6 +107,8 @@ describe("Use device cache", () => {
                 useDomainFilename("3"),
                 useDomainFilename("4"),
             ],
+            downloadPath: usePath(),
+            onFileNaming: ({ index }) => `${index}.${imageName}`,
             onImageLoaded: async (url) => {
                 expect(url).toEqual(useLocalFullPathFilename(`${testIndex}`));
                 testIndex++;
@@ -129,6 +134,8 @@ describe("Use device cache", () => {
                 useDomainFilename("3"),
                 useDomainFilename("4"),
             ],
+            downloadPath: usePath(),
+            onFileNaming: ({ index }) => `${index}.${imageName}`,
             onImageLoaded: async (url) => {
                 testIndex++;
             },
@@ -157,6 +164,8 @@ describe("Use device cache", () => {
         const images = await DeviceCache.startLoadingImages({
             id: activeId,
             data: loadData,
+            downloadPath: usePath(),
+            onFileNaming: ({ index }) => `${index}.${imageName}`,
             onImageLoaded: async () => {
                 testIndex++;
 
@@ -165,6 +174,8 @@ describe("Use device cache", () => {
                     await DeviceCache.startLoadingImages({
                         id: activeId,
                         data: loadData,
+                        downloadPath: "",
+                        onFileNaming: () => "",
                         onImageLoaded: () => Promise.resolve(),
                         shouldCancelLoad: () => false,
                     });

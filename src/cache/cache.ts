@@ -1,14 +1,15 @@
 import RNFS from "react-native-fs";
-import { NHentaiCache } from "./nhentai";
+import { CacheUtils } from "./CacheUtils";
 import { RapunzelLog } from "../config/log";
 import { PromiseTools } from "../tools/promise";
 import { RandomTools } from "../tools/random";
 
 /**
- * Constant representing the path to the directory used for caching images.
- * Uses the React Native File System's Document Directory.
+ * Represents the path to the directory used for caching images.
  */
-const ImageCacheDirectory = RNFS.DocumentDirectoryPath;
+const LegacyImageCacheDirectory = RNFS.DocumentDirectoryPath;
+
+const ImageCacheDirectory = RNFS.DownloadDirectoryPath;
 
 /**
  * Type representing supported image file extensions.
@@ -50,7 +51,7 @@ const downloadImageWithFallback = async ({
                 }
             };
 
-            const createdUrl = `${NHentaiCache.removeFileExtension(url)}${
+            const createdUrl = `${CacheUtils.removeFileExtension(url)}${
                 SupportedExtensions[extensionIndex]
             }`;
 
@@ -86,6 +87,8 @@ const getRandomDelay = () => Math.floor(Math.random() * (200 - 100 + 1)) + 100;
 
 interface DownloadAndCacheImageProps {
     uri: string;
+    downloadPath: string;
+    imageFileName: string;
     onImageCached?: (path: string) => void;
 }
 /**
@@ -95,13 +98,17 @@ interface DownloadAndCacheImageProps {
  */
 const downloadAndCacheImage = async ({
     uri,
+    downloadPath,
+    imageFileName,
     onImageCached = (path) => {},
-}: DownloadAndCacheImageProps) => {
-    const localImagePath = getCachePath(NHentaiCache.getFileName(uri));
+}: DownloadAndCacheImageProps): Promise<string> => {
+    const imageFullPath = `${downloadPath}/${imageFileName}`;
 
-    const exists = await RNFS.exists(localImagePath);
+    const exists = await RNFS.exists(imageFullPath);
 
     if (!exists) {
+        RapunzelLog.log(`[downloadAndCacheImage] Download ${imageFullPath}`);
+
         const onError = (error: unknown) => {
             RapunzelLog.warn(
                 "[downloadAndCacheImage] Error downloading image:",
@@ -119,7 +126,7 @@ const downloadAndCacheImage = async ({
                 downloadHandler: (downloadUri) => {
                     const request = RNFS.downloadFile({
                         fromUrl: downloadUri,
-                        toFile: localImagePath,
+                        toFile: `${imageFullPath}`,
                     });
                     return request.promise;
                 },
@@ -127,25 +134,24 @@ const downloadAndCacheImage = async ({
         } catch (error) {
             onError(error);
         }
+    } else {
+        RapunzelLog.log(`[downloadAndCacheImage] Cached ${imageFullPath}`);
     }
 
-    const result = "file://" + localImagePath;
+    const result = "file://" + imageFullPath;
     onImageCached(result);
     return result;
 };
 
-/**
- * Generates the full path for a file in the ImageCacheDirectory based on the provided filename.
- * @param {string} filename - The name of the file for which to generate the cache path.
- * @returns {string} - The full path to the file in the ImageCacheDirectory.
- */
-const getCachePath = (filename: string) => {
-    return `${ImageCacheDirectory}/${filename}`;
-};
+interface FileNamingProps {
+    index: number;
+}
 
 export interface StartLoadingImagesProps {
     id?: string;
     data: string[];
+    downloadPath: string;
+    onFileNaming: (imageInfo: FileNamingProps) => string;
     onImageLoaded: (url: string) => Promise<void>;
     shouldCancelLoad: (id: string) => boolean;
 }
@@ -160,6 +166,8 @@ export interface StartLoadingImagesProps {
 const startLoadingImages = async ({
     id = RandomTools.generateRandomId(10),
     data,
+    downloadPath,
+    onFileNaming,
     onImageLoaded,
     shouldCancelLoad,
 }: StartLoadingImagesProps): Promise<string[]> => {
@@ -172,10 +180,17 @@ const startLoadingImages = async ({
     };
 
     await PromiseTools.recursivePromiseChain<string>({
-        promises: data.map((uri) => () => {
+        promises: data.map((uri, index) => () => {
             const cancelProcess = shouldCancelLoad(id);
             if (cancelProcess) return Promise.resolve(""); // This will interrupt the load chain;
-            return downloadAndCacheImage({ uri });
+
+            return downloadAndCacheImage({
+                uri,
+                downloadPath,
+                imageFileName: onFileNaming({
+                    index,
+                }),
+            });
         }),
         onPromiseSettled: onImageLoadedHandler,
     });
@@ -216,12 +231,15 @@ const clearSpecificFile = async (filePath: string) => {
 const redownloadImage = async (
     filePath: string,
     imageUri: string,
+    imageFileName: string,
     onImageCached: (localImagePath: string) => void,
 ): Promise<string | null> => {
     if (!imageUri) return null;
     await clearSpecificFile(filePath);
     const image = await downloadAndCacheImage({
         uri: imageUri,
+        downloadPath: filePath,
+        imageFileName,
         onImageCached,
     });
     return image;
@@ -248,6 +266,33 @@ const calculateCacheSize = async (): Promise<number> => {
         );
         return 0; // Return 0 if there's an error
     }
+};
+
+/**
+ * Copies a folder from the source path to the destination path based on the platform.
+ *
+ * @param {string} source - The relative path to the source file within the assets or main bundle.
+ * @param {string} destination - The full path where the file should be copied to.
+ * @returns {Promise<Promise<void>[]>} A promise that resolves if we start copying data.
+ * Await for the promises with something like Promise.all to wait until it finishes.
+ */
+const copyFolder = async (
+    source: string,
+    destination: string,
+): Promise<Promise<void>[]> => {
+    const items = await RNFS.readDir(source);
+
+    const transfers: Promise<void>[] = [];
+    items.forEach((item) => {
+        transfers.push(
+            RNFS.copyFile(
+                `${source}/${item.name}`,
+                `${destination}/${item.name}`,
+            ).catch(console.error),
+        );
+    });
+
+    return transfers;
 };
 
 /**
@@ -298,13 +343,49 @@ const listCachedImages = async (): Promise<string[]> => {
     }
 };
 
+const ensureCreateDeepFolders = async (
+    completePath: string,
+    rootPath: string,
+) => {
+    return await new Promise((resolve) => {
+        const paths = completePath.split("/");
+
+        RapunzelLog.log(paths);
+
+        let progress = 0;
+
+        const onEachItemMigration = async (currentPath: string) => {
+            const imageListFolderPath = `${rootPath}/${currentPath}`;
+            await RNFS.mkdir(imageListFolderPath);
+        };
+
+        const interval = setInterval(() => {
+            if (progress >= paths.length) {
+                clearInterval(interval);
+                RapunzelLog.log(`Created ${paths.length} folders`);
+                resolve(null);
+            } else {
+                progress++;
+
+                const currentPath = paths.slice(0, progress).join("/");
+                RapunzelLog.log(
+                    `${currentPath} - Progress ${progress}/${paths.length}.`,
+                );
+                onEachItemMigration(currentPath).catch(RapunzelLog.error);
+            }
+        }, 20);
+    });
+};
+
 export const DeviceCache = {
+    ImageCacheDirectory,
+    ensureCreateDeepFolders,
     downloadImageWithFallback,
     downloadAndCacheImage,
-    getCachePath,
     startLoadingImages,
     redownloadImage,
     calculateCacheSize,
     clearCache,
     listCachedImages,
+    copyFolder,
 };

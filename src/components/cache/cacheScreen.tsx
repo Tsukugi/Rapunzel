@@ -1,16 +1,23 @@
 import React, { useState } from "react";
 import { DeviceCache } from "../../cache/cache";
-import { Button, Card, Text } from "react-native-paper";
+import { Button, Card, List, Text } from "react-native-paper";
 
 const CacheScreen = () => {
     const [size, setSize] = useState(0);
     const onCalculateSizeHandler = () => {
         DeviceCache.calculateCacheSize().then((value) => setSize(value));
     };
+    const onExportHandler = () => {
+        DeviceCache.exportLibraryAsJson();
+        DeviceCache.migrateCachedImages();
+    };
     return (
         <Card>
             <Card.Content>
-                <Text>Cache size: {size.toFixed(2)}MB</Text>
+                <List.Section>
+                    <Text>Cache size: {size.toFixed(2)}MB</Text>
+                    <Button onPress={onExportHandler}>Export</Button>
+                </List.Section>
             </Card.Content>
             <Card.Actions>
                 <Button onPress={onCalculateSizeHandler}>

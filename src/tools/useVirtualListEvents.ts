@@ -56,7 +56,7 @@ export const useVirtualListEvents = ({
 
         // We make available the first chapter beforehand
         if (book?.chapters.length === 1) {
-            loadChapter(book.chapters[0].id);
+            loadChapter(bookBase.id, book.chapters[0].id);
         }
 
         saveBookToLibrary(book);
