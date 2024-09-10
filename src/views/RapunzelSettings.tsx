@@ -66,7 +66,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
 
     return (
         <ScrollContent>
-            <List.AccordionGroup>
+            <List.AccordionGroup expandedId="1">
                 <List.Accordion title="App settings" id="1">
                     <RapunzelConfigCheckbox
                         label="Enable debug app"

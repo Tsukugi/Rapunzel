@@ -1,6 +1,6 @@
 {
     "name": "@atsu/rapunzel",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "scripts": {
         "android": "react-native run-android",
         "ios": "react-native run-ios",
@@ -17,6 +17,7 @@
         "cheerio": "^1.0.0-rc.12",
         "react": "18.2.0",
         "react-native": "0.72.6",
+        "react-native-document-picker": "^9.3.1",
         "react-native-fs": "^2.20.0",
         "react-native-gesture-handler": "^2.13.4",
         "react-native-mmkv-storage": "^0.9.1",

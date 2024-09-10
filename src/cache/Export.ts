@@ -4,7 +4,22 @@ import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { CacheUtils } from "./CacheUtils";
 import { DeviceCache } from "./cache";
+import { pickSingle } from "react-native-document-picker";
+import { useRapunzelStorage } from "./storage";
+import { StorageEntries } from "./interfaces";
 
+/**
+ * Exports the current library as a JSON file.
+ *
+ * This function retrieves the library from the `useRapunzelStore` hook,
+ * serializes the `saved` books into JSON, and saves the metadata to a file
+ * in the device's download directory (`RapunzelMigration/metadata.json`).
+ *
+ * @async
+ * @function exportLibraryAsJson
+ * @returns {Promise<void>} - A promise that resolves when the export is complete.
+ *
+ */
 const exportLibraryAsJson = async () => {
     const {
         library: [library],
@@ -20,79 +35,48 @@ const exportLibraryAsJson = async () => {
     );
 };
 
-const migrateCachedImages = async () => {
-    const ignoreUnrelatedFiles = ["mmkv", "BridgeReactNativeDevBundle.js"];
-
-    const MigrateSourcePath = DeviceCache.ImageCacheDirectory;
-    const MigrateRoot = `${RNFS.DownloadDirectoryPath}/RapunzelMigration`;
-
-    const onEachItemMigration = async (item: RNFS.ReadDirItem) => {
-        if (ignoreUnrelatedFiles.includes(item.name) || item.isDirectory())
-            return;
-
-        RapunzelLog.log(`Copy ${item.name}`);
-
-        await RNFS.copyFile(
-            `${MigrateSourcePath}/${item.name}`,
-            `${MigrateRoot}/${item.name}`,
-        ).catch(RapunzelLog.error);
-    };
-
-    const items = await RNFS.readDir(MigrateSourcePath);
-    RapunzelLog.log(`Copy ${items.length} items`);
-    await RNFS.mkdir(MigrateRoot);
-
-    let progress = 0;
-
-    const interval = setInterval(() => {
-        if (progress >= items.length) {
-            clearInterval(interval);
-            RapunzelLog.log(`Copied ${items.length} items`);
-        }
-        RapunzelLog.log(`Progress ${progress}/${items.length}`);
-        onEachItemMigration(items[progress]);
-        progress++;
-    }, 20);
-};
-
-const migrateCachedImagesWithStructure = async () => {
+/**
+ * Imports the library from a JSON file.
+ *
+ * This function allows the user to select a JSON file, reads its contents, and 
+ * merges the imported books into the current library stored in `useRapunzelStore`.
+ * It then updates the library both in memory and in persistent storage.
+ *
+ * @async
+ * @function importLibraryFromJson
+ * @returns {Promise<void>} - A promise that resolves when the import is complete.
+ *
+ * @throws {Error} If the file could not be selected or read.
+ */
+const importLibraryFromJson = async () => {
     const {
-        config: [config],
+        library: [library],
     } = useRapunzelStore();
 
-    const ignoreUnrelatedFiles = ["mmkv", "BridgeReactNativeDevBundle.js"];
+    const picked = await pickSingle({
+        mode: "open",
+        copyTo: "documentDirectory",
+        allowMultiSelection: false,
+    });
+    if (!picked.fileCopyUri) {
+        RapunzelLog.error("[importLibraryFromJson] FileCopyUri was not found");
+        return;
+    }
+    const backup = await RNFS.readFile(picked.fileCopyUri);
+    const parsedBackup: Record<string, Book> = JSON.parse(backup);
+    const backupKeys = Object.keys(parsedBackup);
+    RapunzelLog.log(backupKeys.map((key) => parsedBackup[key].title));
+    RapunzelLog.log(
+        `$[importLibraryFromJson] importing ${backupKeys.length} entries`,
+    );
+    library.saved = { ...library.saved, ...parsedBackup };
+    library.rendered = Object.keys(library.saved);
 
-    const MigrateSourcePath = DeviceCache.ImageCacheDirectory;
-    const MigrateRoot = `${RNFS.DownloadDirectoryPath}/RapunzelMigration`;
-
-    const onEachItemMigration = async (item: RNFS.ReadDirItem) => {
-        if (ignoreUnrelatedFiles.includes(item.name) || item.isDirectory())
-            return;
-
-        const info = CacheUtils.getFilenameInfo(item.name);
-
-        const RapunzelId = `${config.repository}.${info.id}`;
-
-        const bookFolderPath = `${MigrateRoot}/${RapunzelId}`;
-        await RNFS.mkdir(bookFolderPath);
-
-        RapunzelLog.log(`Copy ${item.name}`);
-
-        await RNFS.copyFile(
-            `${MigrateSourcePath}/${item.name}`,
-            `${bookFolderPath}/${item.name}`,
-        ).catch(RapunzelLog.error);
-    };
-
-    const items = await RNFS.readDir(MigrateSourcePath);
-    await RNFS.mkdir(MigrateRoot);
-    const copyProcesses = items.map(onEachItemMigration);
-
-    return copyProcesses;
+    const { setItem } = useRapunzelStorage();
+    setItem(StorageEntries.library, library.saved);
 };
 
 export const Export = {
-    migrateCachedImages,
-    migrateCachedImagesWithStructure,
+    importLibraryFromJson,
     exportLibraryAsJson,
 };

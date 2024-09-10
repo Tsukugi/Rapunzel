@@ -7,8 +7,6 @@ import { RandomTools } from "../tools/random";
 /**
  * Represents the path to the directory used for caching images.
  */
-const LegacyImageCacheDirectory = RNFS.DocumentDirectoryPath;
-
 const ImageCacheDirectory = RNFS.DownloadDirectoryPath;
 
 /**
@@ -251,18 +249,32 @@ const redownloadImage = async (
  * If an error occurs during the process, the Promise is rejected with the error, and 0 is returned.
  */
 const calculateCacheSize = async (): Promise<number> => {
+    const cachePath = ImageCacheDirectory;
+    const size = await getFolderSize(cachePath);
+    return size / 1048576; // Bytes to MegaBytes
+};
+
+const getFolderSize = async (cachePath: string, size = 0): Promise<number> => {
     try {
-        const cachePath = ImageCacheDirectory; // Get the path to the cache directory
-        const info = await RNFS.stat(cachePath); // Get information about the cache directory
+        return new Promise(async (resolve) => {
+            const items = await RNFS.readDir(cachePath);
 
-        const cacheSizeInBytes = info.size; // Cache size in bytes
-        const cacheSizeInMegabytes = cacheSizeInBytes / (1024 * 1024); // Cache size in megabytes
+            const onItemFile = async (item: RNFS.ReadDirItem) => {
+                if (item.isDirectory()) {
+                    size += await getFolderSize(item.path);
+                } else {
+                    size += item.size;
+                }
+            };
 
-        return cacheSizeInMegabytes;
+            const processes = items.map(onItemFile);
+            await Promise.allSettled(processes);
+
+            return resolve(size);
+        });
     } catch (error) {
         RapunzelLog.error(
-            "[calculateCacheSize] Error calculating cache size:",
-            error,
+            `[calculateCacheSize] Error calculating cache size of ${cachePath}: ${error}`,
         );
         return 0; // Return 0 if there's an error
     }
@@ -307,15 +319,8 @@ const clearCache = async (): Promise<void> => {
         // Iterate through the files and remove them
         for (const file of files) {
             await RNFS.unlink(file.path);
-        } 
-        
-        const LcachePath = LegacyImageCacheDirectory;
-        const Lfiles = await RNFS.readDir(LcachePath);
-
-        // Iterate through the files and remove them
-        for (const file of Lfiles) {
-            await RNFS.unlink(file.path);
         }
+
         RapunzelLog.log("[clearCache] Cache cleared successfully.");
     } catch (error) {
         RapunzelLog.error("[clearCache] Error clearing cache:", error);

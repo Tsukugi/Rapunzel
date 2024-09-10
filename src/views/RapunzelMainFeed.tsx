@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
@@ -23,9 +23,9 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     >([]);
 
     const {
-        latest: [latestBooks],
-        trending: [trendingBooks],
-        loading: [loading, useLoadingEffect],
+        latest: [latestBooks, useLatestEffect],
+        trending: [, useTrendingEffect],
+        loading: [loading],
     } = useRapunzelStore();
 
     const loadMainFeed = () => {
@@ -42,33 +42,26 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useLoadingEffect((isCurrentlyLoading) => {
-        !isCurrentlyLoading.trending &&
-            (() => {
-                const images = trendingBooks.cachedImages.map(
-                    ({ id, url }, index) => ({
-                        id,
-                        index,
-                        value: url,
-                    }),
-                );
-                RapunzelLog.warn({ trendingBooks: images.map((i) => i.id) });
+    useTrendingEffect((trending) => {
+        const images = trending.cachedImages.map(({ id, url }, index) => ({
+            id,
+            index,
+            value: url,
+        }));
+        RapunzelLog.warn({ trendingBooks: images.map((i) => i.id) });
 
-                setLoadedTrendingBookImages(images);
-            })();
-        !isCurrentlyLoading.latest &&
-            (() => {
-                const images = latestBooks.cachedImages.map(
-                    ({ id, url }, index) => ({
-                        id,
-                        index,
-                        value: url,
-                    }),
-                );
-                RapunzelLog.warn({ latestBooks: images.map((i) => i.id) });
+        setLoadedTrendingBookImages(images);
+    });
 
-                setLoadedImages(images);
-            })();
+    useLatestEffect((latest) => {
+        const images = latest.cachedImages.map(({ id, url }, index) => ({
+            id,
+            index,
+            value: url,
+        }));
+        RapunzelLog.warn({ latestBooks: images.map((i) => i.id) });
+
+        setLoadedImages(images);
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({
