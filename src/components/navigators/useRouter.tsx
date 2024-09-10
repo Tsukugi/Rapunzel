@@ -4,7 +4,9 @@ import { UsesNavigation, ViewNames } from "./interfaces";
 import { useRapunzelStore } from "../../store/store";
 import { useRapunzelStorage } from "../../cache/storage";
 import { StorageEntries } from "../../cache/interfaces";
-import { BackHandler } from "react-native";
+import { Alert, BackHandler } from "react-native";
+import { RapunzelLog } from "../../config/log";
+import { RapunzelCache } from "../../cache/useRapunzelCache";
 
 interface UseRouterProps extends UsesNavigation {
     route: ViewNames;
@@ -29,10 +31,38 @@ export const useRouter = ({ route, navigation }: UseRouterProps) => {
         }, []),
     );
 
+    const showExitAlert = (onExit: () => void) => {
+        Alert.alert(
+            "Exiting Rapunzel",
+            "Do you want to exit?",
+            [
+                {
+                    text: "Cancel",
+                    onPress: () => RapunzelLog.log("Cancel Pressed"),
+                    style: "cancel",
+                },
+                {
+                    text: "Exit!",
+                    onPress: onExit,
+                },
+            ],
+            { cancelable: false },
+        );
+    };
+
+    const onExitHandler = async () => {
+        await RapunzelCache.clearTempCache();
+        BackHandler.exitApp();
+    };
+
     useFocusEffect(
         React.useCallback(() => {
             const onBackPress = () => {
-                navigation.goBack();
+                if (navigation.canGoBack()) {
+                    navigation.goBack();
+                } else {
+                    showExitAlert(onExitHandler);
+                }
                 return true;
             };
 

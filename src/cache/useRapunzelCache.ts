@@ -13,10 +13,10 @@ export enum StaticLibraryPaths {
     MainFeed = `MainFeed`,
     Trending = `Trending`,
     SearchResults = "SearchResults",
-    LatestBooks = "LatestBooks",
     ReadBooks = "ReadBooks",
 }
 
+const RapunzelLibrary = `${DeviceCache.ImageCacheDirectory}/${StaticLibraryPaths.RootFolderName}`;
 export const RapunzelCache = {
     downloadImageList: async ({
         id,
@@ -34,12 +34,13 @@ export const RapunzelCache = {
         );
 
         try {
-            const libraryRoot = `${DeviceCache.ImageCacheDirectory}/${StaticLibraryPaths.RootFolderName}`;
+            await RNFS.mkdir(RapunzelLibrary);
+            await DeviceCache.ensureCreateDeepFolders(
+                folderPath,
+                RapunzelLibrary,
+            );
 
-            await RNFS.mkdir(libraryRoot);
-            await DeviceCache.ensureCreateDeepFolders(folderPath, libraryRoot);
-
-            const imageListFolderPath = `${libraryRoot}/${folderPath}`;
+            const imageListFolderPath = `${RapunzelLibrary}/${folderPath}`;
             return await DeviceCache.startLoadingImages({
                 id,
                 data: imageSet,
@@ -50,6 +51,33 @@ export const RapunzelCache = {
             });
         } catch (error) {
             return [];
+        }
+    },
+    /**
+     * Asynchronously clears ImageCacheDirectory covers.
+     * @returns {Promise<void>} - A Promise that resolves once the covers is successfully cleared.
+     */
+    clearTempCache: async (): Promise<void> => {
+        try {
+            const processes = [
+                RNFS.unlink(
+                    `${RapunzelLibrary}/${StaticLibraryPaths.MainFeed}`,
+                ),
+                RNFS.unlink(
+                    `${RapunzelLibrary}/${StaticLibraryPaths.Trending}`,
+                ),
+                RNFS.unlink(
+                    `${RapunzelLibrary}/${StaticLibraryPaths.SearchResults}`,
+                ),
+            ];
+
+            const res = await Promise.allSettled(processes);
+            RapunzelLog.log(res);
+            RapunzelLog.log(
+                "[clearTempCache] Temp cache cleared successfully.",
+            );
+        } catch (error) {
+            RapunzelLog.error("[clearTempCache] Error clearing cache:", error);
         }
     },
 };

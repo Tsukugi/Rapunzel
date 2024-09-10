@@ -440,7 +440,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: latest.activeProcessId,
             data: imagesToCache,
-            downloadPath: StaticLibraryPaths.LatestBooks,
+            downloadPath: StaticLibraryPaths.MainFeed,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: imageList[index].id,

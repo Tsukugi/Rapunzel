@@ -328,6 +328,7 @@ const clearCache = async (): Promise<void> => {
 };
 
 /**
+ * @Deprecated
  * Asynchronously lists the URIs of cached images in the ImageCacheDirectory.
  * @returns {Promise<string[]>} - A Promise that resolves to an array of image URIs for the cached images.
  * If no cached images are found or an error occurs, an empty array is returned.
@@ -356,6 +357,22 @@ const listCachedImages = async (): Promise<string[]> => {
     }
 };
 
+/**
+ * Ensures the creation of deep folder structures asynchronously.
+ *
+ * This function takes a complete path and iteratively creates each folder in the path structure,
+ * starting from the root path.
+ *
+ * @async
+ * @function ensureCreateDeepFolders
+ * @param {string} completePath - The full path for which folders should be created.
+ * @param {string} rootPath - The root path from which folder creation begins.
+ * @returns {Promise<void>} - A promise that resolves when all folders have been created.
+ *
+ * @example
+ * await ensureCreateDeepFolders("folder/subfolder/subsubfolder", "/root");
+ * // This will create the folder structure: /root/folder, /root/folder/subfolder, /root/folder/subfolder/subsubfolder
+ */
 const ensureCreateDeepFolders = async (
     completePath: string,
     rootPath: string,
