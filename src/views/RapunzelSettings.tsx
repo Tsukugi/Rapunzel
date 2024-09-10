@@ -18,6 +18,10 @@ import { useLibrary } from "../components/cache/library";
 interface RapunzelSettingsProps extends UsesNavigation {}
 
 const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
+    const [openedAccordion, setOpenedAccordion] = React.useState<
+        string | number
+    >(1);
+
     const {
         reader: [reader],
         config: [config],
@@ -34,40 +38,13 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
         useRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
-    const onLoadHandler = async (book: Book) => {
-        reader.book = book;
-        if (!book) return;
-        if (typeof book.chapters[0] === "string") {
-            // This functionality is for older versions of chapter, when it was only an ID
-            const newFormatBook = await useRapunzelLoader().loadBook(
-                book.chapters[0],
-                {
-                    chapterList: {
-                        page: 1,
-                        size: 50,
-                        orderBy: "desc",
-                    },
-                },
-            );
-            if (!newFormatBook) return;
-            reader.book = newFormatBook;
-            useLibrary().saveBookToLibrary(newFormatBook);
-            goToFirstChapterOrSelectChapter({
-                book: newFormatBook,
-                navigation,
-            });
-        } else {
-            goToFirstChapterOrSelectChapter({
-                book,
-                navigation,
-            });
-        }
-    };
-
     return (
         <ScrollContent>
-            <List.AccordionGroup expandedId="1">
-                <List.Accordion title="App settings" id="1">
+            <List.AccordionGroup
+                expandedId={openedAccordion}
+                onAccordionPress={setOpenedAccordion}
+            >
+                <List.Accordion title="App settings" id={1}>
                     <RapunzelConfigCheckbox
                         label="Enable debug app"
                         configId="debug"
@@ -89,7 +66,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
                         onSelect={onSetValueHandlerLanguages}
                     />
                 </List.Accordion>
-                <List.Accordion title="Device and Cache" id="2">
+                <List.Accordion title="Device and Cache" id={2}>
                     <CacheScreen />
                 </List.Accordion>
             </List.AccordionGroup>
