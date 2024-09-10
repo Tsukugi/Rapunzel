@@ -56,14 +56,15 @@ const getViews = (): Partial<ViewDict> => {
                 title: "Browse",
             },
         },
-        RapunzelReader: {
-            component: RapunzelReader,
-            icon: "book",
+        RapunzelLibrary: {
+            component: RapunzelLibrary,
+            icon: "tab-search",
             headerOptions: {
-                hideReader: true,
+                showSearch: true,
+                searchBehaivour: SearchBehaviour.FilterLibrary,
             },
             viewDrawerOptions: {
-                title: "Reader",
+                title: "Library",
             },
         },
         RapunzelSettings: {
@@ -72,6 +73,16 @@ const getViews = (): Partial<ViewDict> => {
             headerOptions: {},
             viewDrawerOptions: {
                 title: "Settings",
+            },
+        },
+        RapunzelReader: {
+            component: RapunzelReader,
+            icon: "book",
+            headerOptions: {
+                hideReader: true,
+            },
+            viewDrawerOptions: {
+                title: "Reader",
             },
         },
         RapunzelWebView: {
@@ -87,18 +98,6 @@ const getViews = (): Partial<ViewDict> => {
             icon: "tray",
             headerOptions: {
                 leftMode: HeaderLeftMode.back,
-            },
-        },
-        RapunzelLibrary: {
-            component: RapunzelLibrary,
-            icon: "tab-search",
-            headerOptions: {
-                showSearch: true,
-                leftMode: HeaderLeftMode.back,
-                searchBehaivour: SearchBehaviour.FilterLibrary,
-            },
-            viewDrawerOptions: {
-                title: "Library",
             },
         },
     };

@@ -1,6 +1,5 @@
 import React, { FC, useCallback } from "react";
 import VirtualList from "../components/virtualList/virtualList";
-import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 import CoupleItem from "../components/paper/item/coupleItem";
@@ -10,14 +9,16 @@ import { useFocusEffect } from "@react-navigation/native";
 import { StorageEntries } from "../cache/interfaces";
 import { useRapunzelStorage } from "../cache/storage";
 import { Book } from "@atsu/lilith";
+import { ListUtils } from "../tools/list";
 
 interface RapunzelLibraryProps extends UsesNavigation {}
 
 const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
     const {
-        loading: [, useLoadingEffect],
-        library: [library],
+        library: [library, useLibraryEffect],
     } = useRapunzelStore();
+
+    const [rendered, setRendered] = React.useState<string[]>([]);
 
     const updateLibraryFromStorage = () => {
         const storedLibrary = useRapunzelStorage().instance.getMap<
@@ -33,8 +34,11 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
     useFocusEffect(
         useCallback(() => {
             updateLibraryFromStorage();
+            setRendered(library.rendered);
         }, []),
     );
+
+    useLibraryEffect(({ rendered }) => setRendered(rendered));
 
     const { onRemoveFromLibraryHandler, onBookSelectHandler } =
         useVirtualListEvents({ navigation });
@@ -42,31 +46,14 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
         navigation,
         onClick: onBookSelectHandler,
         onLongClick: async (bookBase) => {
-            const removePromise = onRemoveFromLibraryHandler(bookBase);
-            library.rendered = library.rendered.filter(
-                (id) => id !== bookBase.id,
-            );
+            await onRemoveFromLibraryHandler(bookBase);
             updateLibraryFromStorage();
-            return await removePromise;
         },
     });
 
-    /**
-     * We filter even images so we have half of the elements but each will have both as [odd, even]
-     */
-    const oddImagesOnly = library.rendered
-        .map((bookId, index) => {
-            return {
-                id: `${index}`,
-                index,
-                value: library.saved[bookId],
-            } as VirtualItem<Book>;
-        })
-        .filter((item) => item.index % 2 === 1);
-
     return (
         <VirtualList
-            data={oddImagesOnly}
+            data={ListUtils.getVirtualItemHalf(rendered)}
             renderer={({ index }) => {
                 const [leftBook, rightBook] = [
                     library.saved[library.rendered[index * 2]],

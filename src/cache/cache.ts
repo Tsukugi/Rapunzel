@@ -307,6 +307,14 @@ const clearCache = async (): Promise<void> => {
         // Iterate through the files and remove them
         for (const file of files) {
             await RNFS.unlink(file.path);
+        } 
+        
+        const LcachePath = LegacyImageCacheDirectory;
+        const Lfiles = await RNFS.readDir(LcachePath);
+
+        // Iterate through the files and remove them
+        for (const file of Lfiles) {
+            await RNFS.unlink(file.path);
         }
         RapunzelLog.log("[clearCache] Cache cleared successfully.");
     } catch (error) {
