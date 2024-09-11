@@ -181,10 +181,19 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     pageNumber: index + 1,
                     extension: CacheUtils.getExtensionFromUri(images[index]),
                 }),
-            onImageLoaded: async (url) => {
-                // Update the Reader state with the cached images and their sizes
-                const imageInfo = await getImageSize(url);
-                reader.cachedImages = [...reader.cachedImages, imageInfo];
+            onImageLoaded: async (url, index) => {
+                const newImage = {
+                    id: `${index + 1}`,
+                    index,
+                    value: await getImageSize(url),
+                };
+                // * Recreating the array triggers an update, we will do this to initially render the Lists.
+                // * But also if we always render we may run into stack size errors.
+                if (index < 1) {
+                    reader.cachedImages = [...reader.cachedImages, newImage];
+                } else {
+                    reader.cachedImages.push(newImage);
+                }
             },
             shouldCancelLoad: (id) => {
                 // Check if the loading process should be canceled
@@ -428,7 +437,13 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     value: url,
                 };
                 latest.cachedImagesRecord[newItem.id] = url;
-                latest.cachedImages = [...latest.cachedImages, newItem];
+                // * Recreating the array triggers an update, we will do this to initially render the Lists.
+                // * But also if we always render we may run into stack size errors.
+                if (index < 1) {
+                    latest.cachedImages = [...latest.cachedImages, newItem];
+                } else {
+                    latest.cachedImages.push(newItem);
+                }
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;

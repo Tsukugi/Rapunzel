@@ -22,7 +22,7 @@ export interface ReaderState {
     activeProcessId: string;
     book: Book | null;
     chapter: Chapter | null;
-    cachedImages: RapunzelImage[];
+    cachedImages: VirtualItem<RapunzelImage>[];
     chapterPage: number;
 }
 export interface ConfigState extends RapunzelConfigBase {
