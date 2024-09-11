@@ -34,6 +34,7 @@ local.properties
 *.keystore
 !debug.keystore
 **/*.apk
+output-metadata.json
 
 # node.js
 #

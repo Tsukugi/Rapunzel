@@ -8,6 +8,7 @@ import {
 } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelConfigBase } from "../config/interfaces";
+import { VirtualItem } from "../components/virtualList/interfaces";
 
 export interface RouterState {
     currentRoute: ViewNames;
@@ -35,14 +36,10 @@ export interface BookBaseList {
     activeProcessId: string;
     bookList: BookBase[];
     bookListRecord: Record<string, BookBase>; // Key as Ids
-    cachedImages: CachedImage[];
+    cachedImages: VirtualItem<string>[];
     cachedImagesRecord: Record<string, string>; // Key as Ids // Should be deprecated soon
 }
 
-export interface CachedImage {
-    id: string;
-    url: string;
-}
 export interface BrowseState extends BookBaseList {
     page: number;
 }

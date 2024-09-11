@@ -58,21 +58,22 @@ export const RapunzelCache = {
      * @returns {Promise<void>} - A Promise that resolves once the covers is successfully cleared.
      */
     clearTempCache: async (): Promise<void> => {
+        const removeContents = async (folder: string) => {
+            const items = await RNFS.readDir(`${RapunzelLibrary}/${folder}`);
+            const processes = items.map((item) => RNFS.unlink(item.path));
+
+            return await Promise.allSettled(processes);
+        };
+
         try {
             const processes = [
-                RNFS.unlink(
-                    `${RapunzelLibrary}/${StaticLibraryPaths.MainFeed}`,
-                ),
-                RNFS.unlink(
-                    `${RapunzelLibrary}/${StaticLibraryPaths.Trending}`,
-                ),
-                RNFS.unlink(
-                    `${RapunzelLibrary}/${StaticLibraryPaths.SearchResults}`,
-                ),
+                removeContents(StaticLibraryPaths.MainFeed),
+                removeContents(StaticLibraryPaths.Trending),
+                removeContents(StaticLibraryPaths.SearchResults),
             ];
 
-            const res = await Promise.allSettled(processes);
-            RapunzelLog.log(res);
+            await Promise.allSettled(processes);
+
             RapunzelLog.log(
                 "[clearTempCache] Temp cache cleared successfully.",
             );

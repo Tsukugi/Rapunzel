@@ -11,27 +11,15 @@ import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
-import { CachedImage, RapunzelImage } from "../store/interfaces";
+import { RapunzelImage } from "../store/interfaces";
 import {
     BookListResults,
     GetBookOptions,
     SearchQueryOptions,
 } from "@atsu/lilith/dist/repo/base/interfaces";
-import {
-    DownloadBookProps,
-    RapunzelCache,
-    StaticLibraryPaths,
-} from "../cache/useRapunzelCache";
+import { RapunzelCache, StaticLibraryPaths } from "../cache/useRapunzelCache";
 import { CacheUtils } from "../cache/CacheUtils";
-
-/**
- * Retrieves the sizes (width and height) of images from the provided URIs using asynchronous calls.
- * @param {string[]} uris - An array of image URIs.
- * @returns {Promise<RapunzelImage[]>} - A Promise that resolves to an array of RapunzelImage objects containing image URIs, widths, and heights.
- */
-const getImageListSizes = (uris: string[]): Promise<RapunzelImage[]> => {
-    return Promise.all(uris.map((uri) => getImageSize(uri)));
-};
+import { VirtualItem } from "../components/virtualList/interfaces";
 
 /**
  * Gets the size (width and height) of an image from the provided URI using asynchronous Image.getSize method.
@@ -81,35 +69,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             },
         },
     });
-
-    type OnImageLoadedEvent = (url: string) => Promise<void>;
-    /**
-     * Handler for the onImageLoaded event; it triggers events for localState and StoreState.
-     * @param {Function} setStoreState - A function to update the state with the loaded images.
-     * @returns {Function} - A function that handles the onImageLoaded event and updates the state.
-     */
-    const imageStateLoader = (
-        setStoreState: (newValue: string[]) => void,
-    ): OnImageLoadedEvent => {
-        // Initialize variables to store loaded images and the current index
-        let loadedImages = [] as string[];
-        let index = 0;
-
-        // Function to be called when an image is loaded
-        const onImageLoaded = async (url: string) => {
-            // Store the loaded image URL at the current index
-            loadedImages[index] = url;
-
-            // Update the state with the loaded images
-            setStoreState(loadedImages);
-
-            // Increment the index for the next loaded image
-            index++;
-        };
-
-        // Return the onImageLoaded function for event handling
-        return onImageLoaded;
-    };
 
     /**
      * Loads a book based on its code, then saves it to the state.
@@ -209,6 +168,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         // Update the Reader state with the loaded chapter information
         reader.chapter = chapter;
         reader.activeProcessId = getNewId();
+        reader.cachedImages = [];
 
         // Load images asynchronously using loadImageList utility
         const promise = RapunzelCache.downloadImageList({
@@ -221,10 +181,11 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     pageNumber: index + 1,
                     extension: CacheUtils.getExtensionFromUri(images[index]),
                 }),
-            onImageLoaded: imageStateLoader(async (value) => {
+            onImageLoaded: async (url) => {
                 // Update the Reader state with the cached images and their sizes
-                reader.cachedImages = await getImageListSizes(value);
-            }),
+                const imageInfo = await getImageSize(url);
+                reader.cachedImages.push(imageInfo);
+            },
             shouldCancelLoad: (id) => {
                 // Check if the loading process should be canceled
                 const cancel = id !== reader.activeProcessId;
@@ -267,29 +228,27 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     interface BookBaseData {
         imagesToCache: string[];
         bookDict: Record<string, BookBase>;
-        imageDict: Record<string, string>;
-        imageList: CachedImage[];
+        imageList: VirtualItem<string>[];
     }
     const getBookBaseData = (bookBaseList: BookBase[]): BookBaseData => {
         // Initialize arrays and dictionary to store images to cache and book information
         const imagesToCache: string[] = [];
         const bookDict: Record<string, BookBase> = {};
-        const imageDict: Record<string, string> = {};
-        const imageList: CachedImage[] = [];
+        const imageList: VirtualItem<string>[] = [];
 
         // Iterate through search results and populate imagesToCache and bookDict
-        bookBaseList.forEach((book) => {
+        bookBaseList.forEach((book, index) => {
             imagesToCache.push(book.cover.uri);
             bookDict[book.id] = book;
-            imageDict[book.id] = book.cover.uri;
             imageList.push({
                 id: book.id,
-                url: book.cover.uri,
+                index: index,
+                value: book.cover.uri,
             });
         });
 
         // Return an object containing imagesToCache, bookDict, and searchResult
-        return { imagesToCache, bookDict, imageDict, imageList };
+        return { imagesToCache, bookDict, imageList };
     };
 
     /**
@@ -343,8 +302,21 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             return [];
         }
 
-        const { imagesToCache, bookDict, imageDict, imageList } =
-            getBookBaseData(searchResult.results);
+        const { imagesToCache, bookDict, imageList } = getBookBaseData(
+            searchResult.results,
+        );
+
+        // Update the Browse state with search results and loaded images
+        browse.bookList = [...browse.bookList, ...searchResult.results];
+        browse.bookListRecord = {
+            ...browse.bookListRecord,
+            ...bookDict,
+        };
+
+        // If a specific page is provided in searchOptions, update the Browse page
+        if (searchOptions?.page) {
+            browse.page = searchOptions.page;
+        }
 
         // Load images asynchronously using loadImageList utility
         const promise = RapunzelCache.downloadImageList({
@@ -356,10 +328,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     book: imageList[index].id,
                     chapter: "cover",
                     extension: CacheUtils.getExtensionFromUri(
-                        imageList[index].url,
+                        imageList[index].value,
                     ),
                 }),
-            onImageLoaded: async () => {},
+            onImageLoaded: async (url, index) => {
+                const newItem = {
+                    id: imageList[index].id,
+                    index: browse.cachedImages.length,
+                    value: url,
+                };
+                browse.cachedImagesRecord[newItem.id] = url;
+                browse.cachedImages = [...browse.cachedImages, newItem];
+            },
             shouldCancelLoad: (id) => {
                 const cancel = id !== browse.activeProcessId;
                 if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
@@ -368,28 +348,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         });
 
         // Handle the result of the image loading process
-        promise
-            .then(() => {
-                // Update the Browse state with search results and loaded images
-                browse.bookList = [...browse.bookList, ...searchResult.results];
-                browse.bookListRecord = {
-                    ...browse.bookListRecord,
-                    ...bookDict,
-                };
-
-                browse.cachedImagesRecord = {
-                    ...browse.cachedImagesRecord,
-                    ...imageDict,
-                };
-                browse.cachedImages = [...browse.cachedImages, ...imageList];
-
-                // If a specific page is provided in searchOptions, update the Browse page
-                if (searchOptions?.page) {
-                    browse.page = searchOptions.page;
-                }
-            })
-            .catch(() => {})
-            .finally(onFinish);
+        promise.finally(onFinish);
 
         // Return the Promise for further handling, if needed
         return promise;
@@ -433,8 +392,21 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             return [];
         }
 
-        const { imagesToCache, bookDict, imageDict, imageList } =
-            getBookBaseData(bookListResults.results);
+        const { imagesToCache, bookDict, imageList } = getBookBaseData(
+            bookListResults.results,
+        );
+
+        // Update the LatestBooks state with search results and loaded images
+        latest.bookList = [...latest.bookList, ...bookListResults.results];
+        latest.bookListRecord = {
+            ...latest.bookListRecord,
+            ...bookDict,
+        };
+
+        // If a specific page is provided in searchOptions, update the latest page
+        if (page) {
+            latest.page = page;
+        }
 
         // Load images asynchronously using loadImageList utility
         const promise = RapunzelCache.downloadImageList({
@@ -446,10 +418,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     book: imageList[index].id,
                     chapter: "cover",
                     extension: CacheUtils.getExtensionFromUri(
-                        imageList[index].url,
+                        imageList[index].value,
                     ),
                 }),
-            onImageLoaded: async () => {},
+            onImageLoaded: async (url, index) => {
+                const newItem = {
+                    id: imageList[index].id,
+                    index: latest.cachedImages.length,
+                    value: url,
+                };
+                latest.cachedImagesRecord[newItem.id] = url;
+                latest.cachedImages = [...latest.cachedImages, newItem];
+            },
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;
                 if (cancel)
@@ -462,32 +442,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         });
 
         // Handle the result of the image loading process
-        promise
-            .then((value) => {
-                // Update the LatestBooks state with search results and loaded images
-                latest.bookList = [
-                    ...latest.bookList,
-                    ...bookListResults.results,
-                ];
-                latest.bookListRecord = {
-                    ...latest.bookListRecord,
-                    ...bookDict,
-                };
-
-                latest.cachedImagesRecord = {
-                    ...latest.cachedImagesRecord,
-                    ...imageDict,
-                };
-
-                latest.cachedImages = [...latest.cachedImages, ...imageList];
-
-                // If a specific page is provided in searchOptions, update the latest page
-                if (page) {
-                    latest.page = page;
-                }
-            })
-            .catch(() => {})
-            .finally(onFinish);
+        promise.finally(onFinish);
 
         // Return the Promise for further handling, if needed
         return promise;
@@ -530,8 +485,16 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             return [];
         }
 
-        const { imagesToCache, bookDict, imageDict, imageList } =
-            getBookBaseData(bookListResults.results);
+        const { imagesToCache, bookDict, imageList } = getBookBaseData(
+            bookListResults.results,
+        );
+
+        // Update the LatestBooks state with search results and loaded images
+        popular.bookList = [...popular.bookList, ...bookListResults.results];
+        popular.bookListRecord = {
+            ...popular.bookListRecord,
+            ...bookDict,
+        };
 
         // Load images asynchronously using loadImageList utility
         const promise = RapunzelCache.downloadImageList({
@@ -544,10 +507,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     chapter: "cover",
                     pageNumber: index + 1,
                     extension: CacheUtils.getExtensionFromUri(
-                        imageList[index].url,
+                        imageList[index].value,
                     ),
                 }),
-            onImageLoaded: async () => {},
+            onImageLoaded: async (url, index) => {
+                const newItem = {
+                    id: imageList[index].id,
+                    index: browse.cachedImages.length,
+                    value: url,
+                };
+                popular.cachedImagesRecord[newItem.id] = url;
+                popular.cachedImages = [...popular.cachedImages, newItem];
+            },
             shouldCancelLoad: (id) => {
                 const cancel = id !== popular.activeProcessId;
                 if (cancel)
@@ -560,27 +531,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         });
 
         // Handle the result of the image loading process
-        promise
-            .then((value) => {
-                // Update the LatestBooks state with search results and loaded images
-                popular.bookList = [
-                    ...popular.bookList,
-                    ...bookListResults.results,
-                ];
-                popular.bookListRecord = {
-                    ...popular.bookListRecord,
-                    ...bookDict,
-                };
-
-                popular.cachedImagesRecord = {
-                    ...popular.cachedImagesRecord,
-                    ...imageDict,
-                };
-
-                popular.cachedImages = [...popular.cachedImages, ...imageList];
-            })
-            .catch(() => {})
-            .finally(onFinish);
+        promise.finally(onFinish);
 
         // Return the Promise for further handling, if needed
         return promise;

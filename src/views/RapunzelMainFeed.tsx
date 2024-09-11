@@ -10,28 +10,30 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRapunzelLoader } from "../api/loader";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import MainFeedItem from "../components/paper/item/mainFeedItem";
-import { RapunzelLog } from "../config/log";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
+import { RapunzelLog } from "../config/log";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
 const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
-    const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
+    const [latestBooksImages, setLatestBooksImages] = useState<
+        VirtualItem<string>[]
+    >([]);
     const [loadedTrendingBookImages, setLoadedTrendingBookImages] = useState<
         VirtualItem<string>[]
     >([]);
 
     const {
-        latest: [latestBooks, useLatestEffect],
-        trending: [, useTrendingEffect],
+        latest: [latestBooks, useLatestBooksEffect],
+        trending: [, useTrendingBooksEffect],
         loading: [loading],
     } = useRapunzelStore();
 
     const loadMainFeed = () => {
         const { getLatestBooks, getTrendingBooks } = useRapunzelLoader();
-        !loading.trending && getTrendingBooks();
-        !loading.latest && getLatestBooks();
+        getTrendingBooks();
+        getLatestBooks();
     };
 
     useFocusEffect(
@@ -42,26 +44,12 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useTrendingEffect((trending) => {
-        const images = trending.cachedImages.map(({ id, url }, index) => ({
-            id,
-            index,
-            value: url,
-        }));
-        RapunzelLog.warn({ trendingBooks: images.map((i) => i.id) });
-
-        setLoadedTrendingBookImages(images);
+    useTrendingBooksEffect((trending) => {
+        setLoadedTrendingBookImages(trending.cachedImages);
     });
 
-    useLatestEffect((latest) => {
-        const images = latest.cachedImages.map(({ id, url }, index) => ({
-            id,
-            index,
-            value: url,
-        }));
-        RapunzelLog.warn({ latestBooks: images.map((i) => i.id) });
-
-        setLoadedImages(images);
+    useLatestBooksEffect((latest) => {
+        setLatestBooksImages(imagesWithTrending(latest.cachedImages));
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({
@@ -73,7 +61,12 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         //loadMainFeed();
     }, 1000);
     const debouncedEndReached = useDebouncedCallback(() => {
-        if (loading.latest) return;
+        if (loading.browse) {
+            RapunzelLog.log(
+                "[onEndReachedHandler] Loading is still on progress, ignoring",
+            );
+            return;
+        }
 
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     }, 1000);
@@ -84,15 +77,24 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         debouncedEndReached();
     };
 
-    const imagesWithTrending = [
-        { id: "Trending", index: 0, value: null },
-        ...loadedImages,
-    ];
+    const imagesWithTrending = (
+        images: VirtualItem<string>[],
+    ): VirtualItem<string>[] => {
+        if (images.length === 0 || images[0].id !== "Trending") {
+            images.unshift({
+                id: "Trending",
+                index: 0,
+                value: "Trending",
+            });
+        }
+        return images;
+    };
 
+    console.log(latestBooksImages.length);
     return (
         <>
             <VirtualList
-                data={imagesWithTrending}
+                data={latestBooksImages}
                 renderer={({ index }) => {
                     if (index === 0) {
                         return (
@@ -103,7 +105,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                         );
                     }
 
-                    const { id } = imagesWithTrending[index];
+                    const { id } = latestBooksImages[index];
                     return (
                         <MainFeedItem
                             style={{
@@ -112,6 +114,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                             }}
                             item={getVirtualItemProps(
                                 latestBooks.bookListRecord[id],
+                                latestBooksImages[index].value,
                             )}
                         />
                     );

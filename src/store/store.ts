@@ -33,29 +33,37 @@ const getDefaultConfig: () => Partial<TaihouOptions> = () => {
     return { debug: false };
 };
 
-const useReactConfig = <T>(
-    name: string,
-    initialState: T,
-): UseReactTaihou<T> => {
-    const [state, watch, unwatch] = useState<T>(initialState, {
-        ...getDefaultConfig(),
-        name,
-    });
-
-    const effect: TaihouEffect<T> = (onUpdate) => {
-        useEffect(() => {
-            watch(onUpdate);
-
-            return () => {
-                unwatch(onUpdate);
-            };
-        }, []);
+export interface InitRapunzelStoreProps {
+    onGetConfig: () => Partial<TaihouOptions>;
+}
+export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
+    const { onGetConfig }: InitRapunzelStoreProps = {
+        ...{ onGetConfig: getDefaultConfig },
+        ...props,
     };
 
-    return [state, effect];
-};
+    const useReactConfig = <T>(
+        name: string,
+        initialState: T,
+    ): UseReactTaihou<T> => {
+        const [state, watch, unwatch] = useState<T>(initialState, {
+            ...onGetConfig(),
+            name,
+        });
 
-export const initRapunzelStore = () => {
+        const effect: TaihouEffect<T> = (onUpdate) => {
+            useEffect(() => {
+                watch(onUpdate);
+
+                return () => {
+                    unwatch(onUpdate);
+                };
+            }, []);
+        };
+
+        return [state, effect];
+    };
+
     RapunzelState.router = useReactConfig<RouterState>("router", {
         currentRoute: ViewNames.RapunzelBrowse,
         history: [],

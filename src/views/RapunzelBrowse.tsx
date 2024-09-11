@@ -7,62 +7,61 @@ import { useRouter } from "../components/navigators/useRouter";
 import CoupleItem from "../components/paper/item/coupleItem";
 import { useRapunzelStore } from "../store/store";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
+import { ListUtils } from "../tools/list";
+import { RapunzelLog } from "../config/log";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
 const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
     const {
-        loading: [, useLoadingEffect],
         header: [header],
-        browse: [browseState],
+        loading: [loading],
+        browse: [browse, browseEffect],
     } = useRapunzelStore();
 
     useRouter({ route: ViewNames.RapunzelBrowse, navigation });
 
-    useLoadingEffect(() => {
-        setLoadedImages(
-            browseState.cachedImages.map(({ id, url }, index) => ({
-                id,
-                index,
-                value: url,
-            })),
-        );
+    browseEffect(({ cachedImages }) => {
+        setLoadedImages(cachedImages);
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({ navigation });
 
     const onEndReachedHandler = () => {
+        if (loading.browse) {
+            RapunzelLog.log(
+                "[onEndReachedHandler] Loading is still on progress, ignoring",
+            );
+            return;
+        }
         useRapunzelLoader().loadSearch(
             header.searchValue,
             {
-                page: browseState.page + 1,
+                page: browse.page + 1,
             },
             false,
         );
     };
 
-    /**
-     * We filter even images so we have half of the elements but each will have both as [odd, even]
-     */
-    const oddImagesOnly = loadedImages.filter((item) => item.index % 2 === 1);
-
     return (
         <VirtualList
-            data={oddImagesOnly}
+            data={ListUtils.getVirtualItemHalf(loadedImages)}
             renderer={({ index }) => {
-                const [leftId, rightId] = [
-                    loadedImages[index * 2].id,
-                    loadedImages[index * 2 + 1].id,
+                const [leftBook, rightBook] = [
+                    browse.bookListRecord[loadedImages[index * 2]?.id],
+                    browse.bookListRecord[loadedImages[index * 2 + 1]?.id],
                 ];
                 return (
                     <CoupleItem
                         couple={[
                             getVirtualItemProps(
-                                browseState.bookListRecord[leftId],
+                                leftBook,
+                                loadedImages[index * 2]?.value,
                             ),
                             getVirtualItemProps(
-                                browseState.bookListRecord[rightId],
+                                rightBook,
+                                loadedImages[index * 2 + 1]?.value,
                             ),
                         ]}
                     />

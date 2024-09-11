@@ -32,7 +32,7 @@ const BrowseItem: FC<BrowserItemProps> = ({
     if (!bookBase) {
         return (
             <Card style={{ ...styles.container, ...style }}>
-                <View style={styles.cover}></View>
+                <View style={styles.cover}>{cover}</View>
             </Card>
         );
     }

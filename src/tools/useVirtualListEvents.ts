@@ -70,11 +70,12 @@ export const useVirtualListEvents = ({
 
     const getVirtualItemProps = (
         bookBase: BookBase | null,
+        cover?: string,
     ): BrowserItemProps | null => {
         if (!bookBase) return null;
 
         return {
-            cover: bookBase.cover.uri,
+            cover: cover || bookBase.cover.uri,
             bookBase,
             onClick: onClick || onBookSelectHandler,
             onLongClick: onLongClick || onBookSaveHandler,

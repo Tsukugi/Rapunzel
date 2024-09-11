@@ -150,7 +150,7 @@ export interface StartLoadingImagesProps {
     data: string[];
     downloadPath: string;
     onFileNaming: (imageInfo: FileNamingProps) => string;
-    onImageLoaded: (url: string) => Promise<void>;
+    onImageLoaded: (url: string, index: number) => Promise<void>;
     shouldCancelLoad: (id: string) => boolean;
 }
 
@@ -174,7 +174,7 @@ const startLoadingImages = async ({
     const onImageLoadedHandler = async (url: string) => {
         if (!url) return; // If no url is passed we expect a load interruption, so we will skip
         indexes.push(url);
-        await onImageLoaded(url);
+        await onImageLoaded(url, indexes.length - 1);
     };
 
     await PromiseTools.recursivePromiseChain<string>({
@@ -376,7 +376,7 @@ const listCachedImages = async (): Promise<string[]> => {
 const ensureCreateDeepFolders = async (
     completePath: string,
     rootPath: string,
-) => {
+): Promise<void> => {
     return await new Promise((resolve) => {
         const paths = completePath.split("/");
 
@@ -393,7 +393,7 @@ const ensureCreateDeepFolders = async (
             if (progress >= paths.length) {
                 clearInterval(interval);
                 RapunzelLog.log(`Created ${paths.length} folders`);
-                resolve(null);
+                resolve();
             } else {
                 progress++;
 
