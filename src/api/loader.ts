@@ -21,6 +21,8 @@ import { RapunzelCache, StaticLibraryPaths } from "../cache/useRapunzelCache";
 import { CacheUtils } from "../cache/CacheUtils";
 import { VirtualItem } from "../components/virtualList/interfaces";
 
+const NumberOfForceRenderImages = 5;
+
 /**
  * Gets the size (width and height) of an image from the provided URI using asynchronous Image.getSize method.
  * @param {string} uri - The URI of the image.
@@ -189,7 +191,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 };
                 // * Recreating the array triggers an update, we will do this to initially render the Lists.
                 // * But also if we always render we may run into stack size errors.
-                if (index < 1) {
+                if (index < NumberOfForceRenderImages) {
                     reader.cachedImages = [...reader.cachedImages, newImage];
                 } else {
                     reader.cachedImages.push(newImage);
@@ -347,7 +349,13 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     value: url,
                 };
                 browse.cachedImagesRecord[newItem.id] = url;
-                browse.cachedImages = [...browse.cachedImages, newItem];
+                // * Recreating the array triggers an update, we will do this to initially render the Lists.
+                // * But also if we always render we may run into stack size errors.
+                if (index < NumberOfForceRenderImages) {
+                    browse.cachedImages = [...browse.cachedImages, newItem];
+                } else {
+                    browse.cachedImages.push(newItem);
+                }
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== browse.activeProcessId;
@@ -439,7 +447,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 latest.cachedImagesRecord[newItem.id] = url;
                 // * Recreating the array triggers an update, we will do this to initially render the Lists.
                 // * But also if we always render we may run into stack size errors.
-                if (index < 1) {
+                if (index < NumberOfForceRenderImages) {
                     latest.cachedImages = [...latest.cachedImages, newItem];
                 } else {
                     latest.cachedImages.push(newItem);
