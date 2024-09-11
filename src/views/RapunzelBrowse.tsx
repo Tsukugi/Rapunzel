@@ -55,14 +55,8 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
                 return (
                     <CoupleItem
                         couple={[
-                            getVirtualItemProps(
-                                leftBook,
-                                loadedImages[index * 2]?.value,
-                            ),
-                            getVirtualItemProps(
-                                rightBook,
-                                loadedImages[index * 2 + 1]?.value,
-                            ),
+                            getVirtualItemProps(leftBook),
+                            getVirtualItemProps(rightBook),
                         ]}
                     />
                 );

@@ -114,7 +114,6 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                             }}
                             item={getVirtualItemProps(
                                 latestBooks.bookListRecord[id],
-                                latestBooksImages[index].value,
                             )}
                         />
                     );
