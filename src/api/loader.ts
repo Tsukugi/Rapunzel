@@ -21,7 +21,7 @@ import { RapunzelCache, StaticLibraryPaths } from "../cache/useRapunzelCache";
 import { CacheUtils } from "../cache/CacheUtils";
 import { VirtualItem } from "../components/virtualList/interfaces";
 
-const NumberOfForceRenderImages = 5;
+const NumberOfForceRenderImages = 20;
 
 /**
  * Gets the size (width and height) of an image from the provided URI using asynchronous Image.getSize method.
@@ -348,7 +348,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     index: browse.cachedImages.length,
                     value: url,
                 };
-                browse.cachedImagesRecord[newItem.id] = url;
+                browse.cachedImagesRecord[newItem.id] = newItem;
                 // * Recreating the array triggers an update, we will do this to initially render the Lists.
                 // * But also if we always render we may run into stack size errors.
                 if (index < NumberOfForceRenderImages) {
@@ -444,14 +444,10 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     index: latest.cachedImages.length,
                     value: url,
                 };
-                latest.cachedImagesRecord[newItem.id] = url;
-                // * Recreating the array triggers an update, we will do this to initially render the Lists.
-                // * But also if we always render we may run into stack size errors.
-                if (index < NumberOfForceRenderImages) {
-                    latest.cachedImages = [...latest.cachedImages, newItem];
-                } else {
-                    latest.cachedImages.push(newItem);
-                }
+
+                if (latest.cachedImagesRecord[newItem.id]) return;
+                latest.cachedImagesRecord[newItem.id] = newItem;
+                latest.cachedImages.push(newItem);
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;
@@ -539,8 +535,10 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     index: browse.cachedImages.length,
                     value: url,
                 };
-                popular.cachedImagesRecord[newItem.id] = url;
-                popular.cachedImages = [...popular.cachedImages, newItem];
+                popular.cachedImagesRecord[newItem.id] = newItem;
+                popular.cachedImages = Object.values(
+                    popular.cachedImagesRecord,
+                );
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== popular.activeProcessId;

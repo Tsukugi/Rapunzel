@@ -37,7 +37,7 @@ export interface BookBaseList {
     bookList: BookBase[];
     bookListRecord: Record<string, BookBase>; // Key as Ids
     cachedImages: VirtualItem<string>[];
-    cachedImagesRecord: Record<string, string>; // Key as Ids // Should be deprecated soon
+    cachedImagesRecord: Record<string, VirtualItem<string>>; // Key as Ids // Should be deprecated soon
 }
 
 export interface BrowseState extends BookBaseList {

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
@@ -13,6 +13,7 @@ import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
+import { ListUtils } from "../tools/list";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -26,30 +27,35 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     const {
         latest: [latestBooks, useLatestBooksEffect],
-        trending: [, useTrendingBooksEffect],
+        trending: [trendingBooks, useTrendingBooksEffect],
         loading: [loading],
     } = useRapunzelStore();
 
-    const loadMainFeed = () => {
+    const loadMainFeed = (clean: boolean) => {
         const { getLatestBooks, getTrendingBooks } = useRapunzelLoader();
         getTrendingBooks();
-        getLatestBooks();
+        getLatestBooks(latestBooks.page, clean);
     };
+
+    useEffect(() => {
+        loadMainFeed(true);
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
-            loadMainFeed();
+            loadMainFeed(false);
         }, []),
     );
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useTrendingBooksEffect((trending) => {
-        setLoadedTrendingBookImages(trending.cachedImages);
+    useTrendingBooksEffect(({ cachedImages }) => {
+        setLoadedTrendingBookImages(cachedImages);
     });
 
-    useLatestBooksEffect((latest) => {
-        setLatestBooksImages(imagesWithTrending(latest.cachedImages));
+    useLatestBooksEffect(({ cachedImages }) => {
+        const list = imagesWithTrending(cachedImages);
+        setLatestBooksImages(list);
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({
@@ -61,7 +67,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         //loadMainFeed();
     }, 1000);
     const debouncedEndReached = useDebouncedCallback(() => {
-        if (loading.browse) {
+        if (loading.latest) {
             RapunzelLog.log(
                 "[onEndReachedHandler] Loading is still on progress, ignoring",
             );
