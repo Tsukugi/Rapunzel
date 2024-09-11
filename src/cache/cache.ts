@@ -172,7 +172,8 @@ const startLoadingImages = async ({
     const indexes: string[] = [];
 
     const onImageLoadedHandler = async (url: string) => {
-        if (!url) return; // If no url is passed we expect a load interruption, so we will skip
+        const cancelProcess = shouldCancelLoad(id);
+        if (!url || cancelProcess) return; // If no url is passed we expect a load interruption, so we will skip
         indexes.push(url);
         await onImageLoaded(url, indexes.length - 1);
     };

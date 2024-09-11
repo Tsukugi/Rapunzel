@@ -184,7 +184,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onImageLoaded: async (url) => {
                 // Update the Reader state with the cached images and their sizes
                 const imageInfo = await getImageSize(url);
-                reader.cachedImages.push(imageInfo);
+                reader.cachedImages = [...reader.cachedImages, imageInfo];
             },
             shouldCancelLoad: (id) => {
                 // Check if the loading process should be canceled
