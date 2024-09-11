@@ -43,8 +43,6 @@ const PaperSearch = ({
         }, []),
     );
 
-    RapunzelLog.log({ searchQuery, isSearchExpanded });
-
     const onChangeHandler = (text: string) => {
         setSearchQuery(text);
     };
@@ -86,7 +84,7 @@ const PaperSearch = ({
 const { width } = Dimensions.get("screen");
 const styles = StyleSheet.create({
     Searchbar: {
-        minWidth: (width + 80) / 2,
+        minWidth: width * 0.7,
         height: 45,
     },
 });

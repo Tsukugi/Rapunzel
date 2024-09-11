@@ -103,6 +103,7 @@ export const NavigatorHeader = ({
 
     return (
         <HeaderBar
+            navigation={navigation}
             style={absoluteMode && headerAbsoluteStyle}
             showSearch={showSearch}
             leftMode={leftMode || HeaderLeftMode.menu}

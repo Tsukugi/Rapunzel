@@ -13,7 +13,6 @@ import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
-import { ListUtils } from "../tools/list";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 

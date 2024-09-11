@@ -1,13 +1,15 @@
-import { Appbar } from "react-native-paper";
+import { Appbar, Icon, Menu, Text } from "react-native-paper";
 import { useState } from "react";
-import { Appearance, ViewStyle } from "react-native";
+import { Appearance, View, ViewStyle } from "react-native";
 
 import { useRapunzelStore } from "../../../store/store";
 
 import PaperSearch from "./search";
 import HeaderLeftBtn, { LeftModeProps } from "./headerLeftBtn";
 import { RapunzelLog } from "../../../config/log";
-interface HeaderBarProps extends LeftModeProps {
+import { RapunzelMenu } from "../RapunzelMenu";
+import { UsesNavigation, ViewNames } from "../../navigators/interfaces";
+interface HeaderBarProps extends LeftModeProps, UsesNavigation {
     style?: ViewStyle | false;
     showSearch?: boolean;
     openSearch: () => void;
@@ -16,6 +18,7 @@ interface HeaderBarProps extends LeftModeProps {
 }
 
 const HeaderBar = ({
+    navigation,
     style,
     showSearch,
     leftMode,
@@ -31,8 +34,9 @@ const HeaderBar = ({
     } = useRapunzelStore();
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
-    useLoadingEffect(({ browse, reader }) => setIsLoading(browse || reader));
+    useLoadingEffect(({ browse }) => setIsLoading(browse));
 
     const onThemeToggle = () => {
         const newTheme =
@@ -42,6 +46,17 @@ const HeaderBar = ({
         Appearance.setColorScheme(newTheme);
     };
 
+    const hamburgerIcon = (
+        <Appbar.Action
+            icon="dots-vertical"
+            onPress={() => {
+                openOptions();
+                setIsMenuOpen(true);
+            }}
+        />
+    );
+
+    // TODO: Export the configuration of the RMenu if needed
     return (
         <Appbar.Header style={style}>
             <HeaderLeftBtn
@@ -57,8 +72,25 @@ const HeaderBar = ({
                     onSubmit={onSubmit}
                 />
             ) : null}
-            <Appbar.Action icon="theme-light-dark" onPress={onThemeToggle} />
-            <Appbar.Action icon="dots-vertical" onPress={openOptions} />
+
+            <RapunzelMenu
+                items={[
+                    {
+                        onPress: onThemeToggle,
+                        title: "Toggle Theme",
+                    },
+                    {
+                        onPress: () => {
+                            navigation.navigate(ViewNames.RapunzelSettings);
+                            setIsMenuOpen(false);
+                        },
+                        title: "Settings",
+                    },
+                ]}
+                anchor={hamburgerIcon}
+                visible={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+            />
         </Appbar.Header>
     );
 };
