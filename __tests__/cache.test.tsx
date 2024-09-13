@@ -31,8 +31,10 @@ jest.mock("react-native-fs", () => ({
     readDir: (path: string) =>
         usePromise([
             {
+                isDirectory: () => false,
                 name: useLocalFilename(),
                 path: `${cachePath}/${bookId}`,
+                size,
             },
         ]),
     downloadFile: (options: object) => ({
@@ -47,7 +49,7 @@ import { RandomTools } from "../src/tools/random";
 
 describe("Use device cache", () => {
     test("Calculate cache size", async () => {
-        const size = await DeviceCache.calculateCacheSize();
+        const size = await DeviceCache.calculateCacheSize(cachePath);
         expect(size).toEqual(50);
     });
 
@@ -81,7 +83,7 @@ describe("Use device cache", () => {
     });
 
     test("List cached images", async () => {
-        const images = await DeviceCache.listCachedImages();
+        const images = await DeviceCache.listCachedImages(cachePath);
         expect(images).toEqual([useLocalFullPathFilename()]);
     });
 
@@ -107,7 +109,7 @@ describe("Use device cache", () => {
                 useDomainFilename("3"),
                 useDomainFilename("4"),
             ],
-            downloadPath: usePath(),
+            imagesPath: usePath(),
             onFileNaming: ({ index }) => `${index}.${imageName}`,
             onImageLoaded: async (url) => {
                 expect(url).toEqual(useLocalFullPathFilename(`${testIndex}`));
@@ -134,7 +136,7 @@ describe("Use device cache", () => {
                 useDomainFilename("3"),
                 useDomainFilename("4"),
             ],
-            downloadPath: usePath(),
+            imagesPath: usePath(),
             onFileNaming: ({ index }) => `${index}.${imageName}`,
             onImageLoaded: async (url) => {
                 testIndex++;
@@ -164,7 +166,7 @@ describe("Use device cache", () => {
         const images = await DeviceCache.startLoadingImages({
             id: activeId,
             data: loadData,
-            downloadPath: usePath(),
+            imagesPath: usePath(),
             onFileNaming: ({ index }) => `${index}.${imageName}`,
             onImageLoaded: async () => {
                 testIndex++;
@@ -174,7 +176,7 @@ describe("Use device cache", () => {
                     await DeviceCache.startLoadingImages({
                         id: activeId,
                         data: loadData,
-                        downloadPath: "",
+                        imagesPath: "",
                         onFileNaming: () => "",
                         onImageLoaded: () => Promise.resolve(),
                         shouldCancelLoad: () => false,

@@ -2,8 +2,6 @@ import { Book } from "@atsu/lilith";
 import RNFS from "react-native-fs";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
-import { CacheUtils } from "./CacheUtils";
-import { DeviceCache } from "./cache";
 import { pickSingle } from "react-native-document-picker";
 import { useRapunzelStorage } from "./storage";
 import { StorageEntries } from "./interfaces";
@@ -38,7 +36,7 @@ const exportLibraryAsJson = async () => {
 /**
  * Imports the library from a JSON file.
  *
- * This function allows the user to select a JSON file, reads its contents, and 
+ * This function allows the user to select a JSON file, reads its contents, and
  * merges the imported books into the current library stored in `useRapunzelStore`.
  * It then updates the library both in memory and in persistent storage.
  *

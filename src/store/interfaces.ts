@@ -30,6 +30,8 @@ export interface ConfigState extends RapunzelConfigBase {
     webviewUrl: string;
     repository: LilithRepo;
     languages: LilithLanguage[];
+    cachelibraryLocation: string;
+    cacheTempImageLocation: string;
 }
 
 export interface BookBaseList {

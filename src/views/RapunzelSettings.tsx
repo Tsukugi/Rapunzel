@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { List } from "react-native-paper";
-import { Book, LilithLanguage, LilithRepo } from "@atsu/lilith";
+import { LilithLanguage, LilithRepo } from "@atsu/lilith";
 
 import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
@@ -11,9 +11,6 @@ import { useRapunzelStore } from "../store/store";
 import { useRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
 import { RapunzelSelect } from "../components/RapunzelSelect";
-import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
-import { useRapunzelLoader } from "../api/loader";
-import { useLibrary } from "../components/cache/library";
 
 interface RapunzelSettingsProps extends UsesNavigation {}
 
@@ -23,7 +20,6 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
     >(1);
 
     const {
-        reader: [reader],
         config: [config],
     } = useRapunzelStore();
 
@@ -59,14 +55,16 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
                         list={[LilithRepo.NHentai, LilithRepo.MangaDex]}
                         onSelect={onSetValueHandlerRepository}
                     />
+                    {/* 
+                    // TODO enable this when we support multi selector and filter languages
                     <RapunzelSelect
                         label="Languages"
                         initialValue={config.languages}
                         list={Object.values(LilithLanguage)}
                         onSelect={onSetValueHandlerLanguages}
-                    />
+                    /> */}
                 </List.Accordion>
-                <List.Accordion title="Device and Cache" id={2}>
+                <List.Accordion title="Library and Temporary Cache" id={2}>
                     <CacheScreen />
                 </List.Accordion>
             </List.AccordionGroup>

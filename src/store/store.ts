@@ -20,6 +20,7 @@ import {
 } from "./interfaces";
 
 import { useEffect } from "react";
+import { ImageCacheLocations } from "../cache/interfaces";
 
 const RapunzelState = {} as Store;
 export const useRapunzelStore = () => {
@@ -72,6 +73,8 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
     RapunzelState.config = useReactConfig<ConfigState>("config", {
         debug: false,
         useFallbackExtensionOnDownload: false,
+        cachelibraryLocation: ImageCacheLocations.Downloads,
+        cacheTempImageLocation: ImageCacheLocations.Temp,
         apiLoaderConfig: {
             "User-Agent": "",
             cookie: "",

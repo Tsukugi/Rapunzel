@@ -92,7 +92,7 @@ const BrowseItem: FC<BrowserItemProps> = ({
         >
             <Card.Cover
                 style={{ ...styles.cover, ...coverStyle }}
-                source={{ uri: cover }}
+                source={{ uri: cover }} 
             />
             <Card.Title
                 titleNumberOfLines={2}

@@ -1,4 +1,5 @@
 import { MMKVInstance } from "react-native-mmkv-storage";
+import RNFS from "react-native-fs";
 
 export enum StorageEntries {
     debug = "debug",
@@ -24,3 +25,9 @@ export interface UseStorage {
 export interface RapunzelStorageBase {
     instance: MMKVInstance;
 }
+
+export const ImageCacheLocations = {
+    Document: RNFS.DocumentDirectoryPath,
+    Downloads: RNFS.DownloadDirectoryPath,
+    Temp: RNFS.TemporaryDirectoryPath,
+};

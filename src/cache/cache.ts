@@ -5,11 +5,6 @@ import { PromiseTools } from "../tools/promise";
 import { RandomTools } from "../tools/random";
 
 /**
- * Represents the path to the directory used for caching images.
- */
-const ImageCacheDirectory = RNFS.DownloadDirectoryPath;
-
-/**
  * Type representing supported image file extensions.
  */
 type Extension = ".jpg" | ".jpeg" | ".png" | ".gif";
@@ -148,7 +143,7 @@ interface FileNamingProps {
 export interface StartLoadingImagesProps {
     id?: string;
     data: string[];
-    downloadPath: string;
+    imagesPath: string;
     onFileNaming: (imageInfo: FileNamingProps) => string;
     onImageLoaded: (url: string, index: number) => Promise<void>;
     shouldCancelLoad: (id: string) => boolean;
@@ -164,7 +159,7 @@ export interface StartLoadingImagesProps {
 const startLoadingImages = async ({
     id = RandomTools.generateRandomId(10),
     data,
-    downloadPath,
+    imagesPath: downloadPath,
     onFileNaming,
     onImageLoaded,
     shouldCancelLoad,
@@ -245,24 +240,26 @@ const redownloadImage = async (
 };
 
 /**
- * Asynchronously calculates the size of the ImageCacheDirectory in megabytes.
+ * Asynchronously calculates the size of the folder in megabytes.
  * @returns {Promise<number>} - A Promise that resolves to the size of the cache directory in megabytes.
  * If an error occurs during the process, the Promise is rejected with the error, and 0 is returned.
  */
-const calculateCacheSize = async (): Promise<number> => {
-    const cachePath = ImageCacheDirectory;
-    const size = await getFolderSize(cachePath);
+const calculateCacheSize = async (path: string): Promise<number> => {
+    const size = await getRecursiveFolderSize(path);
     return size / 1048576; // Bytes to MegaBytes
 };
 
-const getFolderSize = async (cachePath: string, size = 0): Promise<number> => {
+const getRecursiveFolderSize = async (
+    cachePath: string,
+    size = 0,
+): Promise<number> => {
     try {
         return new Promise(async (resolve) => {
             const items = await RNFS.readDir(cachePath);
 
             const onItemFile = async (item: RNFS.ReadDirItem) => {
                 if (item.isDirectory()) {
-                    size += await getFolderSize(item.path);
+                    size += await getRecursiveFolderSize(item.path);
                 } else {
                     size += item.size;
                 }
@@ -309,13 +306,12 @@ const copyFolder = async (
 };
 
 /**
- * Asynchronously clears the contents of the ImageCacheDirectory by removing all cached files.
+ * Asynchronously clears the contents of the path by removing all cached files.
  * @returns {Promise<void>} - A Promise that resolves once the cache is successfully cleared.
  */
-const clearCache = async (): Promise<void> => {
+const clearCache = async (path: string): Promise<void> => {
     try {
-        const cachePath = ImageCacheDirectory;
-        const files = await RNFS.readDir(cachePath);
+        const files = await RNFS.readDir(path);
 
         // Iterate through the files and remove them
         for (const file of files) {
@@ -330,13 +326,13 @@ const clearCache = async (): Promise<void> => {
 
 /**
  * @Deprecated
- * Asynchronously lists the URIs of cached images in the ImageCacheDirectory.
+ * Asynchronously lists the URIs of cached images in the specified path.
  * @returns {Promise<string[]>} - A Promise that resolves to an array of image URIs for the cached images.
  * If no cached images are found or an error occurs, an empty array is returned.
  */
-const listCachedImages = async (): Promise<string[]> => {
+const listCachedImages = async (path: string): Promise<string[]> => {
     try {
-        const files = await RNFS.readDir(ImageCacheDirectory);
+        const files = await RNFS.readDir(path);
 
         // Filter files that have image extensions
         const imageFiles = files.filter((file) =>
@@ -409,7 +405,6 @@ const ensureCreateDeepFolders = async (
 };
 
 export const DeviceCache = {
-    ImageCacheDirectory,
     ensureCreateDeepFolders,
     downloadImageWithFallback,
     downloadAndCacheImage,

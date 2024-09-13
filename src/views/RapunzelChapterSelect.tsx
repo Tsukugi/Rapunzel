@@ -21,6 +21,7 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
     const [managedBook, setManagedbook] = useState<Book | null>(null);
 
     const {
+        library: [library],
         reader: [reader],
         loading: [, loadingEffect],
     } = useRapunzelStore();
@@ -38,7 +39,9 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
 
     const onChapterSelectHandler = (id: string) => {
         const { loadChapter } = useRapunzelLoader();
+
         loadChapter(managedBook.id, id);
+
         navigation.navigate(ViewNames.RapunzelReader);
     };
 

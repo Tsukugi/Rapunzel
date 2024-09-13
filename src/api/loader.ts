@@ -20,6 +20,7 @@ import {
 import { RapunzelCache, StaticLibraryPaths } from "../cache/useRapunzelCache";
 import { CacheUtils } from "../cache/CacheUtils";
 import { VirtualItem } from "../components/virtualList/interfaces";
+import { useRapunzelLibrary } from "../components/cache/library";
 
 const NumberOfForceRenderImages = 20;
 
@@ -56,6 +57,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         browse: [browse],
         config: [config],
         latest: [latest],
+        library: [library],
         trending: [popular],
     } = useRapunzelStore();
 
@@ -137,7 +139,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
     /**
      * Loads a chapter based on its id, automatically downloading and caching the image list to the Reader state.
-     * @param {string} chapterId - Unique id of a chapter.
+     * @param {string} book - Unique id of the containing book.
+     * @param {string} chapterId - Unique id of the selected chapter.
      * @returns {Promise<string[] >} - A Promise that resolves to an array of cached image paths corresponding to the loaded images. Returns null if the chapter loading fails.
      */
     const loadChapter = async (
@@ -164,6 +167,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             return [];
         }
 
+        const libraryBookId = useRapunzelLibrary().getLibraryId(bookId);
+
         // Extract image URIs from the chapter pages
         const images = chapter.pages.map((page) => page.uri);
 
@@ -176,7 +181,10 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: reader.activeProcessId,
             data: images,
-            downloadPath: `${StaticLibraryPaths.ReadBooks}/${config.repository}/${bookId}/${chapterId}`,
+            imagesPath: `${StaticLibraryPaths.ReadBooks}/${config.repository}/${bookId}/${chapterId}`,
+            deviceDownloadPath: library.saved[libraryBookId]
+                ? config.cachelibraryLocation
+                : config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: bookId,
@@ -332,7 +340,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         // Load images asynchronously using loadImageList utility
         const promise = RapunzelCache.downloadImageList({
             id: browse.activeProcessId,
-            downloadPath: StaticLibraryPaths.SearchResults,
+            imagesPath: StaticLibraryPaths.SearchResults,
+            deviceDownloadPath: config.cacheTempImageLocation,
             data: imagesToCache,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
@@ -429,7 +438,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: latest.activeProcessId,
             data: imagesToCache,
-            downloadPath: StaticLibraryPaths.MainFeed,
+            imagesPath: StaticLibraryPaths.MainFeed,
+            deviceDownloadPath: config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: imageList[index].id,
@@ -519,7 +529,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: popular.activeProcessId,
             data: imagesToCache,
-            downloadPath: StaticLibraryPaths.Trending,
+            imagesPath: StaticLibraryPaths.Trending,
+            deviceDownloadPath: config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: imageList[index].id,

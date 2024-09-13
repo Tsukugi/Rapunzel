@@ -2,10 +2,12 @@ import RNFS from "react-native-fs";
 
 import { DeviceCache, StartLoadingImagesProps } from "./cache";
 import { RapunzelLog } from "../config/log";
+import { useRapunzelStore } from "../store/store";
 
 export interface DownloadBookProps extends StartLoadingImagesProps {
     id: string;
-    downloadPath: string; // This accepts nesting (eg a/b/c => ImageCacheDirectory/a/b/c)
+    imagesPath: string; // This accepts nesting (eg a/b/c => ImageCacheDirectory/a/b/c)
+    deviceDownloadPath: string;
 }
 
 export enum StaticLibraryPaths {
@@ -16,17 +18,19 @@ export enum StaticLibraryPaths {
     ReadBooks = "ReadBooks",
 }
 
-const RapunzelLibrary = `${DeviceCache.ImageCacheDirectory}/${StaticLibraryPaths.RootFolderName}`;
 export const RapunzelCache = {
     downloadImageList: async ({
         id,
-        downloadPath: folderPath,
+        imagesPath,
+        deviceDownloadPath,
         data,
         onFileNaming,
         onImageLoaded,
         shouldCancelLoad,
     }: DownloadBookProps) => {
         if (data.length === 0) return [];
+
+        const RapunzelLibrary = `${deviceDownloadPath}/${StaticLibraryPaths.RootFolderName}`;
 
         const imageSet = data.filter((data) => !!data);
         RapunzelLog.log(
@@ -36,15 +40,14 @@ export const RapunzelCache = {
         try {
             await RNFS.mkdir(RapunzelLibrary);
             await DeviceCache.ensureCreateDeepFolders(
-                folderPath,
+                imagesPath,
                 RapunzelLibrary,
             );
-
-            const imageListFolderPath = `${RapunzelLibrary}/${folderPath}`;
+            const imageListFolderPath = `${RapunzelLibrary}/${imagesPath}`;
             return await DeviceCache.startLoadingImages({
                 id,
                 data: imageSet,
-                downloadPath: imageListFolderPath,
+                imagesPath: imageListFolderPath,
                 onFileNaming,
                 onImageLoaded,
                 shouldCancelLoad,
@@ -53,16 +56,20 @@ export const RapunzelCache = {
             return [];
         }
     },
+
     /**
-     * Asynchronously clears ImageCacheDirectory covers.
+     * Asynchronously clears temp directory covers.
      * @returns {Promise<void>} - A Promise that resolves once the covers is successfully cleared.
      */
     clearTempCache: async (): Promise<void> => {
-        const removeContents = async (folder: string) => {
-            const items = await RNFS.readDir(`${RapunzelLibrary}/${folder}`);
-            const processes = items.map((item) => RNFS.unlink(item.path));
+        const {
+            config: [config],
+        } = useRapunzelStore();
 
-            return await Promise.allSettled(processes);
+        const RapunzelLibrary = `${config.cacheTempImageLocation}/${StaticLibraryPaths.RootFolderName}`;
+
+        const removeContents = async (folder: string) => {
+            await RNFS.unlink(`${RapunzelLibrary}/${folder}`);
         };
 
         try {
@@ -70,6 +77,7 @@ export const RapunzelCache = {
                 removeContents(StaticLibraryPaths.MainFeed),
                 removeContents(StaticLibraryPaths.Trending),
                 removeContents(StaticLibraryPaths.SearchResults),
+                removeContents(StaticLibraryPaths.ReadBooks),
             ];
 
             await Promise.allSettled(processes);
@@ -79,6 +87,34 @@ export const RapunzelCache = {
             );
         } catch (error) {
             RapunzelLog.error("[clearTempCache] Error clearing cache:", error);
+        }
+    },
+
+    /**
+     * Asynchronously clears Library directory covers.
+     * @returns {Promise<void>} - A Promise that resolves once the covers is successfully cleared.
+     */ clearLibraryCache: async (): Promise<void> => {
+        const {
+            config: [config],
+        } = useRapunzelStore();
+
+        try {
+            const RapunzelLibrary = `${config.cachelibraryLocation}/${StaticLibraryPaths.RootFolderName}`;
+            const items = await RNFS.readDir(
+                `${RapunzelLibrary}/${StaticLibraryPaths.ReadBooks}`,
+            );
+            const processes = items.map((item) => RNFS.unlink(item.path));
+
+            await Promise.allSettled(processes);
+
+            RapunzelLog.log(
+                "[clearLibraryCache] Library cache cleared successfully.",
+            );
+        } catch (error) {
+            RapunzelLog.error(
+                "[clearLibraryCache] Error clearing cache:",
+                error,
+            );
         }
     },
 };

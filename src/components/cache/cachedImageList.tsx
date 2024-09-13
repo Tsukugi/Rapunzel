@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { View, FlatList, Text, StyleSheet } from "react-native";
 import { DeviceCache } from "../../cache/cache";
+import { useRapunzelStore } from "../../store/store";
 
 interface CachedImagesListProps {}
 
 const CachedImagesList: React.FC<CachedImagesListProps> = () => {
     const [cachedImages, setCachedImages] = useState<string[]>([]);
 
+    const {
+        config: [config],
+    } = useRapunzelStore();
+
     useEffect(() => {
-        DeviceCache.listCachedImages().then(setCachedImages);
+        DeviceCache.listCachedImages(config.cacheTempImageLocation).then(
+            setCachedImages,
+        );
     }, []);
 
     return (
