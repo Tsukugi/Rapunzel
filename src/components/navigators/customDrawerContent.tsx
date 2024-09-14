@@ -6,7 +6,7 @@ import {
 import { Image } from "react-native";
 import { Avatar, Divider } from "react-native-paper";
 import { useRapunzelStore } from "../../store/store";
-import { LilithRepo } from "@atsu/lilith";
+import { LilithRepo } from "../../store/interfaces";
 interface CustomDrawerContent extends DrawerContentComponentProps {}
 
 const safeImage =

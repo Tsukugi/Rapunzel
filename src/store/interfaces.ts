@@ -1,6 +1,5 @@
 import {
     Book,
-    LilithRepo,
     BookBase,
     LilithHeaders,
     Chapter,
@@ -9,6 +8,11 @@ import {
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelConfigBase } from "../config/interfaces";
 import { VirtualItem } from "../components/virtualList/interfaces";
+
+export enum LilithRepo {
+    NHentai = "NHentai",
+    MangaDex = "MangaDex",
+}
 
 export interface RouterState {
     currentRoute: ViewNames;

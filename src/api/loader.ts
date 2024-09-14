@@ -3,8 +3,9 @@ import {
     Book,
     BookBase,
     SearchResult,
-    useAPILoader,
-    LilithLanguage,
+    BookListResults,
+    SearchQueryOptions,
+    GetBookOptions,
 } from "@atsu/lilith";
 
 import { RapunzelLog } from "../config/log";
@@ -12,15 +13,11 @@ import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
 import { RapunzelImage } from "../store/interfaces";
-import {
-    BookListResults,
-    GetBookOptions,
-    SearchQueryOptions,
-} from "@atsu/lilith/dist/repo/base/interfaces";
 import { RapunzelCache, StaticLibraryPaths } from "../cache/useRapunzelCache";
 import { CacheUtils } from "../cache/CacheUtils";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { useRapunzelLibrary } from "../components/cache/library";
+import { useLilithAPI } from "./api";
 
 const NumberOfForceRenderImages = 20;
 
@@ -44,11 +41,6 @@ interface UseRapunzelLoaderProps {
 }
 
 export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
-    const { useAllLanguages }: UseRapunzelLoaderProps = {
-        useAllLanguages: false,
-        ...props,
-    };
-
     const getNewId = () => RandomTools.generateRandomId(10);
 
     const {
@@ -61,18 +53,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         trending: [popular],
     } = useRapunzelStore();
 
-    const apiLoader = useAPILoader({
-        repo: config.repository,
-        config: {
-            headers: config.apiLoaderConfig,
-            options: {
-                debug: config.debug,
-                requiredLanguages: useAllLanguages
-                    ? Object.values(LilithLanguage)
-                    : config.languages,
-            },
-        },
-    });
+    const apiLoader = useLilithAPI();
 
     /**
      * Loads a book based on its code, then saves it to the state.

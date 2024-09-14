@@ -1,7 +1,10 @@
-import { LilithRepo } from "@atsu/lilith";
 import { useRapunzelLoader } from "../api/loader";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
-import { ConfigState, EAutoFetchWebviewStep } from "../store/interfaces";
+import {
+    ConfigState,
+    EAutoFetchWebviewStep,
+    LilithRepo,
+} from "../store/interfaces";
 import { useRapunzelStore } from "../store/store";
 import { RapunzelLog } from "../config/log";
 
@@ -22,7 +25,9 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const validateData = async ({ apiLoaderConfig }: ConfigState) => {
         if (!apiLoaderConfig["User-Agent"] || !apiLoaderConfig.cookie) {
             RapunzelLog.log(
-                `[useAutoFetchWebviewData.validateData] Not enough data ${JSON.stringify(apiLoaderConfig)}`,
+                `[useAutoFetchWebviewData.validateData] Not enough data ${JSON.stringify(
+                    apiLoaderConfig,
+                )}`,
             );
             return false;
         }

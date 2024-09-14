@@ -1,5 +1,5 @@
 import { TaihouOptions, useState } from "@atsu/taihou";
-import { LilithLanguage, LilithRepo } from "@atsu/lilith";
+import { LilithLanguage } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
     AutoFetchWebview,
@@ -10,6 +10,7 @@ import {
     HeaderState,
     LatestBooksState,
     LibraryState,
+    LilithRepo,
     LoadingState,
     PopularBooksState,
     ReaderState,

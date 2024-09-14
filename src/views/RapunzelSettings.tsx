@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { List } from "react-native-paper";
-import { LilithLanguage, LilithRepo } from "@atsu/lilith";
+import { LilithLanguage } from "@atsu/lilith";
 
 import ScrollContent from "../components/scrollContent";
 import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
@@ -11,6 +11,7 @@ import { useRapunzelStore } from "../store/store";
 import { useRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
 import { RapunzelSelect } from "../components/RapunzelSelect";
+import { LilithRepo } from "../store/interfaces";
 
 interface RapunzelSettingsProps extends UsesNavigation {}
 
