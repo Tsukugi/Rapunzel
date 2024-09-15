@@ -95,7 +95,6 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         return images;
     };
 
-    console.log(latestBooksImages.length);
     return (
         <>
             <VirtualList
