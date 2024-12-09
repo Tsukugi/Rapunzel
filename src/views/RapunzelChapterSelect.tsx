@@ -123,7 +123,6 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
                         />
                     );
                 }}
-                onEndReached={onEndReachedHandler}
             />
         </>
     );

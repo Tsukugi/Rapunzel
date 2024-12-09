@@ -10,8 +10,9 @@
     },
     "dependencies": {
         "@atsu/lilith": "github:Tsukugi/Lilith",
-        "@atsu/lilith-nhentai": "github:Tsukugi/LilithNHentai",
+        "@atsu/lilith-hentag": "github:Tsukugi/LilithHentag",
         "@atsu/lilith-mangadex": "github:Tsukugi/LilithMangaDex",
+        "@atsu/lilith-nhentai": "github:Tsukugi/LilithNHentai",
         "@atsu/taihou": "^0.4.0",
         "@react-native-cookies/cookies": "^6.2.1",
         "@react-navigation/drawer": "^6.6.6",

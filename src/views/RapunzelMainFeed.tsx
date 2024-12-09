@@ -42,7 +42,10 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            loadMainFeed(false);
+            setLoadedTrendingBookImages(trendingBooks.cachedImages);
+            setLatestBooksImages(latestBooks.cachedImages);
+            console.log(latestBooks.cachedImages.length);
+            loadMainFeed(latestBooks.cachedImages.length === 0);
         }, []),
     );
 
@@ -96,36 +99,34 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     };
 
     return (
-        <>
-            <VirtualList
-                data={latestBooksImages}
-                renderer={({ index }) => {
-                    if (index === 0) {
-                        return (
-                            <TrendingBooksFeed
-                                virtualItems={loadedTrendingBookImages}
-                                getVirtualItemPropsHandler={getVirtualItemProps}
-                            />
-                        );
-                    }
-
-                    const { id } = latestBooksImages[index];
-                    return (
-                        <MainFeedItem
-                            style={{
-                                style: { height: 500 },
-                                coverStyle: { height: 500 },
-                            }}
-                            item={getVirtualItemProps(
-                                latestBooks.bookListRecord[id],
-                            )}
+        <VirtualList
+            data={latestBooksImages}
+            renderer={({ index }) => {
+                if (index === 0) {
+                    return loadedTrendingBookImages.length > 0 ? (
+                        <TrendingBooksFeed
+                            virtualItems={loadedTrendingBookImages}
+                            getVirtualItemPropsHandler={getVirtualItemProps}
                         />
-                    );
-                }}
-                onStartReached={onStartReachedHandler}
-                onEndReached={onEndReachedHandler}
-            />
-        </>
+                    ) : null;
+                }
+
+                const { id } = latestBooksImages[index];
+                return (
+                    <MainFeedItem
+                        style={{
+                            style: { height: 500 },
+                            coverStyle: { height: 500 },
+                        }}
+                        item={getVirtualItemProps(
+                            latestBooks.bookListRecord[id],
+                        )}
+                    />
+                );
+            }}
+            onStartReached={onStartReachedHandler}
+            onEndReached={onEndReachedHandler}
+        />
     );
 };
 export default RapunzelMainFeed;

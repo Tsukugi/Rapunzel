@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useCallback, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import { useRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
@@ -9,6 +9,7 @@ import { useRapunzelStore } from "../store/store";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import { ListUtils } from "../tools/list";
 import { RapunzelLog } from "../config/log";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
@@ -21,6 +22,12 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     } = useRapunzelStore();
 
     useRouter({ route: ViewNames.RapunzelBrowse, navigation });
+
+    useFocusEffect(
+        useCallback(() => {
+            setLoadedImages(browse.cachedImages);
+        }, []),
+    );
 
     browseEffect(({ cachedImages }) => {
         setLoadedImages(cachedImages);

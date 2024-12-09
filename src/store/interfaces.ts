@@ -11,6 +11,7 @@ import { VirtualItem } from "../components/virtualList/interfaces";
 
 export enum LilithRepo {
     NHentai = "NHentai",
+    HenTag = "HenTag",
     MangaDex = "MangaDex",
 }
 

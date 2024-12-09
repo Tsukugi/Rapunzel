@@ -53,7 +53,7 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
                     <RapunzelSelect
                         label="Repository"
                         initialValue={[config.repository]}
-                        list={[LilithRepo.NHentai, LilithRepo.MangaDex]}
+                        list={Object.values(LilithRepo)}
                         onSelect={onSetValueHandlerRepository}
                     />
                     {/* 

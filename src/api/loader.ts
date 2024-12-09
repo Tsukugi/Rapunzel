@@ -438,7 +438,11 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
                 if (latest.cachedImagesRecord[newItem.id]) return;
                 latest.cachedImagesRecord[newItem.id] = newItem;
-                latest.cachedImages.push(newItem);
+                if (index < NumberOfForceRenderImages) {
+                    latest.cachedImages = [...latest.cachedImages, newItem];
+                } else {
+                    latest.cachedImages.push(newItem);
+                }
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;
