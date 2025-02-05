@@ -57,7 +57,7 @@ export const WebviewInjectJavascript = {
         if(ad){ ad.parentNode.removeChild(ad); }
         var style = document.querySelector("body > style");
         if(style){ style.parentNode.removeChild(style); }
-    }, 10);`,
+    }, 100);`,
     getUserAgent: `setTimeout(function () {
         window.ReactNativeWebView.postMessage(JSON.stringify({userAgent: navigator.userAgent}))
     }, 1000);`,
