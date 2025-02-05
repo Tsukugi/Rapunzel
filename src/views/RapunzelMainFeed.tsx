@@ -44,7 +44,6 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         useCallback(() => {
             setLoadedTrendingBookImages(trendingBooks.cachedImages);
             setLatestBooksImages(latestBooks.cachedImages);
-            console.log(latestBooks.cachedImages.length);
             loadMainFeed(latestBooks.cachedImages.length === 0);
         }, []),
     );

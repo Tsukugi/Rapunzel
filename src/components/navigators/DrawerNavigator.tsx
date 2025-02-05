@@ -10,8 +10,8 @@ import { LocalTheme } from "../../../themes";
 
 import { ViewDict, ViewNavigationData } from "./navigationConfig";
 import CustomDrawerContent from "./customDrawerContent";
-import { ViewNames } from "./interfaces";
 import { NavigatorHeader } from "./NavigatorHeader";
+import { useRapunzelStore } from "../../store/store";
 
 interface DrawerNavigatorProps {
     views: Partial<ViewDict>;
@@ -21,6 +21,10 @@ const Drawer = createDrawerNavigator();
 
 const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     const { colors } = LocalTheme.useTheme();
+
+    const {
+        config: [config],
+    } = useRapunzelStore();
 
     const useOptions = (view: ViewNavigationData): DrawerNavigationOptions => {
         return {
@@ -59,7 +63,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
     return (
         <Drawer.Navigator
             drawerContent={CustomDrawerContent}
-            initialRouteName={ViewNames.RapunzelMainFeed}
+            initialRouteName={config.initialView}
             backBehavior={"history"}
         >
             {Object.values(views).map((view, index) => (

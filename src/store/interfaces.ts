@@ -33,6 +33,7 @@ export interface ReaderState {
 export interface ConfigState extends RapunzelConfigBase {
     apiLoaderConfig: LilithHeaders;
     webviewUrl: string;
+    initialView: ViewNames;
     repository: LilithRepo;
     languages: LilithLanguage[];
     cachelibraryLocation: string;

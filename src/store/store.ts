@@ -80,6 +80,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
             "User-Agent": "",
             cookie: "",
         },
+        initialView: ViewNames.RapunzelMainFeed,
         webviewUrl: `https://nhentai.net/`,
         repository: LilithRepo.NHentai,
         languages: [
