@@ -30,10 +30,12 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         loading: [loading],
     } = useRapunzelStore();
 
-    const loadMainFeed = (clean: boolean) => {
+    const loadMainFeed = async (clean: boolean) => {
         const { getLatestBooks, getTrendingBooks } = useRapunzelLoader();
-        getTrendingBooks();
-        getLatestBooks(latestBooks.page, clean);
+        const trending = getTrendingBooks();
+        const latest = getLatestBooks(latestBooks.page, clean);
+
+        await Promise.all([trending, latest]);
     };
 
     useEffect(() => {
@@ -123,6 +125,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                     />
                 );
             }}
+            onRefresh={async () => await loadMainFeed(true)}
             onStartReached={onStartReachedHandler}
             onEndReached={onEndReachedHandler}
         />

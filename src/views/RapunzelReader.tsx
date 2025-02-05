@@ -16,16 +16,22 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
         VirtualItem<RapunzelImage>[]
     >([]);
     const {
-        reader: [, readerEffect],
+        reader: [reader, readerEffect],
     } = useRapunzelStore();
+
+    const updateImages = () => {
+        setLoadedImages(reader.cachedImages);
+    };
 
     useRouter({ route: ViewNames.RapunzelReader, navigation });
 
+    useFocusEffect(updateImages);
     readerEffect(({ cachedImages }) => setLoadedImages(cachedImages));
 
     return (
         <VirtualList
             data={loadedImages}
+            onRefresh={async () => updateImages()}
             renderer={({ item }) => (
                 <ImageRenderer item={item} onClick={() => {}} />
             )}

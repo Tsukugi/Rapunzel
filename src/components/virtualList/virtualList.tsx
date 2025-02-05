@@ -1,5 +1,10 @@
 import React, { PropsWithChildren } from "react";
-import { VirtualizedList, StyleSheet, ListRenderItem } from "react-native";
+import {
+    VirtualizedList,
+    StyleSheet,
+    ListRenderItem,
+    RefreshControl,
+} from "react-native";
 import { VirtualItem } from "./interfaces";
 import Item from "./item";
 import { LocalTheme } from "../../../themes";
@@ -12,6 +17,7 @@ interface VirtualListProps<T> extends PropsWithChildren {
     style?: Record<string, any>;
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
+    onRefresh?: () => Promise<void>;
     onEndReached?: () => void;
     onStartReached?: () => void;
 }
@@ -21,6 +27,9 @@ const VirtualList = <T,>({
     style,
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_data, index) => _data[index],
+    onRefresh = async () => {
+        RapunzelLog.log("[onRefresh]: Reached");
+    },
     onEndReached = () => {
         RapunzelLog.log("[onEndReached]: Reached");
     },
@@ -32,6 +41,14 @@ const VirtualList = <T,>({
         config: [config],
     } = useRapunzelStore();
 
+    const [refreshing, setRefreshing] = React.useState(false);
+
+    const onRefreshHandler = React.useCallback(() => {
+        setRefreshing(true);
+
+        onRefresh().finally(() => setRefreshing(false));
+    }, []);
+
     const { colors } = LocalTheme.useTheme();
 
     return (
@@ -42,6 +59,12 @@ const VirtualList = <T,>({
                 ...useDebugBorders(config.debug),
             }}
             data={data}
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefreshHandler}
+                />
+            }
             initialNumToRender={3}
             maxToRenderPerBatch={6}
             windowSize={6}

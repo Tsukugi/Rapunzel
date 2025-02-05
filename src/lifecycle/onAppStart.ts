@@ -9,6 +9,7 @@ export const onAppStart = () => {
     } = useRapunzelStore();
 
     // Here is an easy way to do the auto webview for NH only
+    // This is because they have cloudfire clearance requirement 
     if (config.repository === LilithRepo.NHentai) {
         config.initialView = ViewNames.RapunzelWebView;
     }
