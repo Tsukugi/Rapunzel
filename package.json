@@ -1,6 +1,6 @@
 {
     "name": "@atsu/rapunzel",
-    "version": "0.6.11",
+    "version": "0.7.0",
     "scripts": {
         "android": "react-native run-android",
         "ios": "react-native run-ios",
