@@ -10,7 +10,7 @@ import { StorageEntries } from "../cache/interfaces";
 import { useRapunzelStorage } from "../cache/storage";
 import { ListUtils } from "../tools/list";
 import { LibraryBook } from "../store/interfaces";
-import { RapunzelLog } from "../config/log";
+import { LibraryUtils } from "../tools/library";
 
 interface RapunzelLibraryProps extends UsesNavigation {}
 
@@ -27,21 +27,13 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
             Record<string, LibraryBook>
         >(StorageEntries.library);
         if (!storedLibrary) return;
-        library.saved = storedLibrary;
-        library.rendered = Object.keys(storedLibrary)
-            .filter((key) => {
-                const [repo] = key.split("."); // Example "Repo.BookId"
-                return repo === config.repository;
-            })
-            .sort((a, b) => {
-                if (!library.saved[a] || !library.saved[b]) return 1;
-                // Sort asc (newer on top)
-                return library.saved[b].savedAt - library.saved[a].savedAt;
-            });
 
-        RapunzelLog.log(
-            library.rendered.map((key) => library.saved[key].cover.uri),
+        const { rendered, saved } = LibraryUtils.buildLibraryState(
+            storedLibrary,
+            config,
         );
+        library.saved = saved;
+        library.rendered = rendered;
     };
 
     useRouter({ route: ViewNames.RapunzelLibrary, navigation });

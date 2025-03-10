@@ -1,4 +1,4 @@
-import { Card, Text } from "react-native-paper";
+import { Button, Card, Chip, Icon, Text } from "react-native-paper";
 import { FC, useState } from "react";
 import { BookBase } from "@atsu/lilith";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -15,6 +15,7 @@ export interface StyleProps {
 }
 export interface BrowserItemProps extends Partial<StyleProps> {
     cover?: string;
+    bookmarked?: boolean;
     bookBase: BookBase | null;
     onClick?: (bookBase: BookBase) => void;
     onLongClick?: (bookBase: BookBase) => void;
@@ -22,6 +23,7 @@ export interface BrowserItemProps extends Partial<StyleProps> {
 
 const BrowseItem: FC<BrowserItemProps> = ({
     style,
+    bookmarked = false,
     coverStyle,
     titleStyle,
     cover,
@@ -92,8 +94,24 @@ const BrowseItem: FC<BrowserItemProps> = ({
         >
             <Card.Cover
                 style={{ ...styles.cover, ...coverStyle }}
-                source={{ uri: cover }} 
+                source={{ uri: cover }}
             />
+            <Card.Content
+                style={{
+                    ...styles.topContent,
+                    backgroundColor: titleProps.backgroundColor,
+                }}
+            >
+                {bookmarked && (
+                    <Chip
+                        style={{ backgroundColor: titleProps.backgroundColor }}
+                        icon="bookmark"
+                        onPress={() => console.log("Pressed")}
+                    >
+                        Saved
+                    </Chip>
+                )}
+            </Card.Content>
             <Card.Title
                 titleNumberOfLines={2}
                 style={{
@@ -129,6 +147,25 @@ const styles = StyleSheet.create({
     cover: {
         height: width,
         borderRadius: 30,
+    },
+
+    topContent: {
+        position: "absolute",
+        top: 0,
+        right: 0,
+        borderRadius: 30,
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        height: 50,
+        margin: 4,
+        paddingLeft: 0,
+        paddingRight: 0,
+    },
+
+    icon: {
+        width: 30,
     },
 
     title: {

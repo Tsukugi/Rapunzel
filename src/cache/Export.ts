@@ -6,6 +6,7 @@ import { pickSingle } from "react-native-document-picker";
 import { useRapunzelStorage } from "./storage";
 import { StorageEntries } from "./interfaces";
 import { LibraryBook } from "../store/interfaces";
+import { LibraryUtils } from "../tools/library";
 
 /**
  * Exports the current library as a JSON file.
@@ -54,6 +55,7 @@ const exportLibraryAsJson = async () => {
  */
 const importLibraryFromJson = async () => {
     const {
+        config: [config],
         library: [library],
     } = useRapunzelStore();
 
@@ -73,8 +75,13 @@ const importLibraryFromJson = async () => {
     RapunzelLog.log(
         `$[importLibraryFromJson] importing ${backupKeys.length} entries`,
     );
-    library.saved = { ...library.saved, ...parsedBackup };
-    library.rendered = Object.keys(library.saved);
+
+    const { rendered, saved } = LibraryUtils.buildLibraryState(
+        { ...library.saved, ...parsedBackup },
+        config,
+    );
+    library.saved = saved;
+    library.rendered = rendered;
 
     const { setItem } = useRapunzelStorage();
     setItem(StorageEntries.library, library.saved);

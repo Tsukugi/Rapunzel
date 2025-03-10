@@ -9,6 +9,7 @@ interface CoupleItemProps {
 const ItemProvider = ({ item }: { item: BrowserItemProps | null }) => {
     return item ? (
         <BrowseItem
+            bookmarked={item.bookmarked}
             cover={item.cover}
             bookBase={item.bookBase}
             onClick={item.onClick}

@@ -15,19 +15,24 @@ const ItemProvider = ({ item, style }: MainFeedItemProps) => {
     } = useRapunzelStore();
     const innerStyle: StyleProps = {
         style: {
+            marginVertical: 10,
+            marginHorizontal: 5,
             ...style?.style,
             ...useDebugBorders(config.debug),
         },
-        coverStyle: { marginTop: 5, ...style?.coverStyle },
+        coverStyle: {
+            ...style?.coverStyle,
+        },
         titleStyle: {
-            fontSize: 16,
-            lineHeight: 20,
-            height: 70,
+            fontSize: 14,
+            lineHeight: 16,
+            height: 50,
             ...style?.titleStyle,
         },
     };
     return item ? (
         <BrowseItem
+            bookmarked={item.bookmarked}
             cover={item.cover}
             bookBase={item.bookBase}
             onClick={item.onClick}
