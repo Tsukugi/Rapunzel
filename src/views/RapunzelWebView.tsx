@@ -20,27 +20,16 @@ const useDataSavedText = (key: string, value: string) => `${key}: ${value}`;
 const useWebKit = true;
 const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
     const {
+        ui: [ui],
         config: [config],
     } = useRapunzelStore();
-
-    const [visible, setVisible] = React.useState(true);
-    const [hideTimeoutId, setHideTimeoutId] = React.useState<number>(0);
-    const [scrapInfoMessage, setScrapInfoMessage] = React.useState("");
-
-    const onDismissSnackBar = () => setVisible(!visible);
 
     const onWebviewUpdate = (value: string) => {
         const { onDataSuccess } = useAutoFetchWebviewData({ navigation });
 
         onDataSuccess(config);
         if (!config.debug) return;
-        setScrapInfoMessage(value);
-        setVisible(true);
-        clearTimeout(hideTimeoutId);
-        const id = setTimeout(() => {
-            if (id === hideTimeoutId) setVisible(false);
-        }, 3000);
-        setHideTimeoutId(id);
+        ui.snackMessage = value;
     };
 
     useRouter({ route: ViewNames.RapunzelWebView, navigation });
@@ -54,13 +43,6 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
 
     return (
         <>
-            <Snackbar
-                style={styles.container}
-                visible={visible}
-                onDismiss={onDismissSnackBar}
-            >
-                {scrapInfoMessage}
-            </Snackbar>
             <WebView
                 userAgent="Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.3"
                 injectedJavaScript={

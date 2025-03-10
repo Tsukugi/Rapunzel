@@ -3,6 +3,8 @@ import RNFS from "react-native-fs";
 import { DeviceCache, StartLoadingImagesProps } from "./cache";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
+import { LibraryBook } from "../store/interfaces";
+import { DateUtils } from "../tools/date";
 
 export interface DownloadBookProps extends StartLoadingImagesProps {
     id: string;
@@ -116,5 +118,47 @@ export const RapunzelCache = {
                 error,
             );
         }
+    },
+
+    //! Update for legacy systems that didn't use LibraryBook
+    applyLibraryBookAndCoverStoragePatch: (
+        storedLibrary: Record<string, LibraryBook>,
+        onSuccess: (newLibrary: Record<string, LibraryBook>) => void,
+    ) => {
+        const {
+            config: [config],
+        } = useRapunzelStore();
+        const newLib: Record<string, LibraryBook> = {};
+        Promise.all(
+            Object.keys(storedLibrary).map(async (key) => {
+                const [savedRepo, bookId] = key.split(".");
+                const bookPath = `${config.cachelibraryLocation}/${StaticLibraryPaths.RootFolderName}/${StaticLibraryPaths.ReadBooks}/${savedRepo}/${bookId}`;
+                const value = await DeviceCache.getFolderInfo(bookPath).catch(
+                    () => null,
+                );
+
+                // ! This fixes errors in cover names
+                const newUri = storedLibrary[key].cover.uri
+                    .replace(".webp.webp", ".webp")
+                    .replace("t.nhentai.net", "t4.nhentai.net");
+
+                const result: LibraryBook = {
+                    ...storedLibrary[key],
+                    cover: {
+                        ...storedLibrary[key].cover,
+                        uri: newUri,
+                    },
+                    // ! This adds the new prop to sort
+                    savedAt: value
+                        ? DateUtils.getEpoch(value.ctime)
+                        : DateUtils.getEpoch(new Date(2000, 11, 32)), // Old time
+                };
+
+                newLib[key] = result;
+                return result;
+            }),
+        ).then(() => {
+            onSuccess(newLib);
+        });
     },
 };

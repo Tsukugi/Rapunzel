@@ -2,7 +2,7 @@ import { TaihouOptions, useState } from "@atsu/taihou";
 import { LilithLanguage } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
-    AutoFetchWebview,
+    AutoFetchWebviewState,
     BookBaseList,
     BrowseState,
     ConfigState,
@@ -17,6 +17,7 @@ import {
     RouterState,
     Store,
     TaihouEffect,
+    UIState,
     UseReactTaihou,
 } from "./interfaces";
 
@@ -137,10 +138,14 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         trending: false,
     });
 
-    RapunzelState.autoFetchWebview = useReactConfig<AutoFetchWebview>(
+    RapunzelState.autoFetchWebview = useReactConfig<AutoFetchWebviewState>(
         "autoFetchWebview",
         {
             step: EAutoFetchWebviewStep.Standby,
         },
     );
+
+    RapunzelState.ui = useReactConfig<UIState>("ui", {
+        snackMessage: "",
+    });
 };

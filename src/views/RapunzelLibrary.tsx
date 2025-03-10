@@ -10,9 +10,7 @@ import { StorageEntries } from "../cache/interfaces";
 import { useRapunzelStorage } from "../cache/storage";
 import { ListUtils } from "../tools/list";
 import { LibraryBook } from "../store/interfaces";
-import { DeviceCache } from "../cache/cache";
-import { StaticLibraryPaths } from "../cache/useRapunzelCache";
-import { DateUtils } from "../tools/date";
+import { RapunzelLog } from "../config/log";
 
 interface RapunzelLibraryProps extends UsesNavigation {}
 
@@ -29,8 +27,6 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
             Record<string, LibraryBook>
         >(StorageEntries.library);
         if (!storedLibrary) return;
-        // ! Enable this to use the fix
-        // legacyFixUpdateAddSavedAt(storedLibrary);
         library.saved = storedLibrary;
         library.rendered = Object.keys(storedLibrary)
             .filter((key) => {
@@ -38,53 +34,14 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
                 return repo === config.repository;
             })
             .sort((a, b) => {
+                if (!library.saved[a] || !library.saved[b]) return 1;
                 // Sort asc (newer on top)
                 return library.saved[b].savedAt - library.saved[a].savedAt;
             });
 
-        console.log(
+        RapunzelLog.log(
             library.rendered.map((key) => library.saved[key].cover.uri),
         );
-    };
-
-    const legacyFixUpdateAddSavedAt = (
-        storedLibrary: Record<string, LibraryBook>,
-    ) => {
-        //! Update for legacy systems that didn't use LibraryBook
-        const newLib: Record<string, LibraryBook> = {};
-        Promise.all(
-            Object.keys(storedLibrary).map(async (key) => {
-                const [savedRepo, bookId] = key.split(".");
-                const bookPath = `${config.cachelibraryLocation}/${StaticLibraryPaths.RootFolderName}/${StaticLibraryPaths.ReadBooks}/${savedRepo}/${bookId}`;
-                const value = await DeviceCache.getFolderInfo(bookPath).catch(
-                    () => null,
-                );
-
-                // ! This fixes errors in cover names
-                const newUri = storedLibrary[key].cover.uri
-                    .replace(".webp.webp", ".webp")
-                    .replace("t.nhentai.net", "t4.nhentai.net");
-
-                const result: LibraryBook = {
-                    ...storedLibrary[key],
-                    cover: {
-                        ...storedLibrary[key].cover,
-                        uri: newUri,
-                    },
-                    // ! This adds the new prop to sort
-                    savedAt: value
-                        ? DateUtils.getEpoch(value.ctime)
-                        : DateUtils.getEpoch(new Date(2000, 11, 32)), // Old time
-                };
-
-                newLib[key] = result;
-                return result;
-            }),
-        ).then(() => {
-            library.saved = newLib;
-            // ! CAUTION: This writes to the storage, please be sure before uncommenting
-            // useRapunzelStorage().setItem(StorageEntries.library, newLib);
-        });
     };
 
     useRouter({ route: ViewNames.RapunzelLibrary, navigation });

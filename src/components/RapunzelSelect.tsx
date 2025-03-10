@@ -1,4 +1,4 @@
-import { useState, useEffect, FC } from "react";
+import { useState, FC } from "react";
 import { StyleProp, TextStyle } from "react-native";
 import { PaperSelect } from "react-native-paper-select";
 import { LocalTheme } from "../../themes";

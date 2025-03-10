@@ -3,6 +3,7 @@ import { CacheUtils } from "./CacheUtils";
 import { RapunzelLog } from "../config/log";
 import { PromiseTools } from "../tools/promise";
 import { RandomTools } from "../tools/random";
+import { LibraryBook } from "../store/interfaces";
 
 /**
  * Type representing supported image file extensions.
@@ -245,29 +246,43 @@ const redownloadImage = async (
  * If an error occurs during the process, the Promise is rejected with the error, and 0 is returned.
  */
 const calculateCacheSize = async (path: string): Promise<number> => {
+    const mbRatio = 1048576;
     const size = await getRecursiveFolderSize(path);
-    return size / 1048576; // Bytes to MegaBytes
+    const megabytes = size / mbRatio; // Bytes to MegaBytes
+    RapunzelLog.log(`Result from ${path}: ${size} bytes -> ${megabytes} MB`);
+    return megabytes;
 };
 
-const getRecursiveFolderSize = async (
-    cachePath: string,
-    size = 0,
-): Promise<number> => {
+const getRecursiveFolderSize = async (cachePath: string): Promise<number> => {
     try {
         return new Promise(async (resolve) => {
             const items = await RNFS.readDir(cachePath);
 
             const onItemFile = async (item: RNFS.ReadDirItem) => {
                 if (item.isDirectory()) {
-                    size += await getRecursiveFolderSize(item.path);
+                    return await getRecursiveFolderSize(item.path);
                 } else {
-                    size += item.size;
+                    return item.size;
                 }
             };
 
             const processes = items.map(onItemFile);
-            await Promise.allSettled(processes);
-
+            const size: number = await Promise.allSettled(processes).then(
+                (values) =>
+                    values.reduce((acc, val) => {
+                        if (val.status === "rejected") {
+                            RapunzelLog.error(val.reason);
+                            return acc;
+                        }
+                        if (val.value === 0) return acc;
+                        const message = `${cachePath
+                            .split("/")
+                            .pop()}: ${acc} + ${val.value}`;
+                        RapunzelLog.log(message);
+                        acc = acc + val.value;
+                        return acc;
+                    }, 0),
+            );
             return resolve(size);
         });
     } catch (error) {
