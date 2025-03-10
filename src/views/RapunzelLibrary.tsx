@@ -8,13 +8,15 @@ import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import { useFocusEffect } from "@react-navigation/native";
 import { StorageEntries } from "../cache/interfaces";
 import { useRapunzelStorage } from "../cache/storage";
-import { Book } from "@atsu/lilith";
 import { ListUtils } from "../tools/list";
+import { LibraryBook } from "../store/interfaces";
+import { RapunzelLog } from "../config/log";
 
 interface RapunzelLibraryProps extends UsesNavigation {}
 
 const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
     const {
+        config: [config],
         library: [library, useLibraryEffect],
     } = useRapunzelStore();
 
@@ -22,11 +24,24 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
 
     const updateLibraryFromStorage = () => {
         const storedLibrary = useRapunzelStorage().instance.getMap<
-            Record<string, Book>
+            Record<string, LibraryBook>
         >(StorageEntries.library);
         if (!storedLibrary) return;
         library.saved = storedLibrary;
-        library.rendered = Object.keys(storedLibrary);
+        library.rendered = Object.keys(storedLibrary)
+            .filter((key) => {
+                const [repo] = key.split("."); // Example "Repo.BookId"
+                return repo === config.repository;
+            })
+            .sort((a, b) => {
+                if (!library.saved[a] || !library.saved[b]) return 1;
+                // Sort asc (newer on top)
+                return library.saved[b].savedAt - library.saved[a].savedAt;
+            });
+
+        RapunzelLog.log(
+            library.rendered.map((key) => library.saved[key].cover.uri),
+        );
     };
 
     useRouter({ route: ViewNames.RapunzelLibrary, navigation });
@@ -44,7 +59,8 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
         useVirtualListEvents({ navigation });
     const { getVirtualItemProps } = useVirtualListEvents({
         navigation,
-        onClick: onBookSelectHandler,
+        onClick: (bookBase) =>
+            onBookSelectHandler(bookBase).catch((e) => console.error(e)),
         onLongClick: async (bookBase) => {
             await onRemoveFromLibraryHandler(bookBase);
             updateLibraryFromStorage();

@@ -5,6 +5,7 @@ import { useRapunzelStore } from "../store/store";
 import { pickSingle } from "react-native-document-picker";
 import { useRapunzelStorage } from "./storage";
 import { StorageEntries } from "./interfaces";
+import { LibraryBook } from "../store/interfaces";
 
 /**
  * Exports the current library as a JSON file.
@@ -26,9 +27,14 @@ const exportLibraryAsJson = async () => {
     const jsonMetadata: Record<string, Book> = { ...library.saved };
     const MigrateRoot = `${RNFS.DownloadDirectoryPath}/RapunzelMigration`;
 
+    const now = new Date();
+    const dateTime = `${
+        now.toISOString().split("T")[0]
+    }_${now.getHours()}.${now.getMinutes()}.${now.getSeconds()}`; // yyyy-mm-dd_hh.mm.ss
+
     await RNFS.mkdir(MigrateRoot);
     await RNFS.writeFile(
-        `${MigrateRoot}/metadata.json`,
+        `${MigrateRoot}/metadata_${dateTime}.json`,
         JSON.stringify(jsonMetadata),
     );
 };
@@ -61,7 +67,7 @@ const importLibraryFromJson = async () => {
         return;
     }
     const backup = await RNFS.readFile(picked.fileCopyUri);
-    const parsedBackup: Record<string, Book> = JSON.parse(backup);
+    const parsedBackup: Record<string, LibraryBook> = JSON.parse(backup);
     const backupKeys = Object.keys(parsedBackup);
     RapunzelLog.log(backupKeys.map((key) => parsedBackup[key].title));
     RapunzelLog.log(

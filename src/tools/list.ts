@@ -20,7 +20,20 @@ const getEmptyVirtualList = (size: number) =>
         value: "",
     }));
 
+const sortAsc = (arr: number[]) => {
+    return arr.sort((a, b) => {
+        return b - a;
+    });
+};
+const sortDesc = (arr: number[]) => {
+    return arr.sort((a, b) => {
+        return a - b;
+    });
+};
+
 export const ListUtils = {
     getVirtualItemHalf,
     getEmptyVirtualList,
+    sortAsc,
+    sortDesc,
 };

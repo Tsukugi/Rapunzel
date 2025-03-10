@@ -54,7 +54,7 @@ export interface BrowseState extends BookBaseList {
 
 export interface PopularBooksState extends BookBaseList {}
 export interface LibraryState {
-    saved: Record<string, Book>;
+    saved: Record<string, LibraryBook>;
     rendered: string[];
 }
 
@@ -69,6 +69,10 @@ export interface LoadingState {
     latest: boolean;
 }
 
+export interface UIState {
+    snackMessage: string;
+}
+
 export enum EAutoFetchWebviewStep {
     Standby,
     Started,
@@ -77,7 +81,7 @@ export enum EAutoFetchWebviewStep {
     Finished,
 }
 
-export interface AutoFetchWebview {
+export interface AutoFetchWebviewState {
     step: EAutoFetchWebviewStep;
 }
 
@@ -94,11 +98,16 @@ export interface Store {
     latest: UseReactTaihou<LatestBooksState>;
     trending: UseReactTaihou<PopularBooksState>;
     library: UseReactTaihou<LibraryState>;
-    autoFetchWebview: UseReactTaihou<AutoFetchWebview>;
+    autoFetchWebview: UseReactTaihou<AutoFetchWebviewState>;
+    ui: UseReactTaihou<UIState>;
 }
 
 export interface RapunzelImage {
     uri: string;
     width: number | null;
     height: number | null;
+}
+
+export interface LibraryBook extends Book {
+    savedAt: number; // epoch
 }

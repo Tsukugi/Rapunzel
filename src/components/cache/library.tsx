@@ -2,6 +2,8 @@ import { Book, BookBase } from "@atsu/lilith";
 import { StorageEntries } from "../../cache/interfaces";
 import { useRapunzelStorage } from "../../cache/storage";
 import { useRapunzelStore } from "../../store/store";
+import { LibraryBook } from "../../store/interfaces";
+import { DateUtils } from "../../tools/date";
 
 export const useRapunzelLibrary = () => {
     const {
@@ -13,12 +15,13 @@ export const useRapunzelLibrary = () => {
     const saveBookToLibrary = async (book: Book) => {
         const { instance, setItem } = useRapunzelStorage();
         const currentLibrary =
-            (await instance.getMapAsync<Record<string, Book>>(
+            (await instance.getMapAsync<Record<string, LibraryBook>>(
                 StorageEntries.library,
             )) || {};
+        const newBook: LibraryBook = { ...book, savedAt: DateUtils.getEpoch() };
         const newValue = {
             ...currentLibrary,
-            [getLibraryId(book.id)]: book,
+            [getLibraryId(book.id)]: newBook,
         };
 
         setItem(StorageEntries.library, newValue);
@@ -32,7 +35,7 @@ export const useRapunzelLibrary = () => {
         const bookIdToDelete = getLibraryId(book.id);
 
         const currentLibrary =
-            (await instance.getMapAsync<Record<string, Book>>(
+            (await instance.getMapAsync<Record<string, LibraryBook>>(
                 StorageEntries.library,
             )) || {};
 
