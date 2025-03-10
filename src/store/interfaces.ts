@@ -111,3 +111,5 @@ export interface RapunzelImage {
 export interface LibraryBook extends Book {
     savedAt: number; // epoch
 }
+
+export type StoredLibrary = Record<string, LibraryBook>; // <Repo.BookId, LibraryBook>

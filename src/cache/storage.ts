@@ -11,6 +11,7 @@ import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelLog } from "../config/log";
 import { ConfigState, LibraryBook } from "../store/interfaces";
 import { Book } from "@atsu/lilith";
+import { LibraryUtils } from "../tools/library";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
@@ -115,8 +116,12 @@ export const initRapunzelStorage = () => {
         StorageEntries.library,
         setIfValid((storedLibrary: Record<string, LibraryBook>) => {
             if (!storedLibrary) return;
-            library.saved = storedLibrary;
-            library.rendered = Object.keys(storedLibrary);
+            const { rendered, saved } = LibraryUtils.buildLibraryState(
+                storedLibrary,
+                config,
+            );
+            library.saved = saved;
+            library.rendered = rendered;
         }),
     );
 };

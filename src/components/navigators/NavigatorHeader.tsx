@@ -12,6 +12,7 @@ import HeaderBar from "../paper/header/headerBar";
 import { HeaderLeftMode } from "../paper/interfaces";
 import { ViewNames } from "./interfaces";
 import { SearchBehaviour } from "./navigationConfig";
+import { LibraryUtils } from "../../tools/library";
 
 interface NavigatorHeaderProps {
     navigation: DrawerNavigationProp<ParamListBase>;
@@ -30,10 +31,13 @@ export const NavigatorHeader = ({
 }: NavigatorHeaderProps): ReactNode => {
     const { width } = Dimensions.get("screen");
     const {
+        config: [config],
         header: [header],
         library: [library],
         router: [router],
     } = useRapunzelStore();
+
+    const { buildLibraryState } = LibraryUtils;
 
     const headerAbsoluteStyle: ViewStyle = {
         position: "absolute",
@@ -58,12 +62,14 @@ export const NavigatorHeader = ({
         header.searchValue = newValue;
         useRapunzelStorage().setItem(StorageEntries.searchText, newValue);
 
+        const { rendered } = buildLibraryState(library.saved, config);
+
         if (!newValue) {
-            library.rendered = Object.keys(library.saved);
+            library.rendered = rendered;
             return;
         }
 
-        const filteredLibraryIds = Object.keys(library.saved).filter((id) => {
+        const filteredLibraryIds = rendered.filter((id) => {
             const titleMatch = library.saved[id].title
                 .toLowerCase()
                 .includes(newValue.toLowerCase());
@@ -88,8 +94,9 @@ export const NavigatorHeader = ({
             return match;
         });
 
-        if (filteredLibraryIds.length > 0)
+        if (filteredLibraryIds.length > 0) {
             library.rendered = filteredLibraryIds;
+        }
     };
 
     const searchSubmitBehaviour = (() => {

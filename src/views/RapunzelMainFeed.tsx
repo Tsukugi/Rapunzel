@@ -116,8 +116,8 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                 return (
                     <MainFeedItem
                         style={{
-                            style: { height: 500 },
-                            coverStyle: { height: 500 },
+                            style: { height: 350 },
+                            coverStyle: { height: 350 },
                         }}
                         item={getVirtualItemProps(
                             latestBooks.bookListRecord[id],

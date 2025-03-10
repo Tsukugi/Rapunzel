@@ -5,6 +5,7 @@ import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFi
 import { BrowserItemProps } from "../components/paper/item/browserItem";
 import { UsesNavigation } from "../components/navigators/interfaces";
 import { useRapunzelStore } from "../store/store";
+import { StoredLibrary, LibraryBook } from "../store/interfaces";
 
 export interface UseVirtualListProps extends UsesNavigation {
     forceAllLanguages?: boolean;
@@ -20,6 +21,11 @@ export const useVirtualListEvents = ({
     onClick,
     onLongClick,
 }: UseVirtualListProps) => {
+    const {
+        config: [config],
+        library: [library],
+    } = useRapunzelStore();
+
     const { saveBookToLibrary, removeBookFromLibrary } = useRapunzelLibrary();
 
     const onBookSelectHandler: BookEvent = async (bookBase: BookBase) => {
@@ -75,7 +81,10 @@ export const useVirtualListEvents = ({
     ): BrowserItemProps | null => {
         if (!bookBase) return null;
 
+        const libraryBookId = `${config.repository}.${bookBase.id}`;
+        const isInLibrary = !!library.saved[libraryBookId];
         return {
+            bookmarked: isInLibrary,
             cover: bookBase.cover.uri,
             bookBase,
             onClick: onClick || onBookSelectHandler,
