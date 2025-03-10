@@ -34,4 +34,6 @@ const sortDesc = (arr: number[]) => {
 export const ListUtils = {
     getVirtualItemHalf,
     getEmptyVirtualList,
+    sortAsc,
+    sortDesc,
 };
