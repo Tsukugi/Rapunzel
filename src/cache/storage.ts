@@ -9,7 +9,7 @@ import {
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelLog } from "../config/log";
-import { ConfigState } from "../store/interfaces";
+import { ConfigState, LibraryBook } from "../store/interfaces";
 import { Book } from "@atsu/lilith";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
@@ -111,9 +111,9 @@ export const initRapunzelStorage = () => {
         }),
     );
 
-    getMap<Record<string, Book>>(
+    getMap<Record<string, LibraryBook>>(
         StorageEntries.library,
-        setIfValid((storedLibrary: Record<string, Book>) => {
+        setIfValid((storedLibrary: Record<string, LibraryBook>) => {
             if (!storedLibrary) return;
             library.saved = storedLibrary;
             library.rendered = Object.keys(storedLibrary);

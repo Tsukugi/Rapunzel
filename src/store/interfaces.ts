@@ -54,7 +54,7 @@ export interface BrowseState extends BookBaseList {
 
 export interface PopularBooksState extends BookBaseList {}
 export interface LibraryState {
-    saved: Record<string, Book>;
+    saved: Record<string, LibraryBook>;
     rendered: string[];
 }
 
@@ -101,4 +101,8 @@ export interface RapunzelImage {
     uri: string;
     width: number | null;
     height: number | null;
+}
+
+export interface LibraryBook extends Book {
+    savedAt: number; // epoch
 }

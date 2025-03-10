@@ -368,7 +368,7 @@ const listCachedImages = async (path: string): Promise<string[]> => {
  *
  * @example
  * await ensureCreateDeepFolders("folder/subfolder/subsubfolder", "/root");
- * // This will create the folder structure: /root/folder, /root/folder/subfolder, /root/folder/subfolder/subsubfolder
+ * This will create the folder structure: /root/folder, /root/folder/subfolder, /root/folder/subfolder/subsubfolder
  */
 const ensureCreateDeepFolders = async (
     completePath: string,
@@ -404,6 +404,15 @@ const ensureCreateDeepFolders = async (
     });
 };
 
+const getFolderInfo = async (folderPath: string): Promise<RNFS.StatResult> => {
+    return await new Promise(async (resolve, reject) => {
+        const exists = await RNFS.exists(folderPath);
+        if (!exists) return reject(null);
+        const stats = await RNFS.stat(folderPath);
+        resolve(stats);
+    });
+};
+
 export const DeviceCache = {
     ensureCreateDeepFolders,
     downloadImageWithFallback,
@@ -414,4 +423,5 @@ export const DeviceCache = {
     clearCache,
     listCachedImages,
     copyFolder,
+    getFolderInfo,
 };
