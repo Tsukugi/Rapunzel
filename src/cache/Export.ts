@@ -26,9 +26,14 @@ const exportLibraryAsJson = async () => {
     const jsonMetadata: Record<string, Book> = { ...library.saved };
     const MigrateRoot = `${RNFS.DownloadDirectoryPath}/RapunzelMigration`;
 
+    const now = new Date();
+    const dateTime = `${
+        now.toISOString().split("T")[0]
+    }_${now.getHours()}.${now.getMinutes()}.${now.getSeconds()}`; // yyyy-mm-dd_hh.mm.ss
+
     await RNFS.mkdir(MigrateRoot);
     await RNFS.writeFile(
-        `${MigrateRoot}/metadata.json`,
+        `${MigrateRoot}/metadata_${dateTime}.json`,
         JSON.stringify(jsonMetadata),
     );
 };
