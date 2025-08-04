@@ -10,6 +10,7 @@ export interface DownloadBookProps extends StartLoadingImagesProps {
     id: string;
     imagesPath: string; // This accepts nesting (eg a/b/c => ImageCacheDirectory/a/b/c)
     deviceDownloadPath: string;
+    enableCache?: boolean;
 }
 
 export enum StaticLibraryPaths {
@@ -26,6 +27,7 @@ export const RapunzelCache = {
         imagesPath,
         deviceDownloadPath,
         data,
+        enableCache = true,
         onFileNaming,
         onImageLoaded,
         shouldCancelLoad,
@@ -48,6 +50,7 @@ export const RapunzelCache = {
             const imageListFolderPath = `${RapunzelLibrary}/${imagesPath}`;
             return await DeviceCache.startLoadingImages({
                 id,
+                forceDownload: !enableCache,
                 data: imageSet,
                 imagesPath: imageListFolderPath,
                 onFileNaming,

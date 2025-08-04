@@ -74,6 +74,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
 
     RapunzelState.config = useReactConfig<ConfigState>("config", {
         debug: false,
+        enableCache: true,
         useFallbackExtensionOnDownload: false,
         cachelibraryLocation: ImageCacheLocations.Downloads,
         cacheTempImageLocation: ImageCacheLocations.Temp,
