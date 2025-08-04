@@ -47,6 +47,10 @@ const RapunzelSettings: FC<RapunzelSettingsProps> = ({ navigation }) => {
                         configId="debug"
                     />
                     <RapunzelConfigCheckbox
+                        label="Enable cache"
+                        configId="enableCache"
+                    />
+                    <RapunzelConfigCheckbox
                         label="Use Fallback extensions"
                         configId="useFallbackExtensionOnDownload"
                     />

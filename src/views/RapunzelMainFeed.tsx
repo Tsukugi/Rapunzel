@@ -13,6 +13,7 @@ import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
+import { Text } from "react-native-paper";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -46,7 +47,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         useCallback(() => {
             setLoadedTrendingBookImages(trendingBooks.cachedImages);
             setLatestBooksImages(latestBooks.cachedImages);
-            loadMainFeed(latestBooks.cachedImages.length === 0);
+            loadMainFeed(true);
         }, []),
     );
 
@@ -76,7 +77,6 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
             );
             return;
         }
-
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     }, 1000);
     const onStartReachedHandler = () => {

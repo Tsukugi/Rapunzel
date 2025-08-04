@@ -17,6 +17,7 @@ const ImageItem: React.FC<ImageItemProps> = ({
     onClick = (item) => {},
 }): React.JSX.Element => {
     const onClickHandler = () => onClick(item);
+
     return (
         <CachedImage
             onLoadStart={handleImageLoadStart}

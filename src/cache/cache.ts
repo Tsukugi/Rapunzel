@@ -3,17 +3,13 @@ import { CacheUtils } from "./CacheUtils";
 import { RapunzelLog } from "../config/log";
 import { PromiseTools } from "../tools/promise";
 import { RandomTools } from "../tools/random";
-import { LibraryBook } from "../store/interfaces";
-
-/**
- * Type representing supported image file extensions.
- */
-type Extension = ".jpg" | ".jpeg" | ".png" | ".gif";
+import { LilithImageExtension } from "@atsu/lilith";
 
 /**
  * Array containing supported image file extensions in the order of preference for fallbacks.
  */
-const SupportedExtensions: Extension[] = [".jpg", ".png", ".jpeg", ".gif"];
+const SupportedExtensions: LilithImageExtension[] =
+    Object.values(LilithImageExtension);
 
 interface RequestImageWithFallback {
     url: string;
@@ -45,9 +41,10 @@ const downloadImageWithFallback = async ({
                 }
             };
 
-            const createdUrl = `${CacheUtils.removeFileExtension(url)}${
+            const createdUrl = `${CacheUtils.removeFileExtension(url)}.${
                 SupportedExtensions[extensionIndex]
             }`;
+            RapunzelLog.warn(createdUrl);
 
             try {
                 const res = await downloadHandler(createdUrl);
@@ -83,6 +80,7 @@ interface DownloadAndCacheImageProps {
     uri: string;
     downloadPath: string;
     imageFileName: string;
+    forceDownload?: boolean;
     onImageCached?: (path: string) => void;
 }
 /**
@@ -94,13 +92,14 @@ const downloadAndCacheImage = async ({
     uri,
     downloadPath,
     imageFileName,
+    forceDownload = false,
     onImageCached = (path) => {},
 }: DownloadAndCacheImageProps): Promise<string> => {
-    const imageFullPath = `${downloadPath}/${imageFileName}`;
+    let imageFullPath = `${downloadPath}/${imageFileName}`;
 
     const exists = await RNFS.exists(imageFullPath);
 
-    if (!exists) {
+    if (!exists || forceDownload) {
         RapunzelLog.log(`[downloadAndCacheImage] Download ${imageFullPath}`);
 
         const onError = (error: unknown) => {
@@ -115,7 +114,7 @@ const downloadAndCacheImage = async ({
                 setTimeout(() => res(), getRandomDelay()),
             );
 
-            await downloadImageWithFallback({
+            const successUri = await downloadImageWithFallback({
                 url: uri,
                 downloadHandler: (downloadUri) => {
                     const request = RNFS.downloadFile({
@@ -125,11 +124,28 @@ const downloadAndCacheImage = async ({
                     return request.promise;
                 },
             });
+
+            if (!successUri) throw new Error("Couldn't download image");
+            const { removeFileExtension, getExtensionFromUri } = CacheUtils;
+            const diffExtensionFound =
+                getExtensionFromUri(imageFullPath) !==
+                getExtensionFromUri(successUri);
+
+            if (diffExtensionFound) {
+                imageFullPath = `${removeFileExtension(
+                    imageFullPath,
+                )}.${getExtensionFromUri(successUri)}`;
+                RapunzelLog.warn(
+                    `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
+                );
+            }
         } catch (error) {
             onError(error);
         }
     } else {
-        RapunzelLog.log(`[downloadAndCacheImage] Cached ${imageFullPath}`);
+        RapunzelLog.log(
+            `[downloadAndCacheImage] ${uri} is already cached in ${imageFullPath}`,
+        );
     }
 
     const result = "file://" + imageFullPath;
@@ -145,6 +161,7 @@ export interface StartLoadingImagesProps {
     id?: string;
     data: string[];
     imagesPath: string;
+    forceDownload?: boolean;
     onFileNaming: (imageInfo: FileNamingProps) => string;
     onImageLoaded: (url: string, index: number) => Promise<void>;
     shouldCancelLoad: (id: string) => boolean;
@@ -161,6 +178,7 @@ const startLoadingImages = async ({
     id = RandomTools.generateRandomId(10),
     data,
     imagesPath: downloadPath,
+    forceDownload = false,
     onFileNaming,
     onImageLoaded,
     shouldCancelLoad,
@@ -182,6 +200,7 @@ const startLoadingImages = async ({
             return downloadAndCacheImage({
                 uri,
                 downloadPath,
+                forceDownload,
                 imageFileName: onFileNaming({
                     index,
                 }),
