@@ -47,6 +47,15 @@ npm run android
 npm run ios
 ```
 
+### Build APK
+
+To avoid having a build requiring the debug server, do the following
+
+- Open Android Studio and make a signed build/APK 
+- Use the debug credentials android/app/build.gradle
+- Make a "Release" build. 
+
+
 If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
 
 This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.

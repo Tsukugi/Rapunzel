@@ -47,7 +47,7 @@ const PinchableImage: React.FC<PinchableBoxProps> = React.memo(
                 width: scaledWidth * scale.value,
                 height: scaledHeight * scale.value,
             };
-        }, [scale.value, image.width, image.height]);
+        }, [scale.value]);
 
         return (
             <GestureDetector gesture={pinchGesture}>

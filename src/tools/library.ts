@@ -1,4 +1,3 @@
-import { RapunzelLog } from "../config/log";
 import { ConfigState, LibraryBook, LibraryState } from "../store/interfaces";
 
 const buildLibraryState = (
@@ -19,7 +18,6 @@ const buildLibraryState = (
             }),
     };
 
-    RapunzelLog.log(newState.rendered.map((key) => newLibrary[key].cover.uri));
     return newState;
 };
 

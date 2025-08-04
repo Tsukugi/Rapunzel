@@ -162,7 +162,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: reader.activeProcessId,
             data: images,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             imagesPath: `${StaticLibraryPaths.ReadBooks}/${config.repository}/${bookId}/${chapterId}`,
             deviceDownloadPath: library.saved[libraryBookId]
                 ? config.cachelibraryLocation
@@ -177,7 +177,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 const newImage = {
                     id: `${index + 1}`,
                     index,
-                    value: await getImageSize(url),
+                    value: { uri: url } as RapunzelImage,
                 };
                 // * Recreating the array triggers an update, we will do this to initially render the Lists.
                 // * But also if we always render we may run into stack size errors.
@@ -324,7 +324,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             id: browse.activeProcessId,
             imagesPath: StaticLibraryPaths.SearchResults,
             deviceDownloadPath: config.cacheTempImageLocation,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             data: imagesToCache,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
@@ -421,7 +421,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: latest.activeProcessId,
             data: imagesToCache,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             imagesPath: StaticLibraryPaths.MainFeed,
             deviceDownloadPath: config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>
@@ -438,9 +438,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     index: latest.cachedImages.length,
                     value: url,
                 };
-
-                if (config.enableCache && latest.cachedImagesRecord[newItem.id])
-                    return;
 
                 latest.cachedImagesRecord[newItem.id] = newItem;
                 if (index < NumberOfForceRenderImages) {
@@ -519,7 +516,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: popular.activeProcessId,
             data: imagesToCache,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             imagesPath: StaticLibraryPaths.Trending,
             deviceDownloadPath: config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>

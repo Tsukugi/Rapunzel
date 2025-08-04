@@ -32,6 +32,7 @@ const ItemProvider = ({ item, style }: MainFeedItemProps) => {
     };
     return item ? (
         <BrowseItem
+            {...item}
             bookmarked={item.bookmarked}
             cover={item.cover}
             bookBase={item.bookBase}

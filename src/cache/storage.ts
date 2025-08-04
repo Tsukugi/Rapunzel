@@ -84,7 +84,7 @@ export const initRapunzelStorage = () => {
             if (err) console.error("[initRapunzelStorage]", err);
             if (value !== null && value !== undefined) {
                 setter(value);
-                RapunzelLog.log("[initRapunzelStorage]", "=>", value);
+                // RapunzelLog.log("[initRapunzelStorage]", "=>", value);
             }
         };
         return onLoadValue;

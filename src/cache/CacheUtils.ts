@@ -42,9 +42,14 @@ const getExtensionFromUri = (uri: string) => {
     return parts[parts.length - 1];
 };
 
+const replaceExtension = (uri: string, newExt: string) => {
+    return `${removeFileExtension(uri)}.${newExt}`;
+};
+
 export const CacheUtils = {
     getFilenameInfo,
     getFileName,
     removeFileExtension,
     getExtensionFromUri,
+    replaceExtension,
 };

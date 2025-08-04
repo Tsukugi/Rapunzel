@@ -76,7 +76,7 @@ const downloadImageWithFallback = async ({
 
 const getRandomDelay = () => Math.floor(Math.random() * (200 - 100 + 1)) + 100;
 
-interface DownloadAndCacheImageProps {
+export interface DownloadAndCacheImageProps {
     uri: string;
     downloadPath: string;
     imageFileName: string;
@@ -131,13 +131,6 @@ const downloadAndCacheImage = async ({
                 getExtensionFromUri(imageFullPath) !==
                 getExtensionFromUri(successUri);
 
-            if (diffExtensionFound) {
-                imageFullPath = `${removeFileExtension(
-                    imageFullPath,
-                )}.${getExtensionFromUri(successUri)}`;
-                RapunzelLog.warn(
-                    `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
-                );
             }
         } catch (error) {
             onError(error);
@@ -164,7 +157,7 @@ export interface StartLoadingImagesProps {
     forceDownload?: boolean;
     onFileNaming: (imageInfo: FileNamingProps) => string;
     onImageLoaded: (url: string, index: number) => Promise<void>;
-    shouldCancelLoad: (id: string) => boolean;
+    shouldCancelLoad?: (id: string) => boolean;
 }
 
 /**
@@ -181,14 +174,20 @@ const startLoadingImages = async ({
     forceDownload = false,
     onFileNaming,
     onImageLoaded,
-    shouldCancelLoad,
+    shouldCancelLoad = () => false,
 }: StartLoadingImagesProps): Promise<string[]> => {
     const indexes: string[] = [];
 
     const onImageLoadedHandler = async (url: string) => {
         const cancelProcess = shouldCancelLoad(id);
-        if (!url || cancelProcess) return; // If no url is passed we expect a load interruption, so we will skip
+        if (!url || cancelProcess) {
+            RapunzelLog.warn(
+                `[startLoadingImages] Process canceled: CancelProcess ${cancelProcess} - Url ${url}`,
+            ); // If no url is passed we expect a load interruption, so we will skip
+            return;
+        }
         indexes.push(url);
+        RapunzelLog.log(`[startLoadingImages] ${url} loaded`);
         await onImageLoaded(url, indexes.length - 1);
     };
 
@@ -297,7 +296,7 @@ const getRecursiveFolderSize = async (cachePath: string): Promise<number> => {
                         const message = `${cachePath
                             .split("/")
                             .pop()}: ${acc} + ${val.value}`;
-                        RapunzelLog.log(message);
+                        RapunzelLog.log(`[getRecursiveFolderSize]: ${message}`);
                         acc = acc + val.value;
                         return acc;
                     }, 0),
@@ -410,9 +409,6 @@ const ensureCreateDeepFolders = async (
 ): Promise<void> => {
     return await new Promise((resolve) => {
         const paths = completePath.split("/");
-
-        RapunzelLog.log(paths);
-
         let progress = 0;
 
         const onEachItemMigration = async (currentPath: string) => {
