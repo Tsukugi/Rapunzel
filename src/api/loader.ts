@@ -177,7 +177,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 const newImage = {
                     id: `${index + 1}`,
                     index,
-                    value: await getImageSize(url),
+                    value: { uri: url } as RapunzelImage,
                 };
                 // * Recreating the array triggers an update, we will do this to initially render the Lists.
                 // * But also if we always render we may run into stack size errors.
@@ -438,9 +438,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     index: latest.cachedImages.length,
                     value: url,
                 };
-
-                if (config.enableCache && latest.cachedImagesRecord[newItem.id])
-                    return;
 
                 latest.cachedImagesRecord[newItem.id] = newItem;
                 if (index < NumberOfForceRenderImages) {

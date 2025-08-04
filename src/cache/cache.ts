@@ -130,13 +130,13 @@ const downloadAndCacheImage = async ({
                 getExtensionFromUri(imageFullPath) !==
                 getExtensionFromUri(successUri);
 
-            if (diffExtensionFound) {
-                imageFullPath = `${removeFileExtension(
+            if (diffExtensionFound && false) {
+                /* imageFullPath = `${removeFileExtension(
                     imageFullPath,
                 )}.${getExtensionFromUri(successUri)}`;
                 RapunzelLog.warn(
                     `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
-                );
+                );*/
             }
         } catch (error) {
             onError(error);
