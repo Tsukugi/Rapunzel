@@ -10,7 +10,6 @@ export interface DownloadBookProps extends StartLoadingImagesProps {
     id: string;
     imagesPath: string; // This accepts nesting (eg a/b/c => ImageCacheDirectory/a/b/c)
     deviceDownloadPath: string;
-    enableCache?: boolean;
 }
 
 export enum StaticLibraryPaths {
@@ -27,21 +26,22 @@ export const RapunzelCache = {
         imagesPath,
         deviceDownloadPath,
         data,
-        enableCache = true,
+        forceDownload = true,
         onFileNaming,
         onImageLoaded,
         shouldCancelLoad,
     }: DownloadBookProps) => {
-        if (data.length === 0) return [];
-
-        const RapunzelLibrary = `${deviceDownloadPath}/${StaticLibraryPaths.RootFolderName}`;
-
-        const imageSet = data.filter((data) => !!data);
-        RapunzelLog.log(
-            `[loadImageList]: Start loading images, size ${imageSet.length}, id ${id}`,
-        );
-
         try {
+            if (data.length === 0)
+                throw new Error("[downloadImageList] Empty dataset");
+
+            const RapunzelLibrary = `${deviceDownloadPath}/${StaticLibraryPaths.RootFolderName}`;
+
+            const imageSet = data.filter((data) => !!data);
+            RapunzelLog.log(
+                `[loadImageList]: Start loading images, size ${imageSet.length}, id ${id}`,
+            );
+
             await RNFS.mkdir(RapunzelLibrary);
             await DeviceCache.ensureCreateDeepFolders(
                 imagesPath,
@@ -50,7 +50,7 @@ export const RapunzelCache = {
             const imageListFolderPath = `${RapunzelLibrary}/${imagesPath}`;
             return await DeviceCache.startLoadingImages({
                 id,
-                forceDownload: !enableCache,
+                forceDownload,
                 data: imageSet,
                 imagesPath: imageListFolderPath,
                 onFileNaming,
@@ -58,6 +58,7 @@ export const RapunzelCache = {
                 shouldCancelLoad,
             });
         } catch (error) {
+            RapunzelLog.error(error);
             return [];
         }
     },
