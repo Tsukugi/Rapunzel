@@ -10,6 +10,7 @@ export interface DownloadBookProps extends StartLoadingImagesProps {
     id: string;
     imagesPath: string; // This accepts nesting (eg a/b/c => ImageCacheDirectory/a/b/c)
     deviceDownloadPath: string;
+    enableCache?: boolean;
 }
 
 export enum StaticLibraryPaths {

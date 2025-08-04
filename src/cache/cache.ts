@@ -44,6 +44,7 @@ const downloadImageWithFallback = async ({
             const createdUrl = `${CacheUtils.removeFileExtension(url)}.${
                 SupportedExtensions[extensionIndex]
             }`;
+            RapunzelLog.warn(createdUrl);
 
             try {
                 const res = await downloadHandler(createdUrl);
@@ -130,13 +131,6 @@ const downloadAndCacheImage = async ({
                 getExtensionFromUri(imageFullPath) !==
                 getExtensionFromUri(successUri);
 
-            if (diffExtensionFound && false) {
-                /* imageFullPath = `${removeFileExtension(
-                    imageFullPath,
-                )}.${getExtensionFromUri(successUri)}`;
-                RapunzelLog.warn(
-                    `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
-                );*/
             }
         } catch (error) {
             onError(error);
