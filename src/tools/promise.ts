@@ -8,7 +8,7 @@ interface RecursivePromisesProps<T> {
 
 const recursivePromiseChain = async <T>({
     promises,
-    numLevels = promises.length - 1,
+    numLevels = promises.length,
     onPromiseSettled = async (result: T) => {
         await Promise.resolve(result);
     },
@@ -18,7 +18,6 @@ const recursivePromiseChain = async <T>({
     }
 
     const newPromises: PromiseType<T>[] = [];
-
     const promiseChain = promises.reduce(
         (chain, promise) =>
             chain.then(async (results) => {
