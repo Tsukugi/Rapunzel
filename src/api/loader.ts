@@ -162,7 +162,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: reader.activeProcessId,
             data: images,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             imagesPath: `${StaticLibraryPaths.ReadBooks}/${config.repository}/${bookId}/${chapterId}`,
             deviceDownloadPath: library.saved[libraryBookId]
                 ? config.cachelibraryLocation
@@ -324,7 +324,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             id: browse.activeProcessId,
             imagesPath: StaticLibraryPaths.SearchResults,
             deviceDownloadPath: config.cacheTempImageLocation,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             data: imagesToCache,
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
@@ -421,7 +421,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: latest.activeProcessId,
             data: imagesToCache,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             imagesPath: StaticLibraryPaths.MainFeed,
             deviceDownloadPath: config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>
@@ -519,7 +519,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const promise = RapunzelCache.downloadImageList({
             id: popular.activeProcessId,
             data: imagesToCache,
-            enableCache: config.enableCache,
+            forceDownload: !config.enableCache,
             imagesPath: StaticLibraryPaths.Trending,
             deviceDownloadPath: config.cacheTempImageLocation,
             onFileNaming: ({ index }) =>
