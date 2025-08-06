@@ -108,8 +108,6 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
     const getDefaultBookBaseList = (): BookBaseList => ({
         activeProcessId: "",
         bookListRecord: {},
-        bookList: [],
-        cachedImages: [],
         cachedImagesRecord: {},
     });
 

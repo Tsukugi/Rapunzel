@@ -8,6 +8,7 @@ import { useRouter } from "../components/navigators/useRouter";
 import { RapunzelImage } from "../store/interfaces";
 import { useRapunzelStore } from "../store/store";
 import { useFocusEffect } from "@react-navigation/native";
+import { ListUtils } from "../tools/list";
 
 interface RapunzelReaderProps extends UsesNavigation {}
 
@@ -26,7 +27,13 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
     useRouter({ route: ViewNames.RapunzelReader, navigation });
 
     useFocusEffect(updateImages);
-    readerEffect(({ cachedImages }) => setLoadedImages(cachedImages));
+    readerEffect(({ cachedImages }) =>
+        ListUtils.assignUpdatedList(
+            loadedImages,
+            setLoadedImages,
+            cachedImages,
+        ),
+    );
 
     return (
         <VirtualList

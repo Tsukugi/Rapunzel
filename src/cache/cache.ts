@@ -46,14 +46,13 @@ const downloadImageWithFallback = async ({
             }`;
 
             try {
-                const res = await downloadHandler(url);
-                if (res.statusCode === 200) {
-                    RapunzelLog.log(
-                        `[downloadImageWithFallback] Successful download => ${url}`,
-                    );
-                    return onSuccess(createdUrl);
-                }
-                await onDownloadFailed();
+                const res = await downloadHandler(createdUrl);
+                if (res.statusCode !== 200) return await onDownloadFailed();
+
+                RapunzelLog.log(
+                    `[downloadImageWithFallback] Successful download => ${createdUrl}`,
+                );
+                return onSuccess(createdUrl);
             } catch (error) {
                 onError(error);
             }
@@ -130,14 +129,14 @@ const downloadAndCacheImage = async ({
                 getExtensionFromUri(imageFullPath) !==
                 getExtensionFromUri(successUri);
 
-            if (diffExtensionFound && false) {
-                /* imageFullPath = `${removeFileExtension(
+            /* if (diffExtensionFound) {
+                imageFullPath = `${removeFileExtension(
                     imageFullPath,
                 )}.${getExtensionFromUri(successUri)}`;
                 RapunzelLog.warn(
                     `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
-                );*/
-            }
+                );
+            }*/
         } catch (error) {
             onError(error);
         }

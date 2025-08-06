@@ -171,7 +171,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: bookId,
                     pageNumber: index + 1,
-                    extension: CacheUtils.getExtensionFromUri(images[index]),
+                    extension: "jpg",
                 }),
             onImageLoaded: async (url, index) => {
                 const newImage = {
@@ -326,9 +326,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: imageList[index].id,
                     chapter: "cover",
-                    extension: CacheUtils.getExtensionFromUri(
-                        imageList[index].value,
-                    ),
+                    extension: "jpg",
                 }),
             onImageLoaded: async (url, index) => {
                 browse.cachedImagesRecord[imageList[index].id] = {
@@ -412,9 +410,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: imageList[index].id,
                     chapter: "cover",
-                    extension: CacheUtils.getExtensionFromUri(
-                        imageList[index].value,
-                    ),
+                    extension: "jpg",
                 }),
             onImageLoaded: async (url, index) => {
                 const newItem = {
@@ -498,10 +494,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: imageList[index].id,
                     chapter: "cover",
-                    pageNumber: index + 1,
-                    extension: CacheUtils.getExtensionFromUri(
-                        imageList[index].value,
-                    ),
+                    extension: "jpg",
                 }),
             onImageLoaded: async (url, index) => {
                 popular.cachedImagesRecord[imageList[index].id] = {

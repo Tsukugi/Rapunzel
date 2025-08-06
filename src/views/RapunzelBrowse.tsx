@@ -25,12 +25,20 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            setLoadedImages(browse.cachedImages);
+            ListUtils.assignUpdatedList(
+                loadedImages,
+                setLoadedImages,
+                Object.values(browse.cachedImagesRecord),
+            );
         }, []),
     );
 
-    browseEffect(({ cachedImages }) => {
-        setLoadedImages(cachedImages);
+    browseEffect(({ cachedImagesRecord }) => {
+        ListUtils.assignUpdatedList(
+            loadedImages,
+            setLoadedImages,
+            Object.values(cachedImagesRecord),
+        );
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({ navigation });
