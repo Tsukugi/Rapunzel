@@ -46,10 +46,10 @@ const downloadImageWithFallback = async ({
             }`;
 
             try {
-                const res = await downloadHandler(createdUrl);
+                const res = await downloadHandler(url);
                 if (res.statusCode === 200) {
                     RapunzelLog.log(
-                        `[downloadImageWithFallback] Successful download => ${createdUrl}`,
+                        `[downloadImageWithFallback] Successful download => ${url}`,
                     );
                     return onSuccess(createdUrl);
                 }

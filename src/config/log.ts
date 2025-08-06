@@ -1,7 +1,7 @@
 import { RapunzelConfig } from "./config";
 
 const log = (...args: any) => {
-    RapunzelConfig.executeOnlyOnDebug({
+   return; RapunzelConfig.executeOnlyOnDebug({
         executable: () => console.log("RapunzelLog: ", ...args),
         args,
     });

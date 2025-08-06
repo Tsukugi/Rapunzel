@@ -243,7 +243,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             bookDict[book.id] = book;
             imageList.push({
                 id: book.id,
-                index: index,
                 value: book.cover.uri,
             });
         });
@@ -278,9 +277,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If cleaning, reset Browse state variables
         if (clean) {
-            browse.cachedImages = [];
             browse.cachedImagesRecord = {};
-            browse.bookList = [];
             browse.bookListRecord = {};
             browse.activeProcessId = getNewId();
             browse.page = 1;
@@ -308,7 +305,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         );
 
         // Update the Browse state with search results and loaded images
-        browse.bookList = [...browse.bookList, ...searchResult.results];
         browse.bookListRecord = {
             ...browse.bookListRecord,
             ...bookDict,
@@ -335,19 +331,10 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     ),
                 }),
             onImageLoaded: async (url, index) => {
-                const newItem = {
+                browse.cachedImagesRecord[imageList[index].id] = {
                     id: imageList[index].id,
-                    index: browse.cachedImages.length,
                     value: url,
                 };
-                browse.cachedImagesRecord[newItem.id] = newItem;
-                // * Recreating the array triggers an update, we will do this to initially render the Lists.
-                // * But also if we always render we may run into stack size errors.
-                if (index < NumberOfForceRenderImages) {
-                    browse.cachedImages = [...browse.cachedImages, newItem];
-                } else {
-                    browse.cachedImages.push(newItem);
-                }
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== browse.activeProcessId;
@@ -380,9 +367,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If cleaning, reset Browse state variables
         if (clean) {
-            latest.cachedImages = [];
             latest.cachedImagesRecord = {};
-            latest.bookList = [];
             latest.bookListRecord = {};
             latest.activeProcessId = getNewId();
             latest.page = 1;
@@ -406,7 +391,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         );
 
         // Update the LatestBooks state with search results and loaded images
-        latest.bookList = [...latest.bookList, ...bookListResults.results];
         latest.bookListRecord = {
             ...latest.bookListRecord,
             ...bookDict,
@@ -435,16 +419,9 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onImageLoaded: async (url, index) => {
                 const newItem = {
                     id: imageList[index].id,
-                    index: latest.cachedImages.length,
                     value: url,
                 };
-
                 latest.cachedImagesRecord[newItem.id] = newItem;
-                if (index < NumberOfForceRenderImages) {
-                    latest.cachedImages = [...latest.cachedImages, newItem];
-                } else {
-                    latest.cachedImages.push(newItem);
-                }
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== latest.activeProcessId;
@@ -457,6 +434,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             },
         });
 
+        promise.catch(console.error);
         // Handle the result of the image loading process
         promise.finally(onFinish);
 
@@ -480,9 +458,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If cleaning, reset Browse state variables
         if (clean) {
-            popular.cachedImages = [];
             popular.cachedImagesRecord = {};
-            popular.bookList = [];
             popular.bookListRecord = {};
             popular.activeProcessId = getNewId();
         }
@@ -506,7 +482,6 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         );
 
         // Update the LatestBooks state with search results and loaded images
-        popular.bookList = [...popular.bookList, ...bookListResults.results];
         popular.bookListRecord = {
             ...popular.bookListRecord,
             ...bookDict,
@@ -529,15 +504,10 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                     ),
                 }),
             onImageLoaded: async (url, index) => {
-                const newItem = {
+                popular.cachedImagesRecord[imageList[index].id] = {
                     id: imageList[index].id,
-                    index: browse.cachedImages.length,
                     value: url,
                 };
-                popular.cachedImagesRecord[newItem.id] = newItem;
-                popular.cachedImages = Object.values(
-                    popular.cachedImagesRecord,
-                );
             },
             shouldCancelLoad: (id) => {
                 const cancel = id !== popular.activeProcessId;

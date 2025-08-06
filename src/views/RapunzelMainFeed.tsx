@@ -13,7 +13,7 @@ import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
-import { Text } from "react-native-paper";
+import { ListUtils } from "../tools/list";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -45,21 +45,38 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            setLoadedTrendingBookImages(trendingBooks.cachedImages);
-            setLatestBooksImages(latestBooks.cachedImages);
+            ListUtils.assignUpdatedList(
+                loadedTrendingBookImages,
+                setLoadedTrendingBookImages,
+                Object.values(trendingBooks.cachedImagesRecord),
+            );
+            ListUtils.assignUpdatedList(
+                latestBooksImages,
+                setLatestBooksImages,
+                includeImagesWithTrending(
+                    Object.values(latestBooks.cachedImagesRecord),
+                ),
+            );
             loadMainFeed(true);
         }, []),
     );
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useTrendingBooksEffect(({ cachedImages }) => {
-        setLoadedTrendingBookImages(cachedImages);
+    useTrendingBooksEffect(({ cachedImagesRecord }) => {
+        ListUtils.assignUpdatedList(
+            loadedTrendingBookImages,
+            setLoadedTrendingBookImages,
+            Object.values(cachedImagesRecord),
+        );
     });
 
-    useLatestBooksEffect(({ cachedImages }) => {
-        const list = imagesWithTrending(cachedImages);
-        setLatestBooksImages(list);
+    useLatestBooksEffect(({ cachedImagesRecord }) => {
+        ListUtils.assignUpdatedList(
+            latestBooksImages,
+            setLatestBooksImages,
+            includeImagesWithTrending(Object.values(cachedImagesRecord)),
+        );
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({
@@ -86,13 +103,12 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         debouncedEndReached();
     };
 
-    const imagesWithTrending = (
+    const includeImagesWithTrending = (
         images: VirtualItem<string>[],
     ): VirtualItem<string>[] => {
         if (images.length === 0 || images[0].id !== "Trending") {
             images.unshift({
                 id: "Trending",
-                index: 0,
                 value: "Trending",
             });
         }
@@ -101,7 +117,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     return (
         <VirtualList
-            data={latestBooksImages}
+            data={latestBooksImages.reverse()}
             renderer={({ index }) => {
                 if (index === 0) {
                     return loadedTrendingBookImages.length > 0 ? (
