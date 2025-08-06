@@ -7,6 +7,8 @@ import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
 import { getLocaleEmoji } from "../../../tools/locales";
 import { RapunzelLog } from "../../../config/log";
 import { useTimedEvent } from "../../../tools/useTimedEvent";
+import { CacheUtils } from "../../../cache/CacheUtils";
+import { FallbackCacheExtension } from "../../../api/loader";
 
 export interface StyleProps {
     style: Record<string, any>;
@@ -40,6 +42,8 @@ const BrowseItem: FC<BrowserItemProps> = ({
             </Card>
         );
     }
+
+    const [src, setSrc] = useState(cover);
 
     const { colors } = LocalTheme.useTheme();
 
@@ -94,7 +98,19 @@ const BrowseItem: FC<BrowserItemProps> = ({
         >
             <Card.Cover
                 style={{ ...styles.cover, ...coverStyle }}
-                source={{ uri: cover }}
+                source={{ uri: src }}
+                onError={() => {
+                    src &&
+                        setSrc(
+                            CacheUtils.replaceExtension(
+                                src,
+                                FallbackCacheExtension,
+                            ),
+                        );
+                    RapunzelLog.error(
+                        `[BrowserItem]: Image load failed ${src}`,
+                    );
+                }}
             />
             <Card.Content
                 style={{
@@ -158,7 +174,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "flex-end",
         alignItems: "center",
-        height: 50,
+        height: 30,
         margin: 4,
         paddingLeft: 0,
         paddingRight: 0,

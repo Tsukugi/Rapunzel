@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
     View,
-    Image,
     StyleSheet,
     ImageProps,
     Dimensions,
@@ -11,6 +10,9 @@ import { ActivityIndicator, Icon } from "react-native-paper";
 import { LocalTheme } from "../../../themes";
 import PinchableImage from "./pinchableImage";
 import { RapunzelImage } from "../../store/interfaces";
+import { FallbackCacheExtension } from "../../api/loader";
+import { CacheUtils } from "../../cache/CacheUtils";
+import { RapunzelLog } from "../../config/log";
 
 interface EmptyImageComponentProps {
     onPress: () => void;
@@ -47,6 +49,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
     ...props
 }) => {
     const [loading, setLoading] = useState(false);
+    const [src, setSrc] = useState(image.uri);
 
     const { colors } = LocalTheme.useTheme();
 
@@ -68,6 +71,18 @@ const CachedImage: React.FC<CachedImageProps> = ({
                     {...props}
                     onLoadStart={() => setLoading(true)}
                     onLoadEnd={() => setLoading(false)}
+                    onError={() => {
+                        src &&
+                            setSrc(
+                                CacheUtils.replaceExtension(
+                                    src,
+                                    FallbackCacheExtension,
+                                ),
+                            );
+                        RapunzelLog.error(
+                            `[CachedImage]: Image load failed ${src}`,
+                        );
+                    }}
                     image={image}
                 />
             )}

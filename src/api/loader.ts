@@ -6,6 +6,7 @@ import {
     BookListResults,
     SearchQueryOptions,
     GetBookOptions,
+    LilithImageExtension,
 } from "@atsu/lilith";
 
 import { RapunzelLog } from "../config/log";
@@ -20,21 +21,7 @@ import { useRapunzelLibrary } from "../components/cache/library";
 import { useLilithAPI } from "./api";
 
 const NumberOfForceRenderImages = 20;
-
-/**
- * Gets the size (width and height) of an image from the provided URI using asynchronous Image.getSize method.
- * @param {string} uri - The URI of the image.
- * @returns {Promise<RapunzelImage>} - A Promise that resolves to a RapunzelImage object containing the image URI, width, and height.
- */
-const getImageSize = async (uri: string): Promise<RapunzelImage> => {
-    return await new Promise<RapunzelImage>((resolve) =>
-        Image.getSize(
-            uri,
-            (width, height) => resolve({ uri, width, height }),
-            () => resolve({ uri, width: null, height: null }),
-        ),
-    );
-};
+export const FallbackCacheExtension = LilithImageExtension.jpg;
 
 interface UseRapunzelLoaderProps {
     useAllLanguages: boolean;
@@ -171,7 +158,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: bookId,
                     pageNumber: index + 1,
-                    extension: "jpg",
+                    extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
                 const newImage = {
@@ -195,6 +182,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             },
         });
 
+        promise.catch(RapunzelLog.error);
         // Execute the onFinish callback when the image loading process finishes
         promise.finally(onFinish);
 
@@ -326,7 +314,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: imageList[index].id,
                     chapter: "cover",
-                    extension: "jpg",
+                    extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
                 browse.cachedImagesRecord[imageList[index].id] = {
@@ -341,6 +329,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             },
         });
 
+        promise.catch(RapunzelLog.error);
         // Handle the result of the image loading process
         promise.finally(onFinish);
 
@@ -410,7 +399,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: imageList[index].id,
                     chapter: "cover",
-                    extension: "jpg",
+                    extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
                 const newItem = {
@@ -430,7 +419,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             },
         });
 
-        promise.catch(console.error);
+        promise.catch(RapunzelLog.error);
         // Handle the result of the image loading process
         promise.finally(onFinish);
 
@@ -494,7 +483,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 CacheUtils.getFileName({
                     book: imageList[index].id,
                     chapter: "cover",
-                    extension: "jpg",
+                    extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
                 popular.cachedImagesRecord[imageList[index].id] = {
@@ -513,6 +502,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             },
         });
 
+        promise.catch(RapunzelLog.error);
         // Handle the result of the image loading process
         promise.finally(onFinish);
 
