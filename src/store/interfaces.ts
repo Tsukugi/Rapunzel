@@ -42,9 +42,7 @@ export interface ConfigState extends RapunzelConfigBase {
 
 export interface BookBaseList {
     activeProcessId: string;
-    bookList: BookBase[];
     bookListRecord: Record<string, BookBase>; // Key as Ids
-    cachedImages: VirtualItem<string>[];
     cachedImagesRecord: Record<string, VirtualItem<string>>; // Key as Ids // Should be deprecated soon
 }
 

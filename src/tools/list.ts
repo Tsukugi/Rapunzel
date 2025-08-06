@@ -31,7 +31,24 @@ const sortDesc = (arr: number[]) => {
     });
 };
 
+const mergeUniqueValues = <T>(value: T[], newValues: T[]) => {
+    // Create a Set from the current state to ensure uniqueness
+    const currentSet = new Set(value);
+    newValues.forEach((value) => currentSet.add(value));
+    return Array.from(currentSet);
+};
+
+const assignUpdatedList = <T>(
+    value: T[],
+    setter: React.Dispatch<React.SetStateAction<T[]>>,
+    newValue: T[],
+) => {
+    setter(ListUtils.mergeUniqueValues(value, newValue));
+};
+
 export const ListUtils = {
+    mergeUniqueValues,
+    assignUpdatedList,
     getVirtualItemHalf,
     getEmptyVirtualList,
     sortAsc,
