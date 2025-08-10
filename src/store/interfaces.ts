@@ -13,6 +13,7 @@ export enum LilithRepo {
     NHentai = "NHentai",
     HenTag = "HenTag",
     MangaDex = "MangaDex",
+    EHentai = "EHentai",
 }
 
 export interface RouterState {

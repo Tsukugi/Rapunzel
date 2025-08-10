@@ -4,6 +4,7 @@ import { useLilithHenTag } from "@atsu/lilith-hentag";
 import { useRapunzelStore } from "../store/store";
 import { LilithLanguage, RepositoryBase } from "@atsu/lilith";
 import { LilithRepo } from "../store/interfaces";
+import { useZenith } from "./zenithApi";
 
 // TODO implement filter languages on lilith
 export const useLilithAPI = (): RepositoryBase => {
@@ -25,5 +26,7 @@ export const useLilithAPI = (): RepositoryBase => {
             return useLilithHenTag(props);
         case LilithRepo.MangaDex:
             return useLilithMangaDex(props);
+        case LilithRepo.EHentai:
+            return useZenith();
     }
 };
