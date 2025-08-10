@@ -11,7 +11,7 @@ interface CustomDrawerContent extends DrawerContentComponentProps {}
 
 const safeImage =
     "https://mangadex.org/covers/27c025f4-d9f7-4ff7-bb43-2c5cc816fbb1/dfa37bb8-a156-494d-ae7d-9536d290c384.jpg.512.jpg";
-const unsafeImage = "https://i7.nhentai.net/galleries/2694657/3.jpg";
+const unsafeImage = "https://i4.nhentai.net/galleries/2694657/3.jpg";
 
 const CustomDrawerContent = ({
     state,

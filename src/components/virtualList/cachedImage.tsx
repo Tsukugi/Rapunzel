@@ -52,7 +52,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
     const [src, setSrc] = useState(image.uri);
 
     const { colors } = LocalTheme.useTheme();
-
+    //<EmptyImageComponent onPress={() => onClick(image)} />
     return (
         <View
             style={{
@@ -60,32 +60,25 @@ const CachedImage: React.FC<CachedImageProps> = ({
                 backgroundColor: colors.background,
             }}
         >
-            {image.uri === null ? (
-                loading ? (
-                    <LoadingComponent />
-                ) : (
-                    <EmptyImageComponent onPress={() => onClick(image)} />
-                )
-            ) : (
-                <PinchableImage
-                    {...props}
-                    onLoadStart={() => setLoading(true)}
-                    onLoadEnd={() => setLoading(false)}
-                    onError={() => {
-                        src &&
-                            setSrc(
-                                CacheUtils.replaceExtension(
-                                    src,
-                                    FallbackCacheExtension,
-                                ),
-                            );
-                        RapunzelLog.error(
-                            `[CachedImage]: Image load failed ${src}`,
+            {loading && <LoadingComponent />}
+            <PinchableImage
+                {...props}
+                onLoadStart={() => setLoading(true)}
+                onLoadEnd={() => setLoading(false)}
+                onError={() => {
+                    src &&
+                        setSrc(
+                            CacheUtils.replaceExtension(
+                                src,
+                                FallbackCacheExtension,
+                            ),
                         );
-                    }}
-                    image={image}
-                />
-            )}
+                    RapunzelLog.error(
+                        `[CachedImage]: Image load failed ${src}`,
+                    );
+                }}
+                image={image}
+            />
         </View>
     );
 };

@@ -21,7 +21,7 @@ import { useRapunzelLibrary } from "../components/cache/library";
 import { useLilithAPI } from "./api";
 
 const NumberOfForceRenderImages = 20;
-export const FallbackCacheExtension = LilithImageExtension.jpg;
+export const FallbackCacheExtension = LilithImageExtension.webp;
 
 interface UseRapunzelLoaderProps {
     useAllLanguages: boolean;
