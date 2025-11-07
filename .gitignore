@@ -74,3 +74,6 @@ yarn-error.log
 
 # Releases
 /dist
+
+#AI
+.aider*
