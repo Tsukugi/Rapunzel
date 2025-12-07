@@ -23,6 +23,8 @@ const useLocalFullPathFilename = (mockPrefix = "") =>
 const usePromise = <T,>(returnValue: T): Promise<T> =>
     new Promise((res) => res(returnValue));
 
+(global as any).self = (global as any).self || (global as any);
+
 jest.mock("./../src/config/log", () => ({ RapunzelLog: console }));
 jest.mock("react-native-fs", () => ({
     DocumentDirectoryPath: cachePath,
@@ -44,8 +46,8 @@ jest.mock("react-native-fs", () => ({
     stat: (path: string) => usePromise({ size }),
 }));
 
-import { DeviceCache } from "../src/cache/cache";
-import { RandomTools } from "../src/tools/random";
+const { DeviceCache } = require("../src/cache/cache");
+const { RandomTools } = require("../src/tools/random");
 
 describe("Use device cache", () => {
     test("Calculate cache size", async () => {

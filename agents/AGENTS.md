@@ -32,3 +32,5 @@
 - Searching/browse/latest/trending all cache cover images; reader chapter loads fetch pages and cache them, respecting the `enableCache` flag and download destinations.
 - WebView view (`RapunzelWebView`) exists mainly to gather cookies/headers when repos need it; config headers live in `config.apiLoaderConfig`.
 - Snackbar messages come from the UI store (`ui.snackMessage`) and auto-dismiss after 3s.
+- Commit with a Title and a 50+ word summary of the changes, focusing on what has changed and its purpose. 
+- Avoid citing filename path in commit messages
