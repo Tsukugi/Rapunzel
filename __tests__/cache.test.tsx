@@ -30,6 +30,7 @@ jest.mock("react-native-fs", () => ({
     DocumentDirectoryPath: cachePath,
     exists: () => true,
     unlink: () => {},
+    moveFile: () => usePromise(null),
     readDir: (path: string) =>
         usePromise([
             {

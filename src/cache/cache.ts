@@ -130,14 +130,23 @@ const downloadAndCacheImage = async ({
                 getExtensionFromUri(imageFullPath) !==
                 getExtensionFromUri(successUri);
 
-            /* if (diffExtensionFound) {
-                imageFullPath = `${removeFileExtension(
+            if (diffExtensionFound) {
+                const newPath = `${removeFileExtension(
                     imageFullPath,
                 )}.${getExtensionFromUri(successUri)}`;
-                RapunzelLog.warn(
-                    `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
-                );
-            }*/
+                try {
+                    await RNFS.moveFile(imageFullPath, newPath);
+                    imageFullPath = newPath;
+                    RapunzelLog.warn(
+                        `[downloadAndCacheImage] Caching new extension as ${imageFullPath}`,
+                    );
+                } catch (err) {
+                    RapunzelLog.error(
+                        "[downloadAndCacheImage] Error renaming cached image:",
+                        err,
+                    );
+                }
+            }
         } catch (error) {
             onError(error);
         }

@@ -7,6 +7,7 @@ let mockDownloadFile: jest.Mock;
 let mockStat: jest.Mock;
 let mockMkdir: jest.Mock;
 let mockCopyFile: jest.Mock;
+let mockMoveFile: jest.Mock;
 
 jest.mock("../src/config/log", () => ({
     RapunzelLog: {
@@ -25,6 +26,7 @@ jest.mock("react-native-fs", () => ({
     stat: (...args: any[]) => mockStat(...args),
     mkdir: (...args: any[]) => mockMkdir(...args),
     copyFile: (...args: any[]) => mockCopyFile(...args),
+    moveFile: (...args: any[]) => mockMoveFile(...args),
 }));
 
 jest.mock("@atsu/lilith", () => ({
@@ -44,6 +46,7 @@ describe("DeviceCache extra branches", () => {
         mockStat = jest.fn().mockResolvedValue({ size: 0 });
         mockMkdir = jest.fn().mockResolvedValue(null);
         mockCopyFile = jest.fn().mockResolvedValue(null);
+        mockMoveFile = jest.fn().mockResolvedValue(null);
         jest.useRealTimers();
     });
 
@@ -73,6 +76,48 @@ describe("DeviceCache extra branches", () => {
         expect(res).toBe("file:///cache/image.jpg");
     });
 
+    test("downloadAndCacheImage renames file when fallback changes extension", async () => {
+        mockExists.mockResolvedValue(false);
+        mockDownloadFile = jest.fn(({ fromUrl, toFile }) => {
+            const statusCode = fromUrl.endsWith(".jpg") ? 404 : 200;
+            return { promise: Promise.resolve({ statusCode }) };
+        });
+        const onImageCached = jest.fn();
+
+        const res = await DeviceCache.downloadAndCacheImage({
+            uri: "https://example.com/image.jpg",
+            downloadPath: "/cache",
+            imageFileName: "image.jpg",
+            onImageCached,
+        });
+
+        expect(mockMoveFile).toHaveBeenCalledWith(
+            "/cache/image.jpg",
+            "/cache/image.jpeg",
+        );
+        expect(onImageCached).toHaveBeenCalledWith("file:///cache/image.jpeg");
+        expect(res).toBe("file:///cache/image.jpeg");
+    });
+
+    test("downloadAndCacheImage keeps original extension when no fallback", async () => {
+        mockExists.mockResolvedValue(false);
+        mockDownloadFile = jest
+            .fn()
+            .mockReturnValue({ promise: Promise.resolve({ statusCode: 200 }) });
+        const onImageCached = jest.fn();
+
+        const res = await DeviceCache.downloadAndCacheImage({
+            uri: "https://example.com/image.jpg",
+            downloadPath: "/cache",
+            imageFileName: "image.jpg",
+            onImageCached,
+        });
+
+        expect(mockMoveFile).not.toHaveBeenCalled();
+        expect(onImageCached).toHaveBeenCalledWith("file:///cache/image.jpg");
+        expect(res).toBe("file:///cache/image.jpg");
+    });
+
     test("startLoadingImages stops when shouldCancelLoad is true", async () => {
         const spy = jest
             .spyOn(DeviceCache, "downloadAndCacheImage")
@@ -90,6 +135,26 @@ describe("DeviceCache extra branches", () => {
         expect(result).toEqual([]);
         expect(loaded).toEqual([]);
         spy.mockRestore();
+    });
+
+    test("startLoadingImages propagates cached extension from downloader", async () => {
+        mockExists.mockResolvedValue(false);
+        mockDownloadFile = jest.fn(({ fromUrl }) => {
+            const statusCode = fromUrl.endsWith(".jpeg") ? 200 : 404;
+            return { promise: Promise.resolve({ statusCode }) };
+        });
+
+        const loaded: string[] = [];
+
+        const result = await DeviceCache.startLoadingImages({
+            data: ["https://example.com/image"],
+            imagesPath: "/cache",
+            onFileNaming: ({ index }) => `${index}.jpg`,
+            onImageLoaded: async (url) => loaded.push(url),
+        });
+
+        expect(result).toEqual(["file:///cache/0.jpeg"]);
+        expect(loaded).toEqual(["file:///cache/0.jpeg"]);
     });
 
     test("ensureCreateDeepFolders creates nested paths", async () => {
