@@ -121,6 +121,7 @@ const BrowseItem: FC<BrowserItemProps> = ({
                 {bookmarked && (
                     <Chip
                         style={{ backgroundColor: titleProps.backgroundColor }}
+                        textStyle={{ color: titleProps.color }}
                         icon="bookmark"
                         onPress={() => console.log("Pressed")}
                     >
