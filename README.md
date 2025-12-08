@@ -51,9 +51,51 @@ npm run ios
 
 To avoid having a build requiring the debug server, do the following
 
-- Open Android Studio and make a signed build/APK 
+- Open Android Studio and make a signed build/APK
 - Use the debug credentials android/app/build.gradle
-- Make a "Release" build. 
+- Make a "Release" build.
+
+### Automated Release
+
+Alternatively, you can use the automated release script to build a release APK with version management:
+
+```bash
+# Release version 0.8.3
+npm run release -- --version 0.8.3
+
+# Or using the shorthand
+npm run release -- -v 0.8.3
+
+# To see help information:
+npm run release -- --help
+```
+
+The script will update the version in both `package.json` and `android/app/build.gradle`, build the release APK, and place it in the `builds/` directory with the naming convention `Rapunzel-{version}.apk`.
+
+### GitHub Releases
+
+You can also automatically create GitHub releases with your APK:
+
+```bash
+# First build the APK (if not already done)
+npm run release -- --version 0.8.3
+
+# Then create the GitHub release (with auto-generated release notes from commits)
+npm run release-github -- --version 0.8.3
+
+# Or with custom options
+npm run release-github -- -v 0.8.3 -t "v0.8.3-stable" -T "Stable Release 0.8.3"
+
+# Or with custom release notes (bypassing auto-generation)
+npm run release-github -- -v 0.8.3 --notes "Custom release notes here"
+```
+
+Before using this feature, ensure you have:
+1. Installed the GitHub CLI from https://cli.github.com/
+2. Authenticated with `gh auth login`
+3. Built the APK using the release script
+
+For more details, see the [GitHub Release Script Documentation](scripts/GITHUB_RELEASE_README.md).
 
 
 If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
