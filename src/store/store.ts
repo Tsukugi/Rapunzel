@@ -82,6 +82,10 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
             "User-Agent": "",
             cookie: "",
         },
+        apiLoaderTimestamps: {
+            cookie: null,
+            userAgent: null,
+        },
         initialView: ViewNames.RapunzelMainFeed,
         webviewUrl: `https://nhentai.net/`,
         repository: LilithRepo.NHentai,
@@ -141,6 +145,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         "autoFetchWebview",
         {
             step: EAutoFetchWebviewStep.Standby,
+            returnRoute: null,
         },
     );
 

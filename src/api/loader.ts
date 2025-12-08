@@ -19,7 +19,8 @@ import { CacheUtils } from "../cache/CacheUtils";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { useRapunzelLibrary } from "../components/cache/library";
 import { useLilithAPI } from "./api";
-
+import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
+import { getNavigationRef } from "../components/navigators/navigationRef";
 const NumberOfForceRenderImages = 20;
 export const FallbackCacheExtension = LilithImageExtension.webp;
 
@@ -38,9 +39,63 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         latest: [latest],
         library: [library],
         trending: [popular],
+        ui: [ui],
     } = useRapunzelStore();
 
     const apiLoader = useLilithAPI();
+
+    const startWebviewClearance = (message?: string) => {
+        const navigation = getNavigationRef();
+        if (!navigation) {
+            RapunzelLog.warn(
+                "[useRapunzelLoader.startWebviewClearance] Navigation not ready",
+            );
+            return;
+        }
+        ui.snackMessage =
+            message ||
+            "Refreshing cookies... please solve the challenge in the WebView.";
+        const { startProcess } = useAutoFetchWebviewData({ navigation });
+        startProcess(config, true);
+    };
+
+    const isForbiddenError = (error: unknown): boolean => {
+        if (!error) return false;
+        if (typeof error === "string") return error.includes("403");
+        if (typeof error === "object") {
+            const err = error as Record<string, any>;
+            const status =
+                err?.status ??
+                err?.statusCode ??
+                err?.response?.status ??
+                err?.data?.status ??
+                err?.data?.statusCode;
+            if (status === 403) return true;
+            const message = err?.message;
+            if (typeof message === "string" && message.includes("403")) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const handleLilithRequestError = (error: unknown) => {
+        RapunzelLog.error(error);
+        if (isForbiddenError(error)) {
+            startWebviewClearance();
+        }
+    };
+
+    const withLilithRequest = async <T>(
+        promise: Promise<T>,
+    ): Promise<T | null> => {
+        try {
+            return await promise;
+        } catch (error) {
+            handleLilithRequestError(error);
+            return null;
+        }
+    };
 
     /**
      * Loads a book based on its code, then saves it to the state.
@@ -76,9 +131,9 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         RapunzelLog.log("[loadBook] Loading book with code", code);
 
         // Retrieve the book information from the API, including language preferences from the configuration
-        const book = await apiLoader
-            .getBook(code, options)
-            .catch(RapunzelLog.error);
+        const book = await withLilithRequest(
+            apiLoader.getBook(code, options),
+        );
         // If book retrieval fails or the book has no chapters, return null
         if (!book || book.chapters.length === 0) {
             onFinish();
@@ -121,9 +176,9 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         RapunzelLog.log("[loadBook] Loading chapter from id", chapterId);
 
         // Retrieve the chapter information from the API
-        const chapter = await apiLoader
-            .getChapter(chapterId)
-            .catch(RapunzelLog.error);
+        const chapter = await withLilithRequest(
+            apiLoader.getChapter(chapterId),
+        );
 
         // Define a callback to execute when the chapter loading process finishes
         const onFinish = () => {
@@ -201,9 +256,11 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         searchOptions?: Partial<SearchQueryOptions>,
     ): Promise<SearchResult | null> => {
         // Perform a search using the apiLoader, including requiredLanguages from the configuration
-        const searchResult = await apiLoader.search(searchValue, {
-            ...searchOptions,
-        });
+        const searchResult = await withLilithRequest(
+            apiLoader.search(searchValue, {
+                ...searchOptions,
+            }),
+        );
 
         // If no search results or the results array is empty, log an error and return null
         if (!searchResult || searchResult.results.length === 0) {
@@ -363,8 +420,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         RapunzelLog.log("[getLatestBooks] Retrieving latest books");
 
         // Perform the search and retrieve book information, image URIs, and book dictionary
-        const bookListResults: BookListResults = await apiLoader.getLatestBooks(
-            page,
+        const bookListResults = await withLilithRequest(
+            apiLoader.getLatestBooks(page),
         );
 
         // If no search results, finish and return an empty array
@@ -451,9 +508,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         RapunzelLog.log("[getTrendingBooks] Retrieving latest books");
 
         // Perform the search and retrieve book information, image URIs, and book dictionary
+        const trendingResults = await withLilithRequest(
+            apiLoader.getTrendingBooks(),
+        );
+
+        if (!trendingResults) {
+            onFinish();
+            return [];
+        }
+
         const bookListResults: BookListResults = {
             page: 1,
-            results: await apiLoader.getTrendingBooks(),
+            results: trendingResults,
         };
 
         // If no search results, finish and return an empty array

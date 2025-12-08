@@ -11,10 +11,11 @@ import App from "./src/App";
 import { LocalTheme } from "./themes";
 import { initRapunzelStore } from "./src/store/store";
 import { initRapunzelStorage } from "./src/cache/storage";
+import { navigationContainerRef } from "./src/components/navigators/navigationRef";
 
 export default function Main() {
     return (
-        <NavigationContainer>
+        <NavigationContainer ref={navigationContainerRef}>
             <PaperProvider theme={LocalTheme.useTheme()}>
                 <App />
             </PaperProvider>

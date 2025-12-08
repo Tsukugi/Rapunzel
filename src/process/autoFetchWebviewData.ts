@@ -1,4 +1,4 @@
-import { useRapunzelLoader } from "../api/loader";
+import { useLilithAPI } from "../api/api";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import {
     ConfigState,
@@ -11,15 +11,27 @@ import { RapunzelLog } from "../config/log";
 interface UseAutoFetchWebviewData extends UsesNavigation {}
 
 const SupportedSources = [LilithRepo.NHentai];
+const WAIT_BEFORE_RETURN_MS = 1000;
 
 export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const { navigation } = props;
 
-    const getStoreData = () => {
-        const {
-            autoFetchWebview: [autoFetchWebview],
-        } = useRapunzelStore();
-        return autoFetchWebview;
+    const {
+        autoFetchWebview: [autoFetchWebview],
+        router: [router],
+        ui: [ui],
+    } = useRapunzelStore();
+
+    const resolveReturnRoute = (): ViewNames => {
+        const storedRoute = autoFetchWebview.returnRoute;
+        if (storedRoute) return storedRoute;
+        if (router.history.length > 1) {
+            return router.history[router.history.length - 2];
+        }
+        if (router.history.length > 0) {
+            return router.history[0];
+        }
+        return ViewNames.RapunzelMainFeed;
     };
 
     const validateData = async ({ apiLoaderConfig }: ConfigState) => {
@@ -32,7 +44,7 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
             return false;
         }
         try {
-            await useRapunzelLoader().getTrendingBooks(); // Test a request, should be small
+            await useLilithAPI().getTrendingBooks(); // Test a request, should be small
             RapunzelLog.log(
                 "[useAutoFetchWebviewData.validateData] Data seems valid",
             );
@@ -51,20 +63,52 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
         return isSupportedRepo;
     };
 
-    const startProcess = (configState: ConfigState) => {
+    const navigateBackToReturnRoute = () => {
+        autoFetchWebview.step = EAutoFetchWebviewStep.ValidData;
+        const routeToNavigate = resolveReturnRoute();
+        ui.snackMessage =
+            "Headers refreshed. Returning to your last screen...";
+
+        setTimeout(() => {
+            navigation.navigate(routeToNavigate);
+            autoFetchWebview.returnRoute = null;
+            autoFetchWebview.step = EAutoFetchWebviewStep.Finished;
+        }, WAIT_BEFORE_RETURN_MS);
+    };
+
+    const startProcess = async (
+        configState: ConfigState,
+        force: boolean = false,
+    ) => {
         RapunzelLog.log("[useAutoFetchWebviewData.startProcess]");
-        if (
-            getStoreData().step !== EAutoFetchWebviewStep.Standby ||
-            !isSupported(configState.repository)
-        ) {
+        if (!isSupported(configState.repository)) {
             RapunzelLog.log(
                 "[useAutoFetchWebviewData.startProcess] Can't start process",
             );
             return;
         }
-        getStoreData().step = EAutoFetchWebviewStep.Started;
+        if (autoFetchWebview.step !== EAutoFetchWebviewStep.Standby) {
+            if (!force) {
+                RapunzelLog.log(
+                    "[useAutoFetchWebviewData.startProcess] Process already started",
+                );
+                return;
+            }
+            autoFetchWebview.step = EAutoFetchWebviewStep.Standby;
+        }
+        autoFetchWebview.returnRoute =
+            router.currentRoute !== ViewNames.RapunzelWebView
+                ? router.currentRoute
+                : null;
+
+        if (await validateData(configState)) {
+            navigateBackToReturnRoute();
+            return;
+        }
+
+        autoFetchWebview.step = EAutoFetchWebviewStep.Started;
         navigation.navigate(ViewNames.RapunzelWebView);
-        getStoreData().step = EAutoFetchWebviewStep.WaitForData;
+        autoFetchWebview.step = EAutoFetchWebviewStep.WaitForData;
     };
 
     const onDataSuccess = async (configState: ConfigState) => {
@@ -72,9 +116,7 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
 
         if (!(await validateData(configState))) return;
 
-        getStoreData().step = EAutoFetchWebviewStep.ValidData;
-        navigation.navigate(ViewNames.RapunzelMainFeed);
-        getStoreData().step = EAutoFetchWebviewStep.Finished;
+        navigateBackToReturnRoute();
     };
 
     const restartProcess = async (
@@ -92,7 +134,7 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
             RapunzelLog.log({ configState });
             return false;
         }
-        getStoreData().step = EAutoFetchWebviewStep.Standby;
+        autoFetchWebview.step = EAutoFetchWebviewStep.Standby;
         return true;
     };
 

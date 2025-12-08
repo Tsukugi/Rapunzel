@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useRef } from "react";
 import WebView from "react-native-webview";
 import { useRouter } from "../components/navigators/useRouter";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
@@ -23,6 +23,7 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
         ui: [ui],
         config: [config],
     } = useRapunzelStore();
+    const webviewRef = useRef<WebView>(null);
 
     const onWebviewUpdate = (value: string) => {
         const { onDataSuccess } = useAutoFetchWebviewData({ navigation });
@@ -44,10 +45,16 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
     return (
         <>
             <WebView
+                ref={webviewRef}
                 userAgent="Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.3"
                 injectedJavaScript={
                     WebviewInjectJavascript.tryRemoveAds +
                     WebviewInjectJavascript.getUserAgent
+                }
+                onLoadEnd={() =>
+                    webviewRef.current?.injectJavaScript(
+                        WebviewInjectJavascript.tryRemoveAds,
+                    )
                 }
                 onNavigationStateChange={() =>
                     CookieManager.get(config.webviewUrl, useWebKit)

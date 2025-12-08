@@ -33,6 +33,7 @@ export interface ReaderState {
 }
 export interface ConfigState extends RapunzelConfigBase {
     apiLoaderConfig: LilithHeaders;
+    apiLoaderTimestamps: ApiLoaderTimestamps;
     webviewUrl: string;
     initialView: ViewNames;
     repository: LilithRepo;
@@ -82,6 +83,12 @@ export enum EAutoFetchWebviewStep {
 
 export interface AutoFetchWebviewState {
     step: EAutoFetchWebviewStep;
+    returnRoute: ViewNames | null;
+}
+
+export interface ApiLoaderTimestamps {
+    cookie: number | null;
+    userAgent: number | null;
 }
 
 export type TaihouEffect<T> = (onUpdate: (newValue: T) => void) => void;
