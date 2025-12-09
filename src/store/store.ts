@@ -113,6 +113,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         activeProcessId: "",
         bookListRecord: {},
         cachedImagesRecord: {},
+        rendered: [],
     });
 
     RapunzelState.browse = useReactConfig<BrowseState>("browse", {

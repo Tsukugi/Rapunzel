@@ -47,6 +47,7 @@ export interface BookBaseList {
     activeProcessId: string;
     bookListRecord: Record<string, BookBase>; // Key as Ids
     cachedImagesRecord: Record<string, VirtualItem<string>>; // Key as Ids // Should be deprecated soon
+    rendered: string[]; // Ordered list of book ids to render
 }
 
 export interface BrowseState extends BookBaseList {

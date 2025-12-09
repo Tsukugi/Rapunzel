@@ -72,6 +72,7 @@ const createStoreState = () => ({
             activeProcessId: "",
             bookListRecord: {},
             cachedImagesRecord: {},
+            rendered: [],
             page: 1,
         },
         jest.fn(),
@@ -96,13 +97,19 @@ const createStoreState = () => ({
             activeProcessId: "",
             bookListRecord: {},
             cachedImagesRecord: {},
+            rendered: [],
             page: 1,
         },
         jest.fn(),
     ],
     library: [{ saved: {}, rendered: [] }, jest.fn()],
     trending: [
-        { activeProcessId: "", bookListRecord: {}, cachedImagesRecord: {} },
+        {
+            activeProcessId: "",
+            bookListRecord: {},
+            cachedImagesRecord: {},
+            rendered: [],
+        },
         jest.fn(),
     ],
     ui: [{ snackMessage: "" }, jest.fn()],
@@ -199,6 +206,32 @@ describe("useRapunzelLoader search and feeds", () => {
             "book-3",
         ]);
         expect(cachedImagesRecord["book-3"].value).toBe("cached-reverse-2");
+    });
+
+    test("loadSearch appends render order when paging", async () => {
+        const pageOne = [
+            { id: "101", cover: { uri: "cover-101" } },
+            { id: "105", cover: { uri: "cover-105" } },
+        ];
+        const pageTwo = [
+            { id: "099", cover: { uri: "cover-099" } },
+            { id: "120", cover: { uri: "cover-120" } },
+        ];
+
+        mockApiClient.search
+            .mockResolvedValueOnce({ results: pageOne })
+            .mockResolvedValueOnce({ results: pageTwo });
+
+        const loader = useRapunzelLoader();
+        await loader.loadSearch("query", { page: 1 });
+        await loader.loadSearch("query", { page: 2 }, false);
+
+        expect(mockStoreState.browse[0].rendered).toEqual([
+            "101",
+            "105",
+            "099",
+            "120",
+        ]);
     });
 
     test("getLatestBooks caches feed and tracks page", async () => {

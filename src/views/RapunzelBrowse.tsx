@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import VirtualList from "../components/virtualList/virtualList";
 import { useRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
@@ -9,7 +9,6 @@ import { useRapunzelStore } from "../store/store";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import { ListUtils } from "../tools/list";
 import { RapunzelLog } from "../config/log";
-import { useFocusEffect } from "@react-navigation/native";
 
 interface RapunzelBrowseProps extends UsesNavigation {}
 
@@ -23,22 +22,28 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
 
     useRouter({ route: ViewNames.RapunzelBrowse, navigation });
 
-    useFocusEffect(
-        useCallback(() => {
-            ListUtils.assignUpdatedList(
-                loadedImages,
-                setLoadedImages,
-                Object.values(browse.cachedImagesRecord),
-            );
-        }, []),
+    const mapImagesToOrder = useCallback(
+        (
+            record: Record<string, VirtualItem<string>>,
+            order: string[],
+        ): VirtualItem<string>[] => {
+            return order
+                .map((id) => record[id])
+                .filter(
+                    (item): item is VirtualItem<string> => item !== undefined,
+                );
+        },
+        [],
     );
 
-    browseEffect(({ cachedImagesRecord }) => {
-        ListUtils.assignUpdatedList(
-            loadedImages,
-            setLoadedImages,
-            Object.values(cachedImagesRecord),
+    useEffect(() => {
+        setLoadedImages(
+            mapImagesToOrder(browse.cachedImagesRecord, browse.rendered),
         );
+    }, [mapImagesToOrder, browse.cachedImagesRecord, browse.rendered]);
+
+    browseEffect(({ cachedImagesRecord, rendered }) => {
+        setLoadedImages(mapImagesToOrder(cachedImagesRecord, rendered));
     });
 
     const { getVirtualItemProps } = useVirtualListEvents({ navigation });

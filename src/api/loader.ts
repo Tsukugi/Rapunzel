@@ -20,6 +20,7 @@ import { useRapunzelLibrary } from "../components/cache/library";
 import { useLilithAPI } from "./api";
 import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 import { getNavigationRef } from "../components/navigators/navigationRef";
+import { ListUtils } from "../tools/list";
 const NumberOfForceRenderImages = 20;
 export const FallbackCacheExtension = LilithImageExtension.webp;
 
@@ -325,6 +326,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             browse.bookListRecord = {};
             browse.activeProcessId = getNewId();
             browse.page = 1;
+            browse.rendered = [];
         }
 
         RapunzelLog.log(
@@ -353,6 +355,12 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             ...browse.bookListRecord,
             ...bookDict,
         };
+
+        const newRenderOrder = imageList.map((item) => item.id);
+        browse.rendered = ListUtils.mergeUniqueValues(
+            browse.rendered,
+            newRenderOrder,
+        );
 
         /**
          * Preserve the search order in the UI by pre-inserting placeholders in
@@ -426,6 +434,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             latest.bookListRecord = {};
             latest.activeProcessId = getNewId();
             latest.page = 1;
+            latest.rendered = [];
         }
 
         RapunzelLog.log("[getLatestBooks] Retrieving latest books");
@@ -450,6 +459,12 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             ...latest.bookListRecord,
             ...bookDict,
         };
+
+        const newRenderOrder = imageList.map((item) => item.id);
+        latest.rendered = ListUtils.mergeUniqueValues(
+            latest.rendered,
+            newRenderOrder,
+        );
 
         // If a specific page is provided in searchOptions, update the latest page
         if (page) {
@@ -514,6 +529,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             popular.cachedImagesRecord = {};
             popular.bookListRecord = {};
             popular.activeProcessId = getNewId();
+            popular.rendered = [];
         }
 
         RapunzelLog.log("[getTrendingBooks] Retrieving latest books");
@@ -548,6 +564,12 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             ...popular.bookListRecord,
             ...bookDict,
         };
+
+        const newRenderOrder = imageList.map((item) => item.id);
+        popular.rendered = ListUtils.mergeUniqueValues(
+            popular.rendered,
+            newRenderOrder,
+        );
 
         // Load images asynchronously using loadImageList utility
         const promise = RapunzelCache.downloadImageList({
