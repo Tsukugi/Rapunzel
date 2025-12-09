@@ -70,6 +70,17 @@ describe("Use device cache", () => {
             console.log(error);
         });
         expect(image2).toEqual(null);
+
+        const fallbackUri = `fallback/${imageName}`;
+        const image3 = await DeviceCache.downloadImageWithFallback({
+            url: imageName,
+            fallbackUri,
+            downloadHandler: (requestUrl: string) =>
+                usePromise({
+                    statusCode: requestUrl.includes("fallback") ? 200 : 404,
+                }),
+        });
+        expect(image3).toEqual(fallbackUri);
     });
 
     test("Download and cache image", async () => {

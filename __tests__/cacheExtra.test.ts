@@ -157,6 +157,33 @@ describe("DeviceCache extra branches", () => {
         expect(loaded).toEqual(["file:///cache/0.jpeg"]);
     });
 
+    test("startLoadingImages tries fallbackUri when primary fails", async () => {
+        mockExists.mockResolvedValue(false);
+        mockDownloadFile = jest.fn(({ fromUrl }) => {
+            const statusCode = fromUrl.includes("fallback.com") ? 200 : 404;
+            return { promise: Promise.resolve({ statusCode }) };
+        });
+
+        const result = await DeviceCache.startLoadingImages({
+            data: [
+                {
+                    uri: "https://example.com/image.jpg",
+                    fallbackUri: "https://fallback.com/image.jpg",
+                },
+            ],
+            imagesPath: "/cache",
+            onFileNaming: ({ index }) => `${index}.jpg`,
+            onImageLoaded: async () => {},
+        });
+
+        expect(mockDownloadFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+                fromUrl: expect.stringContaining("fallback.com/image.jpg"),
+            }),
+        );
+        expect(result).toEqual(["file:///cache/0.jpg"]);
+    });
+
     test("ensureCreateDeepFolders creates nested paths", async () => {
         jest.useFakeTimers();
         const promise = DeviceCache.ensureCreateDeepFolders("a/b", "/root");

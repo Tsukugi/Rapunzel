@@ -3,7 +3,7 @@ import { CacheUtils } from "./CacheUtils";
 import { RapunzelLog } from "../config/log";
 import { PromiseTools } from "../tools/promise";
 import { RandomTools } from "../tools/random";
-import { LilithImageExtension } from "@atsu/lilith";
+import { LilithImage, LilithImageExtension } from "@atsu/lilith";
 
 /**
  * Array containing supported image file extensions in the order of preference for fallbacks.
@@ -13,6 +13,7 @@ const SupportedExtensions: LilithImageExtension[] =
 
 interface RequestImageWithFallback {
     url: string;
+    fallbackUri?: string;
     downloadHandler: (url: string) => Promise<{ statusCode: number }>;
 }
 /**
@@ -22,61 +23,62 @@ interface RequestImageWithFallback {
  */
 const downloadImageWithFallback = async ({
     url,
+    fallbackUri,
     downloadHandler,
 }: RequestImageWithFallback): Promise<string | null> => {
-    let extensionIndex = 0;
-
-    const downloadWithExtension = (extensionIndex: number) =>
-        new Promise<string>(async (onSuccess, onError) => {
-            const onDownloadFailed = async (): Promise<void> => {
-                const nextFallbackIndex = extensionIndex + 1;
-                if (nextFallbackIndex >= SupportedExtensions.length) {
-                    // All fallbacks failed
-                    onError(`No extension supported for "${url}"`);
-                } else {
-                    RapunzelLog.warn(
-                        `[downloadImageWithFallback] Retrying download with ${SupportedExtensions[nextFallbackIndex]} for ${url}`,
-                    );
-                    onSuccess(await downloadWithExtension(nextFallbackIndex));
-                }
-            };
-
-            const createdUrl = `${CacheUtils.removeFileExtension(url)}.${
-                SupportedExtensions[extensionIndex]
-            }`;
-            RapunzelLog.warn(createdUrl);
-
-            try {
-                const res = await downloadHandler(createdUrl);
-                if (res.statusCode !== 200) return await onDownloadFailed();
-
-                RapunzelLog.log(
-                    `[downloadImageWithFallback] Successful download => ${createdUrl}`,
-                );
-                return onSuccess(createdUrl);
-            } catch (error) {
-                onError(error);
-            }
+    const buildCandidates = (uri: string): string[] => {
+        const candidates = new Set<string>([uri]);
+        SupportedExtensions.forEach((extension) => {
+            candidates.add(`${CacheUtils.removeFileExtension(uri)}.${extension}`);
         });
+        return Array.from(candidates);
+    };
 
-    try {
-        const res = await downloadHandler(url);
-        if (res.statusCode !== 200) {
-            return await downloadWithExtension(extensionIndex);
+    const tryCandidates = async (candidates: string[]): Promise<string | null> => {
+        for (const candidate of candidates) {
+            try {
+                const res = await downloadHandler(candidate);
+                if (res.statusCode === 200) {
+                    RapunzelLog.log(
+                        `[downloadImageWithFallback] Successful download => ${candidate}`,
+                    );
+                    return candidate;
+                }
+                RapunzelLog.warn(
+                    `[downloadImageWithFallback] Download failed with status ${res.statusCode} for ${candidate}`,
+                );
+            } catch (error) {
+                RapunzelLog.warn(
+                    `[downloadImageWithFallback] Error downloading ${candidate}: ${error}`,
+                );
+            }
         }
-        return url;
-    } catch (error) {
-        RapunzelLog.error(
-            `[downloadImageWithFallback] Image download failed for ${url}, reason: ${error}`,
-        );
         return null;
+    };
+
+    const primaryCandidates = buildCandidates(url);
+    const primaryResult = await tryCandidates(primaryCandidates);
+    if (primaryResult) return primaryResult;
+
+    if (fallbackUri) {
+        RapunzelLog.warn(
+            `[downloadImageWithFallback] Trying fallbackUri after failures for ${url}`,
+        );
+        const fallbackResult = await tryCandidates(buildCandidates(fallbackUri));
+        if (fallbackResult) return fallbackResult;
     }
+
+    RapunzelLog.error(
+        `[downloadImageWithFallback] Image download failed for ${url}`,
+    );
+    return null;
 };
 
 const getRandomDelay = () => Math.floor(Math.random() * (200 - 100 + 1)) + 100;
 
 export interface DownloadAndCacheImageProps {
     uri: string;
+    fallbackUri?: string;
     downloadPath: string;
     imageFileName: string;
     forceDownload?: boolean;
@@ -89,6 +91,7 @@ export interface DownloadAndCacheImageProps {
  */
 const downloadAndCacheImage = async ({
     uri,
+    fallbackUri,
     downloadPath,
     imageFileName,
     forceDownload = false,
@@ -115,6 +118,7 @@ const downloadAndCacheImage = async ({
 
             const successUri = await downloadImageWithFallback({
                 url: uri,
+                fallbackUri,
                 downloadHandler: (downloadUri) => {
                     const request = RNFS.downloadFile({
                         fromUrl: downloadUri,
@@ -167,7 +171,7 @@ interface FileNamingProps {
 
 export interface StartLoadingImagesProps {
     id?: string;
-    data: string[];
+    data: Array<string | LilithImage>;
     imagesPath: string;
     forceDownload?: boolean;
     onFileNaming: (imageInfo: FileNamingProps) => string;
@@ -193,6 +197,13 @@ const startLoadingImages = async ({
 }: StartLoadingImagesProps): Promise<string[]> => {
     const indexes: string[] = [];
 
+    const normalizeLilithImage = (
+        image: string | LilithImage,
+    ): LilithImage => {
+        if (typeof image === "string") return { uri: image };
+        return image;
+    };
+
     const onImageLoadedHandler = async (url: string) => {
         const cancelProcess = shouldCancelLoad(id);
         if (!url || cancelProcess) {
@@ -211,8 +222,12 @@ const startLoadingImages = async ({
             const cancelProcess = shouldCancelLoad(id);
             if (cancelProcess) return Promise.resolve(""); // This will interrupt the load chain;
 
+            const { uri: normalizedUri, fallbackUri } =
+                normalizeLilithImage(uri);
+
             return downloadAndCacheImage({
-                uri,
+                uri: normalizedUri,
+                fallbackUri,
                 downloadPath,
                 forceDownload,
                 imageFileName: onFileNaming({

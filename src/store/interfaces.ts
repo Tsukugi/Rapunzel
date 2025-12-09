@@ -4,6 +4,7 @@ import {
     LilithHeaders,
     Chapter,
     LilithLanguage,
+    LilithImage,
 } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelConfigBase } from "../config/interfaces";
@@ -108,11 +109,7 @@ export interface Store {
     ui: UseReactTaihou<UIState>;
 }
 
-export interface RapunzelImage {
-    uri: string;
-    width: number | null;
-    height: number | null;
-}
+export interface RapunzelImage extends LilithImage {}
 
 export interface LibraryBook extends Book {
     savedAt: number; // epoch

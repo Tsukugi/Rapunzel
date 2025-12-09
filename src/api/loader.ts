@@ -1,4 +1,3 @@
-import { Image } from "react-native";
 import {
     Book,
     BookBase,
@@ -55,7 +54,9 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         ui.snackMessage =
             message ||
             "Refreshing cookies... please solve the challenge in the WebView.";
-        const { startProcess } = useAutoFetchWebviewData({ navigation });
+        const { startProcess } = useAutoFetchWebviewData({
+            navigation: navigation as never,
+        });
         startProcess(config, true);
     };
 
@@ -131,9 +132,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         RapunzelLog.log("[loadBook] Loading book with code", code);
 
         // Retrieve the book information from the API, including language preferences from the configuration
-        const book = await withLilithRequest(
-            apiLoader.getBook(code, options),
-        );
+        const book = await withLilithRequest(apiLoader.getBook(code, options));
         // If book retrieval fails or the book has no chapters, return null
         if (!book || book.chapters.length === 0) {
             onFinish();
@@ -193,7 +192,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         const libraryBookId = useRapunzelLibrary().getLibraryId(bookId);
 
         // Extract image URIs from the chapter pages
-        const images = chapter.pages.map((page) => page.uri);
+        const images = chapter.pages as RapunzelImage[];
 
         // Update the Reader state with the loaded chapter information
         reader.chapter = chapter;
@@ -272,19 +271,19 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     };
 
     interface BookBaseData {
-        imagesToCache: string[];
+        imagesToCache: RapunzelImage[];
         bookDict: Record<string, BookBase>;
         imageList: VirtualItem<string>[];
     }
     const getBookBaseData = (bookBaseList: BookBase[]): BookBaseData => {
         // Initialize arrays and dictionary to store images to cache and book information
-        const imagesToCache: string[] = [];
+        const imagesToCache: RapunzelImage[] = [];
         const bookDict: Record<string, BookBase> = {};
         const imageList: VirtualItem<string>[] = [];
 
         // Iterate through search results and populate imagesToCache and bookDict
         bookBaseList.forEach((book, index) => {
-            imagesToCache.push(book.cover.uri);
+            imagesToCache.push(book.cover as RapunzelImage);
             bookDict[book.id] = book;
             imageList.push({
                 id: book.id,
