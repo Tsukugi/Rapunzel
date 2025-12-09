@@ -126,6 +126,88 @@ describe('ReleaseAutomation', () => {
     });
   });
 
+  describe('stageReleaseChanges', () => {
+    it('should stage package, lockfile, gradle, and apk when they exist', () => {
+      mockedFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        if (typeof filePath !== 'string') return false;
+        return (
+          filePath.includes('package.json') ||
+          filePath.includes('package-lock.json') ||
+          filePath.includes('build.gradle') ||
+          filePath.includes('Rapunzel-0.8.3.apk')
+        );
+      });
+      mockedExecSync.mockReturnValue(Buffer.from(''));
+
+      const staged = (releaseAutomation as any).stageReleaseChanges('0.8.3');
+
+      expect(staged).toEqual([
+        'package.json',
+        'package-lock.json',
+        'android/app/build.gradle',
+        'builds/Rapunzel-0.8.3.apk',
+      ]);
+      expect(mockedExecSync).toHaveBeenCalledWith(
+        'git add "package.json" "package-lock.json" "android/app/build.gradle" "builds/Rapunzel-0.8.3.apk"',
+        { cwd: realProjectRoot, stdio: 'inherit' }
+      );
+    });
+
+    it('should skip staging when no release files exist', () => {
+      mockedFs.existsSync.mockReturnValue(false);
+
+      const staged = (releaseAutomation as any).stageReleaseChanges('0.8.3');
+
+      expect(staged).toEqual([]);
+      expect(mockedExecSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('commitReleaseChanges', () => {
+    it('should commit staged changes when present', () => {
+      mockedExecSync.mockImplementation((command: string) => {
+        if (command.startsWith('git diff --cached --quiet')) {
+          throw new Error('changes present');
+        }
+        return Buffer.from('');
+      });
+
+      const committed = (releaseAutomation as any).commitReleaseChanges('0.8.3');
+
+      expect(committed).toBe(true);
+      const commitCall = mockedExecSync.mock.calls.find(
+        ([cmd]) => typeof cmd === 'string' && cmd.startsWith('git commit')
+      );
+      expect(commitCall?.[0]).toBe('git commit -m "chore(release): v0.8.3"');
+      expect(commitCall?.[1]).toEqual({ cwd: realProjectRoot, stdio: 'inherit' });
+    });
+
+    it('should not commit when no staged changes exist', () => {
+      mockedExecSync.mockReturnValue(Buffer.from(''));
+
+      const committed = (releaseAutomation as any).commitReleaseChanges('0.8.3');
+
+      expect(committed).toBe(false);
+      const commitCall = mockedExecSync.mock.calls.find(
+        ([cmd]) => typeof cmd === 'string' && cmd.startsWith('git commit')
+      );
+      expect(commitCall).toBeUndefined();
+    });
+  });
+
+  describe('pushReleaseChanges', () => {
+    it('should push staged changes', () => {
+      mockedExecSync.mockReturnValue(Buffer.from(''));
+
+      (releaseAutomation as any).pushReleaseChanges();
+
+      expect(mockedExecSync).toHaveBeenCalledWith('git push', {
+        cwd: realProjectRoot,
+        stdio: 'inherit',
+      });
+    });
+  });
+
   describe('buildReleaseAPK', () => {
     it('should run the gradle assembleRelease command', () => {
       mockedExecSync.mockReturnValueOnce(Buffer.from(''));
@@ -237,6 +319,15 @@ describe('ReleaseAutomation', () => {
       const moveAPKToBuildsFolderSpy = jest
         .spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder')
         .mockImplementation(() => {});
+      const stageReleaseChangesSpy = jest
+        .spyOn(releaseAutomation as any, 'stageReleaseChanges')
+        .mockReturnValue([]);
+      const commitReleaseChangesSpy = jest
+        .spyOn(releaseAutomation as any, 'commitReleaseChanges')
+        .mockReturnValue(false);
+      const pushReleaseChangesSpy = jest
+        .spyOn(releaseAutomation as any, 'pushReleaseChanges')
+        .mockImplementation(() => {});
 
       mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.8.2' }));
       mockedFs.existsSync.mockReturnValue(true);
@@ -249,6 +340,9 @@ describe('ReleaseAutomation', () => {
       expect(updateAndroidVersionSpy).toHaveBeenCalledWith('0.8.3');
       expect(buildReleaseAPKSpy).toHaveBeenCalled();
       expect(moveAPKToBuildsFolderSpy).toHaveBeenCalledWith('0.8.3');
+      expect(stageReleaseChangesSpy).toHaveBeenCalledWith('0.8.3');
+      expect(commitReleaseChangesSpy).toHaveBeenCalledWith('0.8.3');
+      expect(pushReleaseChangesSpy).not.toHaveBeenCalled();
     });
 
     it('should run the full release process with GitHub release', async () => {
@@ -271,6 +365,15 @@ describe('ReleaseAutomation', () => {
       const moveAPKToBuildsFolderSpy = jest
         .spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder')
         .mockImplementation(() => {});
+      const stageReleaseChangesSpy = jest
+        .spyOn(releaseAutomation as any, 'stageReleaseChanges')
+        .mockReturnValue([]);
+      const commitReleaseChangesSpy = jest
+        .spyOn(releaseAutomation as any, 'commitReleaseChanges')
+        .mockReturnValue(true);
+      const pushReleaseChangesSpy = jest
+        .spyOn(releaseAutomation as any, 'pushReleaseChanges')
+        .mockImplementation(() => {});
       const runGitHubReleaseScriptSpy = jest
         .spyOn(releaseAutomation as any, 'runGitHubReleaseScript')
         .mockResolvedValue(undefined);
@@ -286,6 +389,9 @@ describe('ReleaseAutomation', () => {
       expect(updateAndroidVersionSpy).toHaveBeenCalledWith('0.8.3');
       expect(buildReleaseAPKSpy).toHaveBeenCalled();
       expect(moveAPKToBuildsFolderSpy).toHaveBeenCalledWith('0.8.3');
+      expect(stageReleaseChangesSpy).toHaveBeenCalledWith('0.8.3');
+      expect(commitReleaseChangesSpy).toHaveBeenCalledWith('0.8.3');
+      expect(pushReleaseChangesSpy).toHaveBeenCalled();
       expect(runGitHubReleaseScriptSpy).toHaveBeenCalledWith('0.8.3');
     });
   });

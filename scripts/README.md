@@ -9,6 +9,7 @@ The release script automates the following tasks:
 - Updates the version in `android/app/build.gradle`
 - Builds the release APK using Gradle
 - Moves the generated APK to the `builds/` folder with the naming convention `Rapunzel-{version}.apk`
+- Stages, commits, and pushes the files changed during the release so the working tree stays clean
 
 ## Usage
 
@@ -49,6 +50,8 @@ npm run release -- -v 0.8.3
 
 # Release using current package.json version
 npm run release
+
+# Note: the script will automatically git add/commit/push the release changes.
 ```
 
 ## Generated Files

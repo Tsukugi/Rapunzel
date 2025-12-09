@@ -45,6 +45,15 @@ export class ReleaseAutomation {
             // Move the APK to builds folder with proper naming
             this.moveAPKToBuildsFolder(targetVersion);
 
+            // Commit and push the generated artifacts so the release leaves the repo clean
+            this.stageReleaseChanges(targetVersion);
+            const committed = this.commitReleaseChanges(targetVersion);
+            if (committed) {
+                this.pushReleaseChanges();
+            } else {
+                console.log("ℹ️ No release changes to push");
+            }
+
             // If GitHub release is requested, run the GitHub release script
             if (doGitHubRelease) {
                 await this.runGitHubReleaseScript(targetVersion);
@@ -142,6 +151,69 @@ export class ReleaseAutomation {
         console.log("✅ Updated Android build.gradle version");
     }
 
+    private stageReleaseChanges(version: string): string[] {
+        console.log("🗂️ Staging release artifacts...");
+        const releaseFiles = [
+            "package.json",
+            "package-lock.json",
+            path.join("android", "app", "build.gradle"),
+            path.join("builds", `Rapunzel-${version}.apk`),
+        ];
+
+        const existingFiles = releaseFiles
+            .map((relativePath) => ({
+                relativePath,
+                absolutePath: path.join(this.projectRoot, relativePath),
+            }))
+            .filter(({ absolutePath }) => fs.existsSync(absolutePath))
+            .map(({ relativePath }) => relativePath);
+
+        if (existingFiles.length === 0) {
+            console.log("ℹ️ No release files found to stage");
+            return [];
+        }
+
+        const addCommand = `git add ${existingFiles
+            .map((file) => `"${file}"`)
+            .join(" ")}`;
+
+        execSync(addCommand, { cwd: this.projectRoot, stdio: "inherit" });
+        return existingFiles;
+    }
+
+    private commitReleaseChanges(version: string): boolean {
+        if (!this.hasStagedChanges()) {
+            console.log("ℹ️ No staged changes to commit");
+            return false;
+        }
+
+        const commitMessage = `chore(release): v${version}`;
+        execSync(`git commit -m "${commitMessage}"`, {
+            cwd: this.projectRoot,
+            stdio: "inherit",
+        });
+        console.log("✅ Release changes committed");
+        return true;
+    }
+
+    private pushReleaseChanges(): void {
+        console.log("📤 Pushing release commit to remote...");
+        execSync("git push", { cwd: this.projectRoot, stdio: "inherit" });
+        console.log("✅ Release changes pushed");
+    }
+
+    private hasStagedChanges(): boolean {
+        try {
+            execSync("git diff --cached --quiet", {
+                cwd: this.projectRoot,
+                stdio: "ignore",
+            });
+            return false;
+        } catch {
+            return true;
+        }
+    }
+
     private buildReleaseAPK(): void {
         console.log("🔨 Building release APK...");
 
@@ -225,6 +297,7 @@ Options:
   --version, -v <version>      Set the version to release (e.g., 0.8.3)
   --github, -g                 Also create a GitHub release after building APK
   --help, -h                   Show this help message
+  (the script will git add/commit/push release files automatically)
 
 Examples:
   npm run release -- --version 0.8.3              # Build APK only
