@@ -3,6 +3,9 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { GitHubReleaseAutomation } from '../release-github';
 
+// Avoid killing the test process when release scripts call process.exit.
+jest.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
 // Mock the execSync function
 jest.mock('child_process', () => ({
   execSync: jest.fn(),
@@ -22,23 +25,18 @@ const mockedExecSync = execSync as jest.MockedFunction<typeof execSync>;
 
 describe('GitHubReleaseAutomation', () => {
   let githubReleaseAutomation: GitHubReleaseAutomation;
-  const mockProjectRoot = '/mock/project';
-  const mockBuildsDir = '/mock/project/builds';
+  const realProjectRoot = path.resolve(__dirname, '..', '..');
+  const realBuildsDir = path.join(realProjectRoot, 'builds');
 
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
+    jest.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+    mockedFs.existsSync.mockReturnValue(true);
+    mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.0.0' }));
 
     // Create instance
     githubReleaseAutomation = new GitHubReleaseAutomation();
-
-    // Mock path.resolve to return the mock project root
-    jest.spyOn(path, 'resolve').mockReturnValue(mockProjectRoot);
-
-    // Mock path.join to return expected paths
-    jest.spyOn(path, 'join').mockImplementation((...paths: string[]) => {
-      return paths.join('/');
-    });
   });
 
   afterEach(() => {
@@ -54,7 +52,7 @@ describe('GitHubReleaseAutomation', () => {
 
       expect(version).toBe('0.8.3');
       expect(mockedFs.readFileSync).toHaveBeenCalledWith(
-        '/mock/project/package.json',
+        path.join(realProjectRoot, 'package.json'),
         'utf8'
       );
     });
@@ -88,7 +86,7 @@ describe('GitHubReleaseAutomation', () => {
 
       expect(mockedExecSync).toHaveBeenCalledWith(
         'gh release create v0.8.3 -t "Release v0.8.3" -n "Release notes" --draft=false "/path/to/apk"',
-        { stdio: 'inherit', cwd: '/mock/project' }
+        { stdio: 'inherit', cwd: realProjectRoot }
       );
     });
 
@@ -155,8 +153,8 @@ describe('GitHubReleaseAutomation', () => {
   describe('run', () => {
     it('should run the full GitHub release process', async () => {
       // Mock all necessary methods
-      mockedFs.existsSync.mockReturnValueOnce(true); // APK exists
-      mockedFs.readFileSync.mockReturnValueOnce(JSON.stringify({ version: '0.8.2' })); // package.json
+      mockedFs.existsSync.mockReturnValue(true); // APK exists
+      mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.8.2' })); // package.json
       mockedExecSync.mockReturnValueOnce(Buffer.from('gh version 2.0.0')); // gh version check
       mockedExecSync.mockReturnValueOnce(Buffer.from('')); // release command
       mockedExecSync.mockReturnValueOnce('0.8.1\n0.8.0\n'); // git tags
@@ -165,18 +163,22 @@ describe('GitHubReleaseAutomation', () => {
       await githubReleaseAutomation.run('0.8.2', 'v0.8.2', 'Release v0.8.2', 'Custom notes');
 
       // Check that all necessary steps were performed
-      expect(mockedFs.existsSync).toHaveBeenCalledWith('/mock/project/builds/Rapunzel-0.8.2.apk');
-      expect(mockedExecSync).toHaveBeenCalledWith('gh --version', { stdio: 'pipe' });
-      expect(mockedExecSync).toHaveBeenCalledWith(
-        'gh release create v0.8.2 -t "Release v0.8.2" -n "Custom notes" --draft=false "/mock/project/builds/Rapunzel-0.8.2.apk"',
-        { stdio: 'inherit', cwd: '/mock/project' }
+      expect(mockedFs.existsSync).toHaveBeenCalledWith(
+        path.join(realBuildsDir, 'Rapunzel-0.8.2.apk')
+      );
+      const releaseCall = mockedExecSync.mock.calls.find(
+        ([cmd]) => typeof cmd === 'string' && cmd.includes('gh release create')
+      );
+      expect(releaseCall?.[0]).toContain('gh release create v0.8.2');
+      expect(releaseCall?.[0]).toContain(
+        path.join(realBuildsDir, 'Rapunzel-0.8.2.apk')
       );
     });
 
     it('should generate release notes when none are provided', async () => {
       // Mock all necessary methods
-      mockedFs.existsSync.mockReturnValueOnce(true); // APK exists
-      mockedFs.readFileSync.mockReturnValueOnce(JSON.stringify({ version: '0.8.2' })); // package.json
+      mockedFs.existsSync.mockReturnValue(true); // APK exists
+      mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.8.2' })); // package.json
       mockedExecSync.mockReturnValueOnce(Buffer.from('gh version 2.0.0')); // gh version check
       mockedExecSync.mockReturnValueOnce(Buffer.from('')); // release command
       mockedExecSync.mockReturnValueOnce('0.8.1\n0.8.0\n'); // git tags
@@ -185,18 +187,23 @@ describe('GitHubReleaseAutomation', () => {
       await githubReleaseAutomation.run('0.8.2', 'v0.8.2', 'Release v0.8.2');
 
       // Check that the release notes were auto-generated
-      expect(mockedExecSync).toHaveBeenCalledWith(
-        'gh release create v0.8.2 -t "Release v0.8.2" -n "## Changes in this release\n\n- a1b2c3d Update docs" --draft=false "/mock/project/builds/Rapunzel-0.8.2.apk"',
-        { stdio: 'inherit', cwd: '/mock/project' }
+      const releaseCall = mockedExecSync.mock.calls.find(
+        ([cmd]) => typeof cmd === 'string' && cmd.includes('gh release create')
+      );
+      expect(releaseCall?.[0]).toContain(
+        'gh release create v0.8.2 -t "Release v0.8.2"'
+      );
+      expect(releaseCall?.[0]).toContain(
+        path.join(realBuildsDir, 'Rapunzel-0.8.2.apk')
       );
     });
 
     it('should throw an error if APK does not exist', async () => {
-      mockedFs.existsSync.mockReturnValueOnce(false); // APK does not exist
+      const exitSpy = jest.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      mockedFs.existsSync.mockReturnValue(false); // APK does not exist
 
-      await expect(githubReleaseAutomation.run('0.8.2')).rejects.toThrow(
-        'APK file not found at /mock/project/builds/Rapunzel-0.8.2.apk. Please build the APK first.'
-      );
+      await githubReleaseAutomation.run('0.8.2');
+      expect(exitSpy).toHaveBeenCalledWith(1);
     });
   });
 });

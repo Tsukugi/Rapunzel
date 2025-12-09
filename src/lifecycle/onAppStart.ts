@@ -8,5 +8,6 @@ export const onAppStart = () => {
         config: [config],
     } = useRapunzelStore();
 
+    // Default to main feed; routes override per navigation.
     config.initialView = ViewNames.RapunzelMainFeed;
 };

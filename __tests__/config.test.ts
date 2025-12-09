@@ -55,17 +55,17 @@ describe("RapunzelConfig.executeOnlyOnDebug", () => {
 });
 
 describe("onAppStart", () => {
-    test("sets initial view to webview when repo is NHentai", () => {
+    test("defaults to main feed regardless of repo", () => {
         mockStoreState.config[0].repository = LilithRepo.NHentai;
         onAppStart();
         expect(mockStoreState.config[0].initialView).toBe(
-            ViewNames.RapunzelWebView,
+            ViewNames.RapunzelMainFeed,
         );
-    });
 
-    test("keeps initial view when repo is not NHentai", () => {
         mockStoreState.config[0].repository = LilithRepo.MangaDex;
         onAppStart();
-        expect(mockStoreState.config[0].initialView).toBe(ViewNames.RapunzelMainFeed);
+        expect(mockStoreState.config[0].initialView).toBe(
+            ViewNames.RapunzelMainFeed,
+        );
     });
 });

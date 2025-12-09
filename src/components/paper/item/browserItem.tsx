@@ -1,5 +1,5 @@
-import { Button, Card, Chip, Icon, Text } from "react-native-paper";
-import { FC, useState } from "react";
+import { Card, Chip, Text } from "react-native-paper";
+import { FC, useEffect, useMemo, useState } from "react";
 import { BookBase } from "@atsu/lilith";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { LocalTheme } from "../../../../themes";
@@ -43,22 +43,38 @@ const BrowseItem: FC<BrowserItemProps> = ({
         );
     }
 
-    const [src, setSrc] = useState(cover);
-
     const { colors } = LocalTheme.useTheme();
 
-    const languages = bookBase.availableLanguages.map((lang) =>
-        getLocaleEmoji(lang),
+    const languages = useMemo(
+        () => bookBase.availableLanguages.map((lang) => getLocaleEmoji(lang)),
+        [bookBase.availableLanguages],
     );
-    const title = removeValuesInParenthesesAndBrackets(bookBase.title);
+    const title = useMemo(
+        () => removeValuesInParenthesesAndBrackets(bookBase.title),
+        [bookBase.title],
+    );
 
-    const defaultStyle = {
-        backgroundColor: colors.backdrop,
-        color: "white",
-        title: `${languages.join("")} ${title}`,
-    };
+    // Track the active cover; reset whenever a new book or cover arrives.
+    const [src, setSrc] = useState(cover);
+    useEffect(() => {
+        setSrc(cover);
+    }, [cover]);
 
+    // Build the base title/appearance once per book to keep renders light.
+    const defaultStyle = useMemo(
+        () => ({
+            backgroundColor: colors.backdrop,
+            color: "white",
+            title: `${languages.join("")} ${title}`,
+        }),
+        [colors.backdrop, languages.join(""), title],
+    );
+
+    // Ensure the live title props follow the latest defaults (e.g., after long press).
     const [titleProps, setTitleProps] = useState(defaultStyle);
+    useEffect(() => {
+        setTitleProps(defaultStyle);
+    }, [defaultStyle]);
 
     const [onLongPressEvent] = useTimedEvent(3000);
 
@@ -75,7 +91,6 @@ const BrowseItem: FC<BrowserItemProps> = ({
                     color: colors.onPrimary,
                     title: "Book added to the Library!",
                 });
-                RapunzelLog.log(titleProps.title);
             },
             onFinish: () => {
                 RapunzelLog.log("[BrowseItem.onLongPressEvent.onFinish]");
@@ -97,6 +112,7 @@ const BrowseItem: FC<BrowserItemProps> = ({
             onLongPress={onLongPressHandler}
         >
             <Card.Cover
+                testID="browser-item-cover"
                 style={{ ...styles.cover, ...coverStyle }}
                 source={{ uri: src }}
                 onError={() => {
@@ -130,6 +146,7 @@ const BrowseItem: FC<BrowserItemProps> = ({
                 )}
             </Card.Content>
             <Card.Title
+                testID="browser-item-title"
                 titleNumberOfLines={2}
                 style={{
                     ...styles.title,

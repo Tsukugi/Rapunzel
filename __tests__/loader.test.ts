@@ -105,6 +105,7 @@ const createStoreState = () => ({
         { activeProcessId: "", bookListRecord: {}, cachedImagesRecord: {} },
         jest.fn(),
     ],
+    ui: [{ snackMessage: "" }, jest.fn()],
 });
 
 beforeEach(() => {
@@ -161,6 +162,43 @@ describe("useRapunzelLoader search and feeds", () => {
         expect(mockStoreState.browse[0].page).toBe(2);
         expect(mockStoreState.loading[0].browse).toBe(false);
         expect(cached).toEqual(["cached-0", "cached-1"]);
+    });
+
+    test("loadSearch preserves result order even if downloads finish out of order", async () => {
+        const results = [
+            { id: "book-1", cover: { uri: "cover-1" } },
+            { id: "book-2", cover: { uri: "cover-2" } },
+            { id: "book-3", cover: { uri: "cover-3" } },
+        ];
+        mockApiClient.search.mockResolvedValue({ results });
+        mockDownloadImageList = jest.fn(async (options: any) => {
+            const urls: string[] = [];
+            // Simulate images finishing from last to first.
+            for (let i = options.data.length - 1; i >= 0; i--) {
+                const url = `cached-reverse-${i}`;
+                if (options.onImageLoaded) {
+                    await options.onImageLoaded(url, i);
+                }
+                urls.push(url);
+            }
+            return urls;
+        });
+
+        const loader = useRapunzelLoader();
+        await loader.loadSearch("query");
+
+        const { cachedImagesRecord } = mockStoreState.browse[0];
+        expect(Object.keys(cachedImagesRecord)).toEqual([
+            "book-1",
+            "book-2",
+            "book-3",
+        ]);
+        expect(Object.values(cachedImagesRecord).map((v) => v.id)).toEqual([
+            "book-1",
+            "book-2",
+            "book-3",
+        ]);
+        expect(cachedImagesRecord["book-3"].value).toBe("cached-reverse-2");
     });
 
     test("getLatestBooks caches feed and tracks page", async () => {

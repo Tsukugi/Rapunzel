@@ -6,7 +6,7 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest --config jest.config.ts",
+    "test": "jest --config jest.config.ts --runInBand",
     "release": "ts-node scripts/release.ts",
     "release-github": "ts-node scripts/release-github.ts"
   },

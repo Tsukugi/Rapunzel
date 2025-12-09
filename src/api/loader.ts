@@ -354,6 +354,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             ...bookDict,
         };
 
+        /**
+         * Preserve the search order in the UI by pre-inserting placeholders in
+         * the same order as the API results. Downloads may finish out-of-order,
+         * so we guard against reordering by setting the records up-front and
+         * letting the cache loader overwrite the values in-place later.
+         */
+        imageList.forEach((item) => {
+            if (!browse.cachedImagesRecord[item.id]) {
+                browse.cachedImagesRecord[item.id] = item;
+            }
+        });
+
         // If a specific page is provided in searchOptions, update the Browse page
         if (searchOptions?.page) {
             browse.page = searchOptions.page;

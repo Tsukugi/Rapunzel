@@ -3,6 +3,9 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { ReleaseAutomation } from '../release';
 
+// Avoid killing the test process when release scripts call process.exit.
+jest.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
 // Mock the execSync function
 jest.mock('child_process', () => ({
   execSync: jest.fn(),
@@ -22,23 +25,19 @@ const mockedExecSync = execSync as jest.MockedFunction<typeof execSync>;
 
 describe('ReleaseAutomation', () => {
   let releaseAutomation: ReleaseAutomation;
-  const mockProjectRoot = '/mock/project';
-  const mockBuildsDir = '/mock/project/builds';
+  const realProjectRoot = path.resolve(__dirname, '..', '..');
+  const realBuildsDir = path.join(realProjectRoot, 'builds');
 
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
+    jest.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
 
     // Create instance
     releaseAutomation = new ReleaseAutomation();
 
-    // Mock path.resolve to return the mock project root
-    jest.spyOn(path, 'resolve').mockReturnValue(mockProjectRoot);
-
-    // Mock path.join to return expected paths
-    jest.spyOn(path, 'join').mockImplementation((...paths: string[]) => {
-      return paths.join('/');
-    });
+    // Keep path.resolve as-is, but allow join to behave normally.
+    jest.spyOn(path, 'join').mockImplementation((...paths: string[]) => paths.join('/'));
   });
 
   afterEach(() => {
@@ -54,7 +53,7 @@ describe('ReleaseAutomation', () => {
 
       expect(version).toBe('0.8.3');
       expect(mockedFs.readFileSync).toHaveBeenCalledWith(
-        '/mock/project/package.json',
+        path.join(realProjectRoot, 'package.json'),
         'utf8'
       );
     });
@@ -68,7 +67,7 @@ describe('ReleaseAutomation', () => {
       (releaseAutomation as any).updatePackageJsonVersion('0.8.3');
 
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-        '/mock/project/package.json',
+        path.join(realProjectRoot, 'package.json'),
         JSON.stringify({ version: '0.8.3', name: '@atsu/rapunzel' }, null, 2)
       );
     });
@@ -90,7 +89,7 @@ describe('ReleaseAutomation', () => {
       (releaseAutomation as any).updateAndroidVersion('0.8.3');
 
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-        '/mock/project/android/app/build.gradle',
+        path.join(realProjectRoot, 'android', 'app', 'build.gradle'),
         expect.stringContaining('versionName "0.8.3"')
       );
     });
@@ -115,7 +114,7 @@ describe('ReleaseAutomation', () => {
 
       (releaseAutomation as any).createBuildsDirectory();
 
-      expect(mockedFs.mkdirSync).toHaveBeenCalledWith('/mock/project/builds');
+      expect(mockedFs.mkdirSync).toHaveBeenCalledWith(realBuildsDir);
     });
 
     it('should not create the builds directory if it already exists', () => {
@@ -134,7 +133,7 @@ describe('ReleaseAutomation', () => {
       (releaseAutomation as any).buildReleaseAPK();
 
       expect(mockedExecSync).toHaveBeenCalledWith('./gradlew assembleRelease', {
-        cwd: '/mock/project/android',
+        cwd: path.join(realProjectRoot, 'android'),
         stdio: 'inherit',
         env: expect.anything(),
       });
@@ -158,8 +157,17 @@ describe('ReleaseAutomation', () => {
       (releaseAutomation as any).moveAPKToBuildsFolder('0.8.3');
 
       expect(mockedFs.renameSync).toHaveBeenCalledWith(
-        '/mock/project/android/app/build/outputs/apk/release/app-release.apk',
-        '/mock/project/builds/Rapunzel-0.8.3.apk'
+        path.join(
+          realProjectRoot,
+          'android',
+          'app',
+          'build',
+          'outputs',
+          'apk',
+          'release',
+          'app-release.apk'
+        ),
+        path.join(realBuildsDir, 'Rapunzel-0.8.3.apk')
       );
     });
 
@@ -168,7 +176,18 @@ describe('ReleaseAutomation', () => {
 
       expect(() => {
         (releaseAutomation as any).moveAPKToBuildsFolder('0.8.3');
-      }).toThrow('APK file not found at /mock/project/android/app/build/outputs/apk/release/app-release.apk');
+      }).toThrow(
+        `APK file not found at ${path.join(
+          realProjectRoot,
+          'android',
+          'app',
+          'build',
+          'outputs',
+          'apk',
+          'release',
+          'app-release.apk'
+        )}`
+      );
     });
   });
 
@@ -181,31 +200,43 @@ describe('ReleaseAutomation', () => {
       await (releaseAutomation as any).runGitHubReleaseScript('0.8.3');
 
       expect(mockedExecSync).toHaveBeenCalledWith(
-        'ts-node /mock/project/scripts/release-github.ts --version 0.8.3',
-        { stdio: 'inherit', cwd: '/mock/project' }
+        `ts-node ${path.join(realProjectRoot, 'scripts', 'release-github.ts')} --version 0.8.3`,
+        { stdio: 'inherit', cwd: realProjectRoot }
       );
     });
 
-    it('should throw an error if the GitHub release script fails', () => {
+    it('should throw an error if the GitHub release script fails', async () => {
       mockedExecSync.mockImplementation(() => {
         throw new Error('Command failed');
       });
 
-      expect(() => {
-        (releaseAutomation as any).runGitHubReleaseScript('0.8.3');
-      }).toThrow('Failed to run GitHub release script: Error: Command failed');
+      await expect(
+        (releaseAutomation as any).runGitHubReleaseScript('0.8.3')
+      ).rejects.toThrow('Failed to run GitHub release script: Error: Command failed');
     });
   });
 
   describe('run', () => {
     it('should run the full release process without GitHub release', async () => {
       // Mock all necessary methods
-      const getCurrentVersionSpy = jest.spyOn(releaseAutomation as any, 'getCurrentVersion').mockReturnValue('0.8.2');
-      const updatePackageJsonVersionSpy = jest.spyOn(releaseAutomation as any, 'updatePackageJsonVersion');
-      const updateAndroidVersionSpy = jest.spyOn(releaseAutomation as any, 'updateAndroidVersion');
-      const createBuildsDirectorySpy = jest.spyOn(releaseAutomation as any, 'createBuildsDirectory');
-      const buildReleaseAPKSpy = jest.spyOn(releaseAutomation as any, 'buildReleaseAPK');
-      const moveAPKToBuildsFolderSpy = jest.spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder');
+      const getCurrentVersionSpy = jest
+        .spyOn(releaseAutomation as any, 'getCurrentVersion')
+        .mockReturnValue('0.8.2');
+      const updatePackageJsonVersionSpy = jest
+        .spyOn(releaseAutomation as any, 'updatePackageJsonVersion')
+        .mockImplementation(() => {});
+      const updateAndroidVersionSpy = jest
+        .spyOn(releaseAutomation as any, 'updateAndroidVersion')
+        .mockImplementation(() => {});
+      const createBuildsDirectorySpy = jest
+        .spyOn(releaseAutomation as any, 'createBuildsDirectory')
+        .mockImplementation(() => {});
+      const buildReleaseAPKSpy = jest
+        .spyOn(releaseAutomation as any, 'buildReleaseAPK')
+        .mockImplementation(() => {});
+      const moveAPKToBuildsFolderSpy = jest
+        .spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder')
+        .mockImplementation(() => {});
 
       mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.8.2' }));
       mockedFs.existsSync.mockReturnValue(true);
@@ -222,13 +253,27 @@ describe('ReleaseAutomation', () => {
 
     it('should run the full release process with GitHub release', async () => {
       // Mock all necessary methods
-      const getCurrentVersionSpy = jest.spyOn(releaseAutomation as any, 'getCurrentVersion').mockReturnValue('0.8.2');
-      const updatePackageJsonVersionSpy = jest.spyOn(releaseAutomation as any, 'updatePackageJsonVersion');
-      const updateAndroidVersionSpy = jest.spyOn(releaseAutomation as any, 'updateAndroidVersion');
-      const createBuildsDirectorySpy = jest.spyOn(releaseAutomation as any, 'createBuildsDirectory');
-      const buildReleaseAPKSpy = jest.spyOn(releaseAutomation as any, 'buildReleaseAPK');
-      const moveAPKToBuildsFolderSpy = jest.spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder');
-      const runGitHubReleaseScriptSpy = jest.spyOn(releaseAutomation as any, 'runGitHubReleaseScript');
+      const getCurrentVersionSpy = jest
+        .spyOn(releaseAutomation as any, 'getCurrentVersion')
+        .mockReturnValue('0.8.2');
+      const updatePackageJsonVersionSpy = jest
+        .spyOn(releaseAutomation as any, 'updatePackageJsonVersion')
+        .mockImplementation(() => {});
+      const updateAndroidVersionSpy = jest
+        .spyOn(releaseAutomation as any, 'updateAndroidVersion')
+        .mockImplementation(() => {});
+      const createBuildsDirectorySpy = jest
+        .spyOn(releaseAutomation as any, 'createBuildsDirectory')
+        .mockImplementation(() => {});
+      const buildReleaseAPKSpy = jest
+        .spyOn(releaseAutomation as any, 'buildReleaseAPK')
+        .mockImplementation(() => {});
+      const moveAPKToBuildsFolderSpy = jest
+        .spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder')
+        .mockImplementation(() => {});
+      const runGitHubReleaseScriptSpy = jest
+        .spyOn(releaseAutomation as any, 'runGitHubReleaseScript')
+        .mockResolvedValue(undefined);
 
       mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.8.2' }));
       mockedFs.existsSync.mockReturnValue(true);
