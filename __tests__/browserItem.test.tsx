@@ -75,4 +75,23 @@ describe("BrowseItem", () => {
         expect(title.props.title).toContain("Title Two");
         expect(title.props.title).toContain("japanese");
     });
+
+    test("renders fallback when cover is data URI", () => {
+        const book = makeBook("book-3", "Has Data Cover", ["english"]);
+        const dataUri =
+            "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+        const component = renderer.create(
+            <BrowseItem bookBase={book} cover={dataUri} />,
+        );
+
+        const fallbacks = component.root.findAllByProps({
+            testID: "browser-item-cover-fallback",
+        });
+        const covers = component.root.findAllByProps({
+            testID: "browser-item-cover",
+        });
+        expect(fallbacks.length).toBeGreaterThanOrEqual(1);
+        expect(covers.length).toBe(0);
+    });
 });

@@ -60,6 +60,14 @@ const BrowseItem: FC<BrowserItemProps> = ({
         setSrc(cover);
     }, [cover]);
 
+    // Some sources (e.g., transparent base64 placeholders) are not valid URLs
+    // for React Native's fetch layer. Filter them out and show a fallback
+    // instead of letting the component crash with "Invalid URL".
+    const safeUri = useMemo(
+        () => (src && !src.startsWith("data:") ? src : undefined),
+        [src],
+    );
+
     // Build the base title/appearance once per book to keep renders light.
     const defaultStyle = useMemo(
         () => ({
@@ -111,23 +119,38 @@ const BrowseItem: FC<BrowserItemProps> = ({
             onPress={onPressHandler}
             onLongPress={onLongPressHandler}
         >
-            <Card.Cover
-                testID="browser-item-cover"
-                style={{ ...styles.cover, ...coverStyle }}
-                source={{ uri: src }}
-                onError={() => {
-                    src &&
-                        setSrc(
-                            CacheUtils.replaceExtension(
-                                src,
-                                FallbackCacheExtension,
-                            ),
+            {safeUri ? (
+                <Card.Cover
+                    testID="browser-item-cover"
+                    style={{ ...styles.cover, ...coverStyle }}
+                    source={{ uri: safeUri }}
+                    onError={() => {
+                        safeUri &&
+                            setSrc(
+                                CacheUtils.replaceExtension(
+                                    safeUri,
+                                    FallbackCacheExtension,
+                                ),
+                            );
+                        RapunzelLog.error(
+                            `[BrowserItem]: Image load failed ${safeUri}`,
                         );
-                    RapunzelLog.error(
-                        `[BrowserItem]: Image load failed ${src}`,
-                    );
-                }}
-            />
+                    }}
+                />
+            ) : (
+                <View
+                    testID="browser-item-cover-fallback"
+                    style={{
+                        ...styles.cover,
+                        ...coverStyle,
+                        backgroundColor: colors.backdrop,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Text style={styles.coverFallbackText}>No cover</Text>
+                </View>
+            )}
             <Card.Content
                 style={{
                     ...styles.topContent,
@@ -181,6 +204,10 @@ const styles = StyleSheet.create({
     cover: {
         height: width,
         borderRadius: 30,
+    },
+    coverFallbackText: {
+        fontSize: 10,
+        color: "white",
     },
 
     topContent: {
