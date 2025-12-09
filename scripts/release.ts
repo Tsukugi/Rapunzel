@@ -105,14 +105,24 @@ export class ReleaseAutomation {
 
         // Extract the current versionName
         const versionNameRegex = /versionName\s+"([^"]+)"/;
-        const currentMatch = buildGradleContent.match(versionNameRegex);
-        if (!currentMatch) {
+        const currentVersionMatch = buildGradleContent.match(versionNameRegex);
+        if (!currentVersionMatch) {
             throw new Error("Could not find versionName in build.gradle");
         }
 
-        const currentVersion = currentMatch[1];
+        // Extract the current versionCode
+        const versionCodeRegex = /versionCode\s+(\d+)/;
+        const currentCodeMatch = buildGradleContent.match(versionCodeRegex);
+        if (!currentCodeMatch) {
+            throw new Error("Could not find versionCode in build.gradle");
+        }
+
+        const currentVersion = currentVersionMatch[1];
+        const currentCode = parseInt(currentCodeMatch[1], 10);
+        const newCode = currentCode + 1;  // Increment versionCode by 1
+
         console.log(
-            `🔄 Updating Android build.gradle version from ${currentVersion} to ${version}`,
+            `🔄 Updating Android build.gradle versionName from ${currentVersion} to ${version} and versionCode from ${currentCode} to ${newCode}`,
         );
 
         // Replace the versionName
@@ -120,6 +130,13 @@ export class ReleaseAutomation {
             versionNameRegex,
             `versionName "${version}"`,
         );
+
+        // Replace the versionCode
+        buildGradleContent = buildGradleContent.replace(
+            versionCodeRegex,
+            `versionCode ${newCode}`,
+        );
+
         fs.writeFileSync(buildGradlePath, buildGradleContent);
 
         console.log("✅ Updated Android build.gradle version");
