@@ -28,8 +28,9 @@
 
 ## Persist After Fetch
 - A watcher component (`FeedPersistence`) listens to `latest` / `trending` changes:
-  - Serializes the corresponding slice to MMKV with debounce (~300ms).
-  - Caps payload to ~80 items; no timestamps or versioning stored.
+  - Immediately persists once on mount, then on every slice update (debounced ~300ms).
+  - Serializes only `rendered`, `bookListRecord`, `cachedImagesRecord` and caps them to ~80 entries.
+  - Persisted payloads can be empty; hydration treats missing/empty data as “no feed cached”.
 
 ## Testing Checklist
 - Cold offline launch shows last feed immediately; no crash if storage empty.
@@ -37,3 +38,6 @@
 - Missing/corrupt image files are pruned during hydration.
 - Pagination still works (latest page increments preserved; append from network).
 - Storage caps respected; old data evicted on save.
+- Automated coverage:
+  - `__tests__/storageHydration.test.ts` validates hydration pruning/capping behavior.
+  - `__tests__/feedPersistence.test.tsx` ensures persistence serializes the right payload and respects caps.

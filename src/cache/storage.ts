@@ -9,9 +9,18 @@ import {
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
 import { RapunzelLog } from "../config/log";
-import { ConfigState, LibraryBook } from "../store/interfaces";
-import { Book } from "@atsu/lilith";
+import {
+    BookBaseList,
+    ConfigState,
+    LatestBooksState,
+    LibraryBook,
+    PopularBooksState,
+} from "../store/interfaces";
 import { LibraryUtils } from "../tools/library";
+import RNFS from "react-native-fs";
+import { VirtualItem } from "../components/virtualList/interfaces";
+import { MaxFeedItems } from "./feedConstants";
+import { BookBase } from "@atsu/lilith";
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
@@ -77,6 +86,8 @@ export const initRapunzelStorage = () => {
         header: [header],
         library: [library],
         router: [router],
+        latest: [latest],
+        trending: [trending],
     } = useRapunzelStore();
 
     const setIfValid = <T>(setter: (key: T) => void) => {
@@ -123,5 +134,63 @@ export const initRapunzelStorage = () => {
             library.saved = saved;
             library.rendered = rendered;
         }),
+    );
+
+    const sanitizeBookBaseList = async <T extends BookBaseList>(
+        snapshot: T,
+    ): Promise<T> => {
+        if (!snapshot)
+            throw Error("[sanitizeBookBaseList] No snapshot provided");
+
+        const safeRendered: string[] = [];
+        const safeBookListRecord: Record<string, BookBase> = {};
+        const safeCachedImagesRecord: Record<string, VirtualItem<string>> = {};
+
+        for (const id of snapshot.rendered) {
+            if (safeRendered.length >= MaxFeedItems) break;
+            const imageEntry = snapshot.cachedImagesRecord?.[id];
+            const bookEntry = snapshot.bookListRecord?.[id];
+            if (!imageEntry || !bookEntry) continue;
+            const fileUri = imageEntry.value;
+            if (!fileUri || typeof fileUri !== "string") continue;
+            const path = fileUri.replace("file://", "");
+            const exists = await RNFS.exists(path);
+            if (!exists) continue;
+            safeRendered.push(id);
+            safeBookListRecord[id] = bookEntry;
+            safeCachedImagesRecord[id] = imageEntry;
+        }
+
+        return {
+            ...snapshot,
+            rendered: safeRendered,
+            bookListRecord: safeBookListRecord,
+            cachedImagesRecord: safeCachedImagesRecord,
+        };
+    };
+
+    const hydrateBookBaseList = async <T extends BookBaseList>(
+        storageEntry: StorageEntries,
+        targetState: T,
+    ) => {
+        try {
+            const snapshot = getMap<T>(storageEntry);
+            const safeSnapshot = await sanitizeBookBaseList(snapshot);
+            targetState.rendered = safeSnapshot.rendered;
+            targetState.bookListRecord = safeSnapshot.bookListRecord;
+            targetState.cachedImagesRecord = safeSnapshot.cachedImagesRecord;
+            return safeSnapshot;
+        } catch (err) {
+            RapunzelLog.warn(
+                "[initRapunzelStorage] Latest hydrate failed",
+                err,
+            );
+        }
+    };
+
+    hydrateBookBaseList<LatestBooksState>(StorageEntries.feedLatest, latest);
+    hydrateBookBaseList<PopularBooksState>(
+        StorageEntries.feedTrending,
+        trending,
     );
 };

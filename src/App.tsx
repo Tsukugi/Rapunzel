@@ -6,6 +6,7 @@ import { onAppStart } from "./lifecycle/onAppStart";
 import { StyleSheet } from "react-native";
 import { Snackbar } from "react-native-paper";
 import { useRapunzelStore } from "./store/store";
+import FeedPersistence from "./lifecycle/FeedPersistence";
 
 const Views = Navigation.getViews();
 
@@ -38,6 +39,7 @@ const App: React.FC = () => {
             >
                 {snackMessage}
             </Snackbar>
+            <FeedPersistence />
             <DrawerNavigator views={Views}></DrawerNavigator>
         </>
     );

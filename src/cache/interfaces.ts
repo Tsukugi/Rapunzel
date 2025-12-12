@@ -10,6 +10,8 @@ export enum StorageEntries {
     repository = "repository",
     config = "config",
     library = "library",
+    feedLatest = "feed.latest",
+    feedTrending = "feed.trending",
 }
 
 export namespace Storage {
