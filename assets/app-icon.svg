@@ -1,0 +1,31 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="64" x2="900" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3C175A" />
+      <stop offset="0.5" stop-color="#7B2EBF" />
+      <stop offset="1" stop-color="#F47EB2" />
+    </linearGradient>
+    <linearGradient id="book" x1="256" y1="300" x2="768" y2="780" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="1" stop-color="#FBEAFE" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="bookmark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF5C8D" />
+      <stop offset="1" stop-color="#FF2A63" />
+    </linearGradient>
+    <linearGradient id="pageShadow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EAD9FF" />
+      <stop offset="1" stop-color="#B893FF" />
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="220" fill="url(#bg)" />
+  <path d="M228 330 L464 292 C499 286 525 286 560 292 L796 330 C812 332 820 344 820 356 V754 C820 774 804 788 784 786 L546 758 C526 756 507 756 487 758 L248 786 C228 788 212 774 212 754 V354 C212 344 218 332 228 330 Z" fill="url(#book)" />
+  <path d="M508 320 L508 760" stroke="#E0C6FF" stroke-width="18" stroke-linecap="round" />
+  <path d="M320 356 L320 744 C320 758 332 770 346 770 L480 754 C496 752 510 742 516 728 L516 332 C516 318 504 306 490 308 L336 330 C326 332 320 342 320 352 Z" fill="#FFFFFF" opacity="0.35" />
+  <path d="M516 332 C516 318 526 306 540 308 L692 330 C704 332 712 342 712 354 V744 C712 756 702 766 690 764 L538 742 C524 740 516 728 516 714 Z" fill="#F6E7FF" opacity="0.4" />
+  <path d="M438 332 L438 672" stroke="url(#pageShadow)" stroke-width="14" stroke-linecap="round" opacity="0.7" />
+  <path d="M584 332 L584 672" stroke="url(#pageShadow)" stroke-width="14" stroke-linecap="round" opacity="0.7" />
+  <path d="M564 286 L564 492 L614 472 L664 492 L664 286" fill="url(#bookmark)" />
+  <circle cx="360" cy="420" r="60" fill="#FFFFFF" fill-opacity="0.08" />
+  <circle cx="740" cy="260" r="120" fill="#FFFFFF" fill-opacity="0.06" />
+</svg>

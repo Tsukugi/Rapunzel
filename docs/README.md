@@ -37,25 +37,36 @@ This is a React Native application built with Expo, featuring a complete develop
 npm install
 ```
 
-2. Start the development server:
+2. Link the local `@atsu/*` packages:
+```bash
+npm run link:atsu
+```
+
+3. Start the development server:
 ```bash
 npm start
 ```
 
-3. To run on Android:
+4. To run on Android:
 ```bash
 npm run android
 ```
 
-4. To run on iOS (requires macOS):
+5. To run on iOS (requires macOS):
 ```bash
 npm run ios
 ```
 
-5. To run on web:
+6. To run on web:
 ```bash
 npm run web
 ```
+
+## Navigation and gestures
+
+- Navigation uses React Navigation Drawer to mirror the Rapunzel V1 view mapping.
+- `react-native-gesture-handler` must be initialised before anything else; `App.tsx` imports it at the top and wraps the tree in `GestureHandlerRootView`. Keep this pattern if you add new entry points.
+- Drawer screens are declared in `src/navigation/viewConfig.ts`; edit that file to add, hide, or rename screens in the drawer.
 
 ## Development Scripts
 

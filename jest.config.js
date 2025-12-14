@@ -11,6 +11,7 @@ export default {
     '!**/node_modules/**',
     '!**/coverage/**',
     '!**/metro.config.js',
+    '!**/metro.config.cjs',
     '!**/babel.config.js',
   ],
   coverageReporters: ['html', 'lcov', 'text'],
