@@ -46,6 +46,7 @@ This document outlines the plan for migrating the source code from the original 
 1. Convert RapunzelV1 views to RapunzelV2 screen components
 2. Update all components to maintain Taihou hook usage
 3. Adapt UI components to work with Taihou state
+4. Initial port: MainFeed, Browse, and Reader now use the Lilith loader (network-only, cache pending)
 
 ### Phase 5: Business Logic Preservation
 1. Migrate API layer functions (useLilithAPI)

@@ -4,6 +4,8 @@
 
 Today I helped set up a complete React Native project with modern tooling and best practices for 2025. The project uses Expo and includes:
 
+For detailed information about the project architecture, entry points, data caching, UI components, and development instructions, please refer to the [agents documentation](./agents/AGENTS.md).
+
 ### Tools & Libraries Installed:
 - React Native with Expo SDK
 - TypeScript for type safety

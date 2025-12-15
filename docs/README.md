@@ -7,7 +7,8 @@ This is a React Native application built with Expo, featuring a complete develop
 - **React Native** with Expo managed workflow
 - **TypeScript** for type safety
 - **React Navigation** for navigation between screens
-- **Redux Toolkit** for state management
+- **@atsu/taihou** store for state management
+- **Lilith repositories** (NHentai, HenTag, MangaDex, EHentai via Zenith) as data sources
 - **ESLint** and **Prettier** for code quality and formatting
 - **Jest** and **React Native Testing Library** for testing
 - Modular project structure organized by features
@@ -18,9 +19,10 @@ This is a React Native application built with Expo, featuring a complete develop
 ├── assets/                 # Asset files (images, fonts, etc.)
 ├── src/
 │   ├── components/         # Reusable UI components
+│   ├── api/                # Lilith API hooks and loaders
 │   ├── screens/            # Screen components
 │   ├── navigation/         # Navigation configuration
-│   └── store/              # Redux store configuration
+│   └── store/              # Taihou store configuration
 ├── .eslintrc.js           # ESLint configuration
 ├── .prettierrc.json       # Prettier configuration
 ├── jest.config.js         # Jest configuration
@@ -67,6 +69,11 @@ npm run web
 - Navigation uses React Navigation Drawer to mirror the Rapunzel V1 view mapping.
 - `react-native-gesture-handler` must be initialised before anything else; `App.tsx` imports it at the top and wraps the tree in `GestureHandlerRootView`. Keep this pattern if you add new entry points.
 - Drawer screens are declared in `src/navigation/viewConfig.ts`; edit that file to add, hide, or rename screens in the drawer.
+
+## Data loading
+
+- `src/api/loader.ts` wraps Lilith repository SDKs and populates the Taihou stores.
+- Latest, trending, and search flows currently stream remote cover/image URLs (no on-device cache yet) and feed into `MainFeed`, `Browse`, and `Reader`.
 
 ## Development Scripts
 
