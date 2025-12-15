@@ -11,7 +11,7 @@ import { DrawerScreenProps } from "@react-navigation/drawer";
 import { useRapunzelLoader } from "../api/loader";
 import { useLibraryManager } from "../library/useLibraryManager";
 import { RootDrawerParamList } from "../navigation/AppNavigator";
-import { colors } from "../theme";
+import { useTheme } from "../theme";
 import { LibraryBook, useRapunzelStore, ViewNames } from "../store";
 
 type LibraryProps = DrawerScreenProps<
@@ -27,6 +27,8 @@ const LibraryScreen = ({ navigation }: LibraryProps) => {
     } = useRapunzelStore();
     const { toggleLibrary } = useLibraryManager();
     const { loadBook, loadChapter } = useRapunzelLoader();
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
 
     const books = useMemo(
         () =>
@@ -85,54 +87,57 @@ const LibraryScreen = ({ navigation }: LibraryProps) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-    listContent: {
-        paddingHorizontal: 12,
-        paddingBottom: 24,
-        gap: 12,
-    },
-    column: {
-        gap: 12,
-        marginBottom: 12,
-    },
-    card: {
-        flex: 1,
-        backgroundColor: colors.white,
-        borderRadius: 8,
-        overflow: "hidden",
-        elevation: 2,
-        shadowColor: colors.black,
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-    },
-    cover: {
-        width: "100%",
-        height: coverHeight,
-        backgroundColor: colors.gray,
-    },
-    cardTitle: {
-        paddingHorizontal: 8,
-        paddingTop: 8,
-        fontSize: 14,
-        fontWeight: "700",
-        color: colors.black,
-    },
-    cardMeta: {
-        paddingHorizontal: 8,
-        paddingBottom: 10,
-        fontSize: 12,
-        color: colors.gray,
-    },
-    emptyText: {
-        textAlign: "center",
-        color: colors.gray,
-        marginTop: 24,
-    },
-});
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        listContent: {
+            paddingHorizontal: 12,
+            paddingBottom: 24,
+            gap: 12,
+        },
+        column: {
+            gap: 12,
+            marginBottom: 12,
+        },
+        card: {
+            flex: 1,
+            backgroundColor: colors.card,
+            borderRadius: 8,
+            overflow: "hidden",
+            elevation: 2,
+            shadowColor: colors.black,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+        cover: {
+            width: "100%",
+            height: coverHeight,
+            backgroundColor: colors.gray,
+        },
+        cardTitle: {
+            paddingHorizontal: 8,
+            paddingTop: 8,
+            fontSize: 14,
+            fontWeight: "700",
+            color: colors.black,
+        },
+        cardMeta: {
+            paddingHorizontal: 8,
+            paddingBottom: 10,
+            fontSize: 12,
+            color: colors.gray,
+        },
+        emptyText: {
+            textAlign: "center",
+            color: colors.gray,
+            marginTop: 24,
+        },
+    });
 
 export default LibraryScreen;

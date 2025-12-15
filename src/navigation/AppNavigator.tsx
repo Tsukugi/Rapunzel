@@ -6,7 +6,7 @@ import {
 } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors } from '../theme';
+import { useTheme } from '../theme';
 import { ViewNames, useRapunzelStore } from '../store';
 import { DrawerRouteConfig, drawerRoutes } from './viewConfig';
 
@@ -31,6 +31,7 @@ export const AppNavigator = () => {
     config: [config],
     router: [router],
   } = useRapunzelStore();
+  const { colors } = useTheme();
 
   useEffect(() => {
     router.currentRoute = config.initialView;

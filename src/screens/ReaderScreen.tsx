@@ -8,7 +8,7 @@ import {
     View,
 } from "react-native";
 import { DrawerScreenProps } from "@react-navigation/drawer";
-import { colors } from "../theme";
+import { useTheme } from "../theme";
 import { RootDrawerParamList } from "../navigation/AppNavigator";
 import { useRapunzelStore, ViewNames } from "../store";
 
@@ -22,6 +22,8 @@ const ReaderScreen = ({ navigation }: ReaderProps) => {
         reader: [reader],
         loading: [loading],
     } = useRapunzelStore();
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
 
     const { book, chapter, cachedImages } = reader;
 
@@ -76,59 +78,60 @@ const ReaderScreen = ({ navigation }: ReaderProps) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-    content: {
-        padding: 16,
-        gap: 12,
-    },
-    headerRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-    },
-    centered: {
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: colors.black,
-        marginBottom: 6,
-    },
-    emptySubtitle: {
-        fontSize: 14,
-        color: colors.gray,
-        textAlign: "center",
-        paddingHorizontal: 16,
-    },
-    bookTitle: {
-        fontSize: 20,
-        fontWeight: "800",
-        color: colors.black,
-    },
-    chapterTitle: {
-        fontSize: 16,
-        fontWeight: "700",
-        color: colors.gray,
-    },
-    chapterButton: {
-        color: colors.primary,
-        fontWeight: "700",
-    },
-    page: {
-        width: "100%",
-        minHeight: 320,
-        backgroundColor: colors.white,
-        borderRadius: 8,
-    },
-    loader: {
-        marginTop: 12,
-    },
-});
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        content: {
+            padding: 16,
+            gap: 12,
+        },
+        headerRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        centered: {
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        emptyTitle: {
+            fontSize: 18,
+            fontWeight: "700",
+            color: colors.black,
+            marginBottom: 6,
+        },
+        emptySubtitle: {
+            fontSize: 14,
+            color: colors.gray,
+            textAlign: "center",
+            paddingHorizontal: 16,
+        },
+        bookTitle: {
+            fontSize: 20,
+            fontWeight: "800",
+            color: colors.black,
+        },
+        chapterTitle: {
+            fontSize: 16,
+            fontWeight: "700",
+            color: colors.gray,
+        },
+        chapterButton: {
+            color: colors.primary,
+            fontWeight: "700",
+        },
+        page: {
+            width: "100%",
+            minHeight: 320,
+            backgroundColor: colors.card,
+            borderRadius: 8,
+        },
+        loader: {
+            marginTop: 12,
+        },
+    });
 
 export default ReaderScreen;

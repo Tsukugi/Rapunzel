@@ -12,7 +12,7 @@ import {
 import { DrawerScreenProps } from "@react-navigation/drawer";
 import { useRapunzelLoader } from "../api/loader";
 import { RootDrawerParamList } from "../navigation/AppNavigator";
-import { colors } from "../theme";
+import { useTheme } from "../theme";
 import { useRapunzelStore, VirtualItem, ViewNames } from "../store";
 import { useLibraryManager } from "../library/useLibraryManager";
 
@@ -32,6 +32,8 @@ const MainFeedScreen = ({ navigation }: MainFeedProps) => {
     const { getLatestBooks, getTrendingBooks, loadBook, loadChapter } =
         useRapunzelLoader();
     const { toggleLibrary, isSaved } = useLibraryManager();
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
 
     const [refreshing, setRefreshing] = useState(false);
 
@@ -171,112 +173,117 @@ const MainFeedScreen = ({ navigation }: MainFeedProps) => {
     );
 };
 
-const styles = StyleSheet.create({
-    listContent: {
-        paddingHorizontal: 12,
-        paddingBottom: 24,
-        backgroundColor: colors.background,
-    },
-    column: {
-        gap: 12,
-        marginBottom: 12,
-    },
-    card: {
-        flex: 1,
-        backgroundColor: colors.white,
-        borderRadius: 8,
-        overflow: "hidden",
-        elevation: 2,
-        shadowColor: colors.black,
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-        position: "relative",
-    },
-    cover: {
-        width: "100%",
-        height: coverHeight,
-        backgroundColor: colors.gray,
-    },
-    cardTitle: {
-        paddingHorizontal: 8,
-        paddingVertical: 10,
-        fontSize: 14,
-        fontWeight: "600",
-        color: colors.black,
-    },
-    savedBadge: {
-        position: "absolute",
-        top: 8,
-        right: 8,
-        backgroundColor: colors.primary,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        zIndex: 1,
-    },
-    savedText: {
-        color: colors.white,
-        fontSize: 11,
-        fontWeight: "700",
-    },
-    section: {
-        paddingVertical: 12,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-        marginBottom: 8,
-        color: colors.black,
-    },
-    trendingRow: {
-        gap: 12,
-        paddingVertical: 4,
-    },
-    trendingCard: {
-        width: 140,
-        backgroundColor: colors.white,
-        borderRadius: 8,
-        overflow: "hidden",
-        elevation: 2,
-        shadowColor: colors.black,
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-        position: "relative",
-    },
-    trendingCover: {
-        width: "100%",
-        height: coverHeight * 0.65,
-        backgroundColor: colors.gray,
-    },
-    trendingTitle: {
-        paddingHorizontal: 8,
-        paddingVertical: 10,
-        fontSize: 13,
-        fontWeight: "600",
-        color: colors.black,
-    },
-    trendingBadge: {
-        position: "absolute",
-        top: 8,
-        right: 8,
-        backgroundColor: colors.primary,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        zIndex: 1,
-    },
-    trendingBadgeText: {
-        color: colors.white,
-        fontSize: 10,
-        fontWeight: "700",
-    },
-    emptyText: {
-        textAlign: "center",
-        color: colors.gray,
-        marginTop: 24,
-    },
-});
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+    StyleSheet.create({
+        listContent: {
+            paddingHorizontal: 12,
+            paddingBottom: 24,
+            backgroundColor: colors.background,
+        },
+        column: {
+            gap: 12,
+            marginBottom: 12,
+        },
+        card: {
+            flex: 1,
+            backgroundColor: colors.card,
+            borderRadius: 8,
+            overflow: "hidden",
+            elevation: 2,
+            shadowColor: colors.black,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            position: "relative",
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+        cover: {
+            width: "100%",
+            height: coverHeight,
+            backgroundColor: colors.gray,
+        },
+        cardTitle: {
+            paddingHorizontal: 8,
+            paddingVertical: 10,
+            fontSize: 14,
+            fontWeight: "600",
+            color: colors.black,
+        },
+        savedBadge: {
+            position: "absolute",
+            top: 8,
+            right: 8,
+            backgroundColor: colors.primary,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            zIndex: 1,
+        },
+        savedText: {
+            color: colors.white,
+            fontSize: 11,
+            fontWeight: "700",
+        },
+        section: {
+            paddingVertical: 12,
+        },
+        sectionTitle: {
+            fontSize: 18,
+            fontWeight: "700",
+            marginBottom: 8,
+            color: colors.black,
+        },
+        trendingRow: {
+            gap: 12,
+            paddingVertical: 4,
+        },
+        trendingCard: {
+            width: 140,
+            backgroundColor: colors.card,
+            borderRadius: 8,
+            overflow: "hidden",
+            elevation: 2,
+            shadowColor: colors.black,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            position: "relative",
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+        trendingCover: {
+            width: "100%",
+            height: coverHeight * 0.65,
+            backgroundColor: colors.gray,
+        },
+        trendingTitle: {
+            paddingHorizontal: 8,
+            paddingVertical: 10,
+            fontSize: 13,
+            fontWeight: "600",
+            color: colors.black,
+        },
+        trendingBadge: {
+            position: "absolute",
+            top: 8,
+            right: 8,
+            backgroundColor: colors.primary,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            zIndex: 1,
+        },
+        trendingBadgeText: {
+            color: colors.white,
+            fontSize: 10,
+            fontWeight: "700",
+        },
+        emptyText: {
+            textAlign: "center",
+            color: colors.gray,
+            marginTop: 24,
+        },
+    });
 
 export default MainFeedScreen;

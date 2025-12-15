@@ -13,7 +13,7 @@ import {
 import { DrawerScreenProps } from "@react-navigation/drawer";
 import { useRapunzelLoader } from "../api/loader";
 import { RootDrawerParamList } from "../navigation/AppNavigator";
-import { colors } from "../theme";
+import { useTheme } from "../theme";
 import { useRapunzelStore, VirtualItem, ViewNames } from "../store";
 import { useLibraryManager } from "../library/useLibraryManager";
 
@@ -32,6 +32,8 @@ const BrowseScreen = ({ navigation }: BrowseProps) => {
     } = useRapunzelStore();
     const { loadSearch, loadBook, loadChapter } = useRapunzelLoader();
     const { toggleLibrary, isSaved } = useLibraryManager();
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
 
     const [query, setQuery] = useState(header.searchValue);
     const [refreshing, setRefreshing] = useState(false);
@@ -162,94 +164,97 @@ const BrowseScreen = ({ navigation }: BrowseProps) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-    searchBar: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        gap: 8,
-    },
-    input: {
-        flex: 1,
-        height: 44,
-        borderWidth: 1,
-        borderColor: colors.gray,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        color: colors.black,
-        backgroundColor: colors.white,
-    },
-    searchButton: {
-        backgroundColor: colors.primary,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 8,
-    },
-    searchButtonDisabled: {
-        opacity: 0.6,
-    },
-    searchButtonText: {
-        color: colors.white,
-        fontWeight: "700",
-    },
-    listContent: {
-        paddingHorizontal: 12,
-        paddingBottom: 24,
-        gap: 12,
-    },
-    column: {
-        gap: 12,
-        marginBottom: 12,
-    },
-    card: {
-        flex: 1,
-        backgroundColor: colors.white,
-        borderRadius: 8,
-        overflow: "hidden",
-        elevation: 2,
-        shadowColor: colors.black,
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-        position: "relative",
-    },
-    cover: {
-        width: "100%",
-        height: coverHeight,
-        backgroundColor: colors.gray,
-    },
-    cardTitle: {
-        paddingHorizontal: 8,
-        paddingVertical: 10,
-        fontSize: 14,
-        fontWeight: "600",
-        color: colors.black,
-    },
-    savedBadge: {
-        position: "absolute",
-        top: 8,
-        right: 8,
-        backgroundColor: colors.primary,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        zIndex: 1,
-    },
-    savedText: {
-        color: colors.white,
-        fontSize: 11,
-        fontWeight: "700",
-    },
-    emptyText: {
-        textAlign: "center",
-        color: colors.gray,
-        marginTop: 24,
-    },
-});
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        searchBar: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+            gap: 8,
+        },
+        input: {
+            flex: 1,
+            height: 44,
+            borderWidth: 1,
+            borderColor: colors.gray,
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            color: colors.black,
+            backgroundColor: colors.card,
+        },
+        searchButton: {
+            backgroundColor: colors.primary,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 8,
+        },
+        searchButtonDisabled: {
+            opacity: 0.6,
+        },
+        searchButtonText: {
+            color: colors.white,
+            fontWeight: "700",
+        },
+        listContent: {
+            paddingHorizontal: 12,
+            paddingBottom: 24,
+            gap: 12,
+        },
+        column: {
+            gap: 12,
+            marginBottom: 12,
+        },
+        card: {
+            flex: 1,
+            backgroundColor: colors.card,
+            borderRadius: 8,
+            overflow: "hidden",
+            elevation: 2,
+            shadowColor: colors.black,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            position: "relative",
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+        cover: {
+            width: "100%",
+            height: coverHeight,
+            backgroundColor: colors.gray,
+        },
+        cardTitle: {
+            paddingHorizontal: 8,
+            paddingVertical: 10,
+            fontSize: 14,
+            fontWeight: "600",
+            color: colors.black,
+        },
+        savedBadge: {
+            position: "absolute",
+            top: 8,
+            right: 8,
+            backgroundColor: colors.primary,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            zIndex: 1,
+        },
+        savedText: {
+            color: colors.white,
+            fontSize: 11,
+            fontWeight: "700",
+        },
+        emptyText: {
+            textAlign: "center",
+            color: colors.gray,
+            marginTop: 24,
+        },
+    });
 
 export default BrowseScreen;

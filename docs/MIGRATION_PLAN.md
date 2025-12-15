@@ -128,4 +128,7 @@ This document outlines the plan for migrating the source code from the original 
 - Library: save/remove/toggle implemented; long-press on Feed/Browse saves; badges show saved state; Library screen renders saved books and opens first chapter.
 - Reader/Chapters: Reader links to new Chapter Select screen with pagination and locale badges.
 - Navigation: Drawer mapping mirrors V1 view names; initial routing respects `config.initialView` and NHentai WebView override.
-- Pending: persist config mutations from Settings, port WebView clearance (cookies/user-agent), implement feed cache hydration/persistence, and add tests for storage + library flows.
+- Config/WebView: Settings now persists Taihou config mutations; WebView captures Cloudflare cookie + user agent into config/storage and auto-returns when valid.
+- Feed cache: Latest/Trending cache hydrate from storage on startup and persist after fetches.
+- Tests: Added storage + library state coverage (config/library/feed snapshots, rendered ordering).
+- Pending: port cache layer (RapunzelCache/CacheUtils) for on-disk images + cache settings UI (locations, size, clear/export/import), fix legacy Jest suites (release/AppButton), and add cache-aware image rendering/prefetching in Reader/Feed/Browse.

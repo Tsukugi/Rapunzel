@@ -8,6 +8,8 @@ export const onAppStart = () => {
   const {
     config: [config],
     library: [library],
+    latest: [latest],
+    trending: [trending],
   } = useRapunzelStore();
 
   const hydrate = async () => {
@@ -21,6 +23,14 @@ export const onAppStart = () => {
     );
     library.saved = saved;
     library.rendered = rendered;
+
+    const storedFeed = await RapunzelStorage.loadFeed();
+    if (storedFeed.latest) {
+      Object.assign(latest, storedFeed.latest);
+    }
+    if (storedFeed.trending) {
+      Object.assign(trending, storedFeed.trending);
+    }
 
     if (config.repository === LilithRepo.NHentai) {
       config.initialView = ViewNames.RapunzelWebView;

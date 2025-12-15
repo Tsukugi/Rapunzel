@@ -9,6 +9,7 @@ import {
 import { useRapunzelStore, RapunzelImage, VirtualItem } from "../store";
 import { RapunzelLog } from "../config/log";
 import { useLilithAPI } from "./useLilithAPI";
+import { RapunzelStorage } from "../storage/rapunzelStorage";
 
 const generateVirtualItems = (bookBaseList: BookBase[]) => {
     const bookDict: Record<string, BookBase> = {};
@@ -46,6 +47,11 @@ export const useRapunzelLoader = () => {
     } = useRapunzelStore();
 
     const apiLoader = useLilithAPI();
+    const persistFeedCache = () =>
+        RapunzelStorage.saveFeed({
+            latest,
+            trending: popular,
+        });
 
     const loadBook = async (
         code: string,
@@ -196,6 +202,8 @@ export const useRapunzelLoader = () => {
             };
             latest.page = page;
 
+            await persistFeedCache();
+
             return Object.values(cachedImagesRecord).map((item) => item.value);
         } catch (error) {
             RapunzelLog.error("[getLatestBooks]", error);
@@ -232,6 +240,8 @@ export const useRapunzelLoader = () => {
                 ...popular.cachedImagesRecord,
                 ...cachedImagesRecord,
             };
+
+            await persistFeedCache();
 
             return Object.values(cachedImagesRecord).map((item) => item.value);
         } catch (error) {
