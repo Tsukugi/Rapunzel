@@ -122,3 +122,10 @@ This document outlines the plan for migrating the source code from the original 
 - API integration continues to work
 - Caching system functions properly
 - App passes existing tests (where applicable)
+
+## Current Progress (V2)
+- Taihou store initialized with config/library hydration; AsyncStorage dependency installed (Expo dev client required) with in-memory fallback.
+- Library: save/remove/toggle implemented; long-press on Feed/Browse saves; badges show saved state; Library screen renders saved books and opens first chapter.
+- Reader/Chapters: Reader links to new Chapter Select screen with pagination and locale badges.
+- Navigation: Drawer mapping mirrors V1 view names; initial routing respects `config.initialView` and NHentai WebView override.
+- Pending: persist config mutations from Settings, port WebView clearance (cookies/user-agent), implement feed cache hydration/persistence, and add tests for storage + library flows.

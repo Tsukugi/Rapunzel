@@ -96,6 +96,9 @@ For more advanced development with custom native modules:
 
 This creates a native build with your JavaScript bundle that has access to all Expo APIs and additional native modules.
 
+#### Native Modules (AsyncStorage)
+- After installing, rebuild your dev client (`npx expo run:android` / `npx expo run:ios` or `eas build --profile development`) so the native module is available.
+
 ### State Management
 This project uses Redux Toolkit for state management:
 - Store configuration: `src/store/index.ts`

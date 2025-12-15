@@ -14,6 +14,7 @@ import { useRapunzelLoader } from "../api/loader";
 import { RootDrawerParamList } from "../navigation/AppNavigator";
 import { colors } from "../theme";
 import { useRapunzelStore, VirtualItem, ViewNames } from "../store";
+import { useLibraryManager } from "../library/useLibraryManager";
 
 type MainFeedProps = DrawerScreenProps<
     RootDrawerParamList,
@@ -30,6 +31,7 @@ const MainFeedScreen = ({ navigation }: MainFeedProps) => {
     } = useRapunzelStore();
     const { getLatestBooks, getTrendingBooks, loadBook, loadChapter } =
         useRapunzelLoader();
+    const { toggleLibrary, isSaved } = useLibraryManager();
 
     const [refreshing, setRefreshing] = useState(false);
 
@@ -85,7 +87,13 @@ const MainFeedScreen = ({ navigation }: MainFeedProps) => {
             <TouchableOpacity
                 style={styles.card}
                 onPress={() => openFirstChapter(book.id)}
+                onLongPress={() => toggleLibrary(book)}
             >
+                {isSaved(book.id) ? (
+                    <View style={styles.savedBadge}>
+                        <Text style={styles.savedText}>Saved</Text>
+                    </View>
+                ) : null}
                 <Image
                     source={{ uri: item.value }}
                     style={styles.cover}
@@ -114,7 +122,15 @@ const MainFeedScreen = ({ navigation }: MainFeedProps) => {
                             key={item.id}
                             style={styles.trendingCard}
                             onPress={() => openFirstChapter(book.id)}
+                            onLongPress={() => toggleLibrary(book)}
                         >
+                            {isSaved(book.id) ? (
+                                <View style={styles.trendingBadge}>
+                                    <Text style={styles.trendingBadgeText}>
+                                        Saved
+                                    </Text>
+                                </View>
+                            ) : null}
                             <Image
                                 source={{ uri: item.value }}
                                 style={styles.trendingCover}
@@ -175,6 +191,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
+        position: "relative",
     },
     cover: {
         width: "100%",
@@ -187,6 +204,21 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "600",
         color: colors.black,
+    },
+    savedBadge: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        backgroundColor: colors.primary,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        zIndex: 1,
+    },
+    savedText: {
+        color: colors.white,
+        fontSize: 11,
+        fontWeight: "700",
     },
     section: {
         paddingVertical: 12,
@@ -211,6 +243,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
+        position: "relative",
     },
     trendingCover: {
         width: "100%",
@@ -223,6 +256,21 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: "600",
         color: colors.black,
+    },
+    trendingBadge: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        backgroundColor: colors.primary,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        zIndex: 1,
+    },
+    trendingBadgeText: {
+        color: colors.white,
+        fontSize: 10,
+        fontWeight: "700",
     },
     emptyText: {
         textAlign: "center",

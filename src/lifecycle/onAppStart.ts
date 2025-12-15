@@ -1,15 +1,31 @@
-import { ViewNames } from '../store/types';
 import { RapunzelLog } from '../config/log';
-import { LilithRepo } from '../store/types';
-import { useRapunzelStore } from '../store';
+import { RapunzelStorage } from '../storage/rapunzelStorage';
+import { LibraryUtils } from '../tools/library';
+import { useRapunzelStore, LilithRepo, ViewNames } from '../store';
 
 export const onAppStart = () => {
   RapunzelLog.warn('[OnAppStart]');
   const {
     config: [config],
+    library: [library],
   } = useRapunzelStore();
 
-  if (config.repository === LilithRepo.NHentai) {
-    config.initialView = ViewNames.RapunzelWebView;
-  }
+  const hydrate = async () => {
+    const storedConfig = await RapunzelStorage.loadConfig();
+    Object.assign(config, { ...config, ...storedConfig });
+
+    const storedLibrary = await RapunzelStorage.loadLibrary();
+    const { saved, rendered } = LibraryUtils.buildLibraryState(
+      storedLibrary,
+      config,
+    );
+    library.saved = saved;
+    library.rendered = rendered;
+
+    if (config.repository === LilithRepo.NHentai) {
+      config.initialView = ViewNames.RapunzelWebView;
+    }
+  };
+
+  hydrate().catch((error) => RapunzelLog.warn('[onAppStart] hydrate failed', error));
 };

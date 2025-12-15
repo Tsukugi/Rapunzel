@@ -7,10 +7,17 @@ import {
     Text,
     View,
 } from "react-native";
+import { DrawerScreenProps } from "@react-navigation/drawer";
 import { colors } from "../theme";
-import { useRapunzelStore } from "../store";
+import { RootDrawerParamList } from "../navigation/AppNavigator";
+import { useRapunzelStore, ViewNames } from "../store";
 
-const ReaderScreen = () => {
+type ReaderProps = DrawerScreenProps<
+    RootDrawerParamList,
+    ViewNames.RapunzelReader
+>;
+
+const ReaderScreen = ({ navigation }: ReaderProps) => {
     const {
         reader: [reader],
         loading: [loading],
@@ -32,8 +39,24 @@ const ReaderScreen = () => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.bookTitle}>{book.title || book.id}</Text>
-            <Text style={styles.chapterTitle}>{chapter.name || chapter.id}</Text>
+            <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.bookTitle}>{book.title || book.id}</Text>
+                    <Text style={styles.chapterTitle}>
+                        {chapter.name || chapter.id}
+                    </Text>
+                </View>
+                <View>
+                    <Text
+                        style={styles.chapterButton}
+                        onPress={() =>
+                            navigation.navigate(ViewNames.RapunzelChapterSelect)
+                        }
+                    >
+                        Chapters
+                    </Text>
+                </View>
+            </View>
             {cachedImages.map((image) => (
                 <Image
                     key={image.id}
@@ -62,6 +85,11 @@ const styles = StyleSheet.create({
         padding: 16,
         gap: 12,
     },
+    headerRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
     centered: {
         alignItems: "center",
         justifyContent: "center",
@@ -87,6 +115,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "700",
         color: colors.gray,
+    },
+    chapterButton: {
+        color: colors.primary,
+        fontWeight: "700",
     },
     page: {
         width: "100%",

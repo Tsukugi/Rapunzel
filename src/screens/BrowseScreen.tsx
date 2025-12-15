@@ -15,6 +15,7 @@ import { useRapunzelLoader } from "../api/loader";
 import { RootDrawerParamList } from "../navigation/AppNavigator";
 import { colors } from "../theme";
 import { useRapunzelStore, VirtualItem, ViewNames } from "../store";
+import { useLibraryManager } from "../library/useLibraryManager";
 
 type BrowseProps = DrawerScreenProps<
     RootDrawerParamList,
@@ -30,6 +31,7 @@ const BrowseScreen = ({ navigation }: BrowseProps) => {
         loading: [loading],
     } = useRapunzelStore();
     const { loadSearch, loadBook, loadChapter } = useRapunzelLoader();
+    const { toggleLibrary, isSaved } = useLibraryManager();
 
     const [query, setQuery] = useState(header.searchValue);
     const [refreshing, setRefreshing] = useState(false);
@@ -86,7 +88,13 @@ const BrowseScreen = ({ navigation }: BrowseProps) => {
             <TouchableOpacity
                 style={styles.card}
                 onPress={() => openFirstChapter(book.id)}
+                onLongPress={() => toggleLibrary(book)}
             >
+                {isSaved(book.id) ? (
+                    <View style={styles.savedBadge}>
+                        <Text style={styles.savedText}>Saved</Text>
+                    </View>
+                ) : null}
                 <Image
                     source={{ uri: item.value }}
                     style={styles.cover}
@@ -208,6 +216,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
+        position: "relative",
     },
     cover: {
         width: "100%",
@@ -220,6 +229,21 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "600",
         color: colors.black,
+    },
+    savedBadge: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        backgroundColor: colors.primary,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        zIndex: 1,
+    },
+    savedText: {
+        color: colors.white,
+        fontSize: 11,
+        fontWeight: "700",
     },
     emptyText: {
         textAlign: "center",
