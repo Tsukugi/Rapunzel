@@ -23,6 +23,7 @@ import { getNavigationRef } from "../components/navigators/navigationRef";
 import { ListUtils } from "../tools/list";
 const NumberOfForceRenderImages = 20;
 export const FallbackCacheExtension = LilithImageExtension.webp;
+const ImageCacheRevision = "v2";
 
 interface UseRapunzelLoaderProps {
     useAllLanguages: boolean;
@@ -212,14 +213,16 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: bookId,
+                    chapter: `${chapterId}.${ImageCacheRevision}`,
                     pageNumber: index + 1,
                     extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
+                const sourceImage = images[index];
                 const newImage = {
                     id: `${index + 1}`,
                     index,
-                    value: { uri: url } as RapunzelImage,
+                    value: { ...sourceImage, uri: url } as RapunzelImage,
                 };
                 // * Recreating the array triggers an update, we will do this to initially render the Lists.
                 // * But also if we always render we may run into stack size errors.
@@ -389,7 +392,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: imageList[index].id,
-                    chapter: "cover",
+                    chapter: `cover.${ImageCacheRevision}`,
                     extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
@@ -481,7 +484,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: imageList[index].id,
-                    chapter: "cover",
+                    chapter: `cover.${ImageCacheRevision}`,
                     extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {
@@ -581,7 +584,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             onFileNaming: ({ index }) =>
                 CacheUtils.getFileName({
                     book: imageList[index].id,
-                    chapter: "cover",
+                    chapter: `cover.${ImageCacheRevision}`,
                     extension: FallbackCacheExtension,
                 }),
             onImageLoaded: async (url, index) => {

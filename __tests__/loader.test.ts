@@ -128,7 +128,10 @@ beforeEach(() => {
         const results: string[] = [];
         for (let i = 0; i < options.data.length; i++) {
             const url = `cached-${i}`;
-            if (!options.shouldCancelLoad || !options.shouldCancelLoad(options.id)) {
+            if (
+                !options.shouldCancelLoad ||
+                !options.shouldCancelLoad(options.id)
+            ) {
                 if (options.onImageLoaded) {
                     await options.onImageLoaded(url, i);
                 }
@@ -160,12 +163,12 @@ describe("useRapunzelLoader search and feeds", () => {
         expect(downloadArgs.forceDownload).toBe(false);
         expect(downloadArgs.id).toBeDefined();
 
-        expect(mockStoreState.browse[0].bookListRecord["book-1"].cover.uri).toBe(
-            "cover-1",
-        );
-        expect(mockStoreState.browse[0].cachedImagesRecord["book-1"].value).toBe(
-            "cached-0",
-        );
+        expect(
+            mockStoreState.browse[0].bookListRecord["book-1"].cover.uri,
+        ).toBe("cover-1");
+        expect(
+            mockStoreState.browse[0].cachedImagesRecord["book-1"].value,
+        ).toBe("cached-0");
         expect(mockStoreState.browse[0].page).toBe(2);
         expect(mockStoreState.loading[0].browse).toBe(false);
         expect(cached).toEqual(["cached-0", "cached-1"]);
@@ -245,9 +248,9 @@ describe("useRapunzelLoader search and feeds", () => {
         const downloadArgs = mockDownloadImageList.mock.calls[0][0];
         expect(downloadArgs.imagesPath).toBe("cache/main");
         expect(downloadArgs.deviceDownloadPath).toBe("Temp");
-        expect(mockStoreState.latest[0].bookListRecord["latest-1"].cover.uri).toBe(
-            "latest-cover",
-        );
+        expect(
+            mockStoreState.latest[0].bookListRecord["latest-1"].cover.uri,
+        ).toBe("latest-cover");
         expect(mockStoreState.latest[0].page).toBe(3);
         expect(mockStoreState.loading[0].latest).toBe(false);
         expect(cached).toEqual(["cached-0"]);
@@ -267,9 +270,9 @@ describe("useRapunzelLoader search and feeds", () => {
         const downloadArgs = mockDownloadImageList.mock.calls[0][0];
         expect(downloadArgs.imagesPath).toBe("cache/trending");
         expect(downloadArgs.deviceDownloadPath).toBe("Temp");
-        expect(mockStoreState.trending[0].bookListRecord["trend-1"].cover.uri).toBe(
-            "trend-cover-1",
-        );
+        expect(
+            mockStoreState.trending[0].bookListRecord["trend-1"].cover.uri,
+        ).toBe("trend-cover-1");
         expect(mockStoreState.loading[0].trending).toBe(false);
         expect(cached).toEqual(["cached-0", "cached-1"]);
     });
@@ -316,7 +319,10 @@ describe("useRapunzelLoader book and chapter flows", () => {
     });
 
     test("loadBook returns null when no chapters", async () => {
-        mockApiClient.getBook.mockResolvedValue({ id: "book-empty", chapters: [] });
+        mockApiClient.getBook.mockResolvedValue({
+            id: "book-empty",
+            chapters: [],
+        });
         const loader = useRapunzelLoader();
 
         const book = await loader.loadBook("book-empty");
@@ -333,7 +339,10 @@ describe("useRapunzelLoader book and chapter flows", () => {
         };
         mockApiClient.getChapter.mockResolvedValue({
             id: "chapter-1",
-            pages: [{ uri: "img-1" }, { uri: "img-2" }],
+            pages: [
+                { uri: "img-1", width: 1280, height: 1790 },
+                { uri: "img-2", width: 1000, height: 1400 },
+            ],
         });
         mockRandomId = "chapter-id";
 
@@ -345,10 +354,19 @@ describe("useRapunzelLoader book and chapter flows", () => {
         expect(downloadArgs.imagesPath).toBe(
             "cache/read/NHentai/book-abc/chapter-1",
         );
+        expect(downloadArgs.onFileNaming({ index: 0 })).toBe(
+            "book-abc.chapter-1.v2.1.webp",
+        );
         expect(downloadArgs.deviceDownloadPath).toBe("Downloads");
         expect(mockStoreState.reader[0].chapter?.id).toBe("chapter-1");
         expect(mockStoreState.reader[0].cachedImages.length).toBe(2);
-        expect(mockStoreState.reader[0].cachedImages[0].value.uri).toBe("cached-0");
+        expect(mockStoreState.reader[0].cachedImages[0].value.uri).toBe(
+            "cached-0",
+        );
+        expect(mockStoreState.reader[0].cachedImages[0].value.width).toBe(1280);
+        expect(mockStoreState.reader[0].cachedImages[0].value.height).toBe(
+            1790,
+        );
         expect(mockStoreState.loading[0].reader).toBe(false);
         expect(images).toEqual(["cached-0", "cached-1"]);
     });

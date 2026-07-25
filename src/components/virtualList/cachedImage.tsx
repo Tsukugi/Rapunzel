@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     StyleSheet,
@@ -51,6 +51,10 @@ const CachedImage: React.FC<CachedImageProps> = ({
     const [loading, setLoading] = useState(false);
     const [src, setSrc] = useState(image.uri);
 
+    useEffect(() => {
+        setSrc(image.uri);
+    }, [image.uri]);
+
     const { colors } = LocalTheme.useTheme();
     //<EmptyImageComponent onPress={() => onClick(image)} />
     return (
@@ -77,7 +81,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
                         `[CachedImage]: Image load failed ${src}`,
                     );
                 }}
-                image={image}
+                image={{ ...image, uri: src }}
             />
         </View>
     );
