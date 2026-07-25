@@ -16,11 +16,6 @@ export enum LilithRepo {
     EHentai = "EHentai",
 }
 
-export const normalizeLilithRepo = (repository: string): LilithRepo =>
-    repository === "HenTag"
-        ? LilithRepo.NHentai
-        : (repository as LilithRepo);
-
 export interface RouterState {
     currentRoute: ViewNames;
     history: ViewNames[];

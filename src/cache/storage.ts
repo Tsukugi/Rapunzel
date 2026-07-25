@@ -15,7 +15,6 @@ import {
     EntryCacheMetadata,
     LatestBooksState,
     LibraryBook,
-    normalizeLilithRepo,
     PopularBooksState,
 } from "../store/interfaces";
 import { LibraryUtils } from "../tools/library";
@@ -126,12 +125,8 @@ export const initRapunzelStorage = () => {
     getMap(
         StorageEntries.config,
         setIfValid((value: ConfigState) => {
-            const normalizedConfig = {
-                ...value,
-                repository: normalizeLilithRepo(String(value.repository)),
-            };
-            Object.keys(normalizedConfig).forEach((key) => {
-                (config as any)[key] = (normalizedConfig as any)[key];
+            Object.keys(value).forEach((key) => {
+                (config as any)[key] = (value as any)[key];
             });
         }),
     );
