@@ -227,7 +227,7 @@ Open **Settings** and expand both accordions.
 -   [ ] Toggle **Enable debug app**. Leave and reopen Settings. Confirm the value persists.
 -   [ ] Toggle **Enable cache**. Leave and reopen Settings. Confirm the value persists.
 -   [ ] Toggle **Use Fallback extensions**. Leave and reopen Settings. Confirm the value persists.
--   [ ] Open **Repository**. Confirm the available choices are NHentai, HenTag, MangaDex, and EHentai.
+-   [ ] Open **Repository**. Confirm the available choices are NHentai, MangaDex, and EHentai.
 -   [ ] Select a different repository. Confirm the selected value persists after leaving and reopening Settings.
 
 Restore the repository used for the main run after this check.
@@ -316,7 +316,6 @@ Run at least Feed, Browse search, book open, Reader, and Library save for each r
 | Repository | Feed     | Search   | Book / reader | Save / library | Notes                                          |
 | ---------- | -------- | -------- | ------------- | -------------- | ---------------------------------------------- |
 | NHentai    | \_\_\_\_ | \_\_\_\_ | \_\_\_\_      | \_\_\_\_       | WebView clearance may be required              |
-| HenTag     | \_\_\_\_ | \_\_\_\_ | \_\_\_\_      | \_\_\_\_       |                                                |
 | MangaDex   | \_\_\_\_ | \_\_\_\_ | \_\_\_\_      | \_\_\_\_       |                                                |
 | EHentai    | \_\_\_\_ | \_\_\_\_ | \_\_\_\_      | \_\_\_\_       | Requires Zenith server at `192.168.0.248:1313` |
 

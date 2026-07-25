@@ -11,7 +11,6 @@ Rapunzel uses local links. These directories must exist beside Rapunzel:
 G:\dev\Rapunzel
 G:\dev\AmagiChan
 G:\dev\Lilith
-G:\dev\LilithHentag
 G:\dev\LilithMangaDex
 G:\dev\LilithNHentai
 ```

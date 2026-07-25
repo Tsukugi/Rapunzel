@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@atsu/lilith": "file:../Lilith",
-    "@atsu/lilith-hentag": "file:../LilithHentag",
     "@atsu/lilith-mangadex": "file:../LilithMangaDex",
     "@atsu/lilith-nhentai": "file:../LilithNHentai",
     "@atsu/taihou": "^0.4.0",

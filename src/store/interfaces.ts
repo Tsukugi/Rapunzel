@@ -12,10 +12,14 @@ import { VirtualItem } from "../components/virtualList/interfaces";
 
 export enum LilithRepo {
     NHentai = "NHentai",
-    HenTag = "HenTag",
     MangaDex = "MangaDex",
     EHentai = "EHentai",
 }
+
+export const normalizeLilithRepo = (repository: string): LilithRepo =>
+    repository === "HenTag"
+        ? LilithRepo.NHentai
+        : (repository as LilithRepo);
 
 export interface RouterState {
     currentRoute: ViewNames;

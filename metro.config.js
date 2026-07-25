@@ -25,7 +25,6 @@ const blockList = exclusionList([
 const siblingPackages = {
     "@atsu/amagi": path.resolve(__dirname, "../AmagiChan"),
     "@atsu/lilith": path.resolve(__dirname, "../Lilith"),
-    "@atsu/lilith-hentag": path.resolve(__dirname, "../LilithHentag"),
     "@atsu/lilith-mangadex": path.resolve(__dirname, "../LilithMangaDex"),
     "@atsu/lilith-nhentai": path.resolve(__dirname, "../LilithNHentai"),
 };

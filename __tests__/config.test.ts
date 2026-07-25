@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { RapunzelConfig } from "../src/config/config";
 import { onAppStart } from "../src/lifecycle/onAppStart";
 import { ViewNames } from "../src/components/navigators/interfaces";
-import { LilithRepo } from "../src/store/interfaces";
+import {
+    LilithRepo,
+    normalizeLilithRepo,
+} from "../src/store/interfaces";
 
 let mockStoreState: any;
 
@@ -66,6 +69,15 @@ describe("onAppStart", () => {
         onAppStart();
         expect(mockStoreState.config[0].initialView).toBe(
             ViewNames.RapunzelMainFeed,
+        );
+    });
+});
+
+describe("normalizeLilithRepo", () => {
+    test("moves old HenTag settings to NHentai", () => {
+        expect(normalizeLilithRepo("HenTag")).toBe(LilithRepo.NHentai);
+        expect(normalizeLilithRepo(LilithRepo.MangaDex)).toBe(
+            LilithRepo.MangaDex,
         );
     });
 });
