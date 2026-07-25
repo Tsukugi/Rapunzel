@@ -12,9 +12,15 @@ import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
-import { RapunzelImage } from "../store/interfaces";
+import { BookBaseList, RapunzelImage } from "../store/interfaces";
 import { RapunzelCache, StaticLibraryPaths } from "../cache/useRapunzelCache";
 import { CacheUtils } from "../cache/CacheUtils";
+import {
+    getBrowseCacheKey,
+    getEntryUid,
+    getFeedCacheKey,
+    getTrendingCacheKey,
+} from "../cache/listCache";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { useRapunzelLibrary } from "../components/cache/library";
 import { useLilithAPI } from "./api";
@@ -278,25 +284,164 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         imagesToCache: RapunzelImage[];
         bookDict: Record<string, BookBase>;
         imageList: VirtualItem<string>[];
+        sourceIds: string[];
     }
-    const getBookBaseData = (bookBaseList: BookBase[]): BookBaseData => {
+    const getBookBaseData = (
+        bookBaseList: BookBase[],
+        repository: string,
+    ): BookBaseData => {
         // Initialize arrays and dictionary to store images to cache and book information
         const imagesToCache: RapunzelImage[] = [];
         const bookDict: Record<string, BookBase> = {};
         const imageList: VirtualItem<string>[] = [];
+        const sourceIds: string[] = [];
 
         // Iterate through search results and populate imagesToCache and bookDict
-        bookBaseList.forEach((book, index) => {
+        bookBaseList.forEach((book) => {
+            const uid = getEntryUid(repository, book.id);
             imagesToCache.push(book.cover as RapunzelImage);
-            bookDict[book.id] = book;
+            bookDict[uid] = book;
+            sourceIds.push(book.id);
             imageList.push({
-                id: book.id,
+                id: uid,
                 value: book.cover.uri,
             });
         });
 
         // Return an object containing imagesToCache, bookDict, and searchResult
-        return { imagesToCache, bookDict, imageList };
+        return { imagesToCache, bookDict, imageList, sourceIds };
+    };
+
+    const ensureListMetadata = (
+        state: BookBaseList,
+        cacheKey: string,
+    ): void => {
+        state.cacheKey = state.cacheKey || cacheKey;
+        if (state.loadedPages === undefined) state.loadedPages = {};
+        if (state.entryMetaRecord === undefined) state.entryMetaRecord = {};
+        state.lastFetchedAt = state.lastFetchedAt ?? null;
+        state.hasNextPage = state.hasNextPage ?? true;
+        state.scrollOffset = state.scrollOffset ?? 0;
+    };
+
+    const resetList = (state: BookBaseList, cacheKey: string): void => {
+        state.cachedImagesRecord = {};
+        state.bookListRecord = {};
+        state.activeProcessId = getNewId();
+        state.rendered = [];
+        state.cacheKey = cacheKey;
+        state.loadedPages = {};
+        state.entryMetaRecord = {};
+        state.lastFetchedAt = null;
+        state.hasNextPage = true;
+        state.scrollOffset = 0;
+    };
+
+    const isPageLoading = (state: BookBaseList, page: number) =>
+        state.loadedPages?.[String(page)]?.status === "loading";
+
+    const isPageLoaded = (state: BookBaseList, page: number) =>
+        state.loadedPages?.[String(page)]?.status === "loaded";
+
+    const startCoverDownload = ({
+        state,
+        data,
+        imageList,
+        sourceIds,
+        imagesPath,
+        activeProcessId,
+    }: {
+        state: BookBaseList;
+        data: RapunzelImage[];
+        imageList: VirtualItem<string>[];
+        sourceIds: string[];
+        imagesPath: string;
+        activeProcessId: string;
+    }): Promise<string[]> => {
+        const promise = RapunzelCache.downloadImageList({
+            id: activeProcessId,
+            imagesPath,
+            deviceDownloadPath: config.cacheTempImageLocation,
+            forceDownload: !config.enableCache,
+            data,
+            onFileNaming: ({ index }) =>
+                CacheUtils.getFileName({
+                    book: sourceIds[index],
+                    chapter: `cover.${ImageCacheRevision}`,
+                    extension: FallbackCacheExtension,
+                }),
+            onImageLoaded: async (url, index) => {
+                const uid = imageList[index].id;
+                state.cachedImagesRecord[uid] = {
+                    id: uid,
+                    value: url,
+                };
+                const metadata = state.entryMetaRecord?.[uid];
+                if (metadata) metadata.coverCachedAt = Date.now();
+            },
+            shouldCancelLoad: (id) => id !== state.activeProcessId,
+        });
+
+        promise.catch(RapunzelLog.error);
+        return promise;
+    };
+
+    const mergeBookPage = ({
+        state,
+        result,
+        data,
+        page,
+    }: {
+        state: BookBaseList;
+        result: BookListResults;
+        data: BookBaseData;
+        page: number;
+    }): void => {
+        const now = Date.now();
+        const pageKey = String(page);
+        const newRenderOrder = data.imageList.map((item) => item.id);
+
+        state.bookListRecord = {
+            ...state.bookListRecord,
+            ...data.bookDict,
+        };
+        state.rendered = ListUtils.mergeUniqueValues(
+            state.rendered,
+            newRenderOrder,
+        );
+
+        data.imageList.forEach((item, index) => {
+            const existing = state.cachedImagesRecord[item.id];
+            if (!existing || !existing.value?.startsWith("file://")) {
+                state.cachedImagesRecord[item.id] = item;
+            }
+
+            const existingMetadata = state.entryMetaRecord?.[item.id];
+            if (state.entryMetaRecord) {
+                state.entryMetaRecord[item.id] = {
+                    uid: item.id,
+                    firstSeenAt: existingMetadata?.firstSeenAt ?? now,
+                    lastFetchedAt: now,
+                    coverCachedAt: existingMetadata?.coverCachedAt ?? null,
+                };
+            }
+        });
+
+        if (state.loadedPages) {
+            state.loadedPages[pageKey] = {
+                status: "loaded",
+                loadedAt: now,
+                entryIds: newRenderOrder,
+            };
+        }
+        state.lastFetchedAt = now;
+        state.hasNextPage =
+            typeof result.totalPages === "number"
+                ? page < result.totalPages
+                : result.results.length > 0;
+        if ("page" in state) {
+            (state as any).page = Math.max((state as any).page || 1, page);
+        }
     };
 
     /**
@@ -311,26 +456,29 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         searchValue: string,
         searchOptions?: Partial<SearchQueryOptions>,
         clean: boolean = true,
+        force: boolean = false,
     ): Promise<string[]> => {
-        // If not cleaning and a search is already in progress, return an empty array
-        if (!clean && loading.browse) return [];
+        const page = searchOptions?.page || 1;
+        const cacheKey = getBrowseCacheKey(config.repository, searchValue);
+        ensureListMetadata(browse, cacheKey);
 
-        // Set the loader.browse flag to true to indicate that a search is in progress
+        if (!clean && browse.cacheKey !== cacheKey) return [];
+        if (!clean && (loading.browse || isPageLoading(browse, page))) return [];
+        if (!clean && !force && isPageLoaded(browse, page)) return [];
+
         loading.browse = true;
-
-        // Define a callback to execute when the search process finishes, either successfully or not
-        const onFinish = () => {
-            loading.browse = false;
-        };
 
         // If cleaning, reset Browse state variables
         if (clean) {
-            browse.cachedImagesRecord = {};
-            browse.bookListRecord = {};
-            browse.activeProcessId = getNewId();
+            resetList(browse, cacheKey);
             browse.page = 1;
-            browse.rendered = [];
         }
+        ensureListMetadata(browse, cacheKey);
+        browse.loadedPages![String(page)] = {
+            status: "loading",
+            loadedAt: null,
+            entryIds: [],
+        };
 
         RapunzelLog.log(
             "[loadSearch] Searching for the following",
@@ -345,25 +493,18 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If no search results, finish and return an empty array
         if (!searchResult) {
-            onFinish();
+            browse.loadedPages![String(page)] = {
+                status: "failed",
+                loadedAt: null,
+                entryIds: [],
+            };
+            browse.hasNextPage = false;
+            loading.browse = false;
             return [];
         }
 
-        const { imagesToCache, bookDict, imageList } = getBookBaseData(
-            searchResult.results,
-        );
-
-        // Update the Browse state with search results and loaded images
-        browse.bookListRecord = {
-            ...browse.bookListRecord,
-            ...bookDict,
-        };
-
-        const newRenderOrder = imageList.map((item) => item.id);
-        browse.rendered = ListUtils.mergeUniqueValues(
-            browse.rendered,
-            newRenderOrder,
-        );
+        const data = getBookBaseData(searchResult.results, config.repository);
+        mergeBookPage({ state: browse, result: searchResult, data, page });
 
         /**
          * Preserve the search order in the UI by pre-inserting placeholders in
@@ -371,74 +512,44 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
          * so we guard against reordering by setting the records up-front and
          * letting the cache loader overwrite the values in-place later.
          */
-        imageList.forEach((item) => {
-            if (!browse.cachedImagesRecord[item.id]) {
-                browse.cachedImagesRecord[item.id] = item;
-            }
+        loading.browse = false;
+        const promise = startCoverDownload({
+            state: browse,
+            data: data.imagesToCache,
+            imageList: data.imageList,
+            sourceIds: data.sourceIds,
+            imagesPath: `${StaticLibraryPaths.BookCovers}/${config.repository}`,
+            activeProcessId: browse.activeProcessId,
         });
-
-        // If a specific page is provided in searchOptions, update the Browse page
-        if (searchOptions?.page) {
-            browse.page = searchOptions.page;
-        }
-
-        // Load images asynchronously using loadImageList utility
-        const promise = RapunzelCache.downloadImageList({
-            id: browse.activeProcessId,
-            imagesPath: StaticLibraryPaths.SearchResults,
-            deviceDownloadPath: config.cacheTempImageLocation,
-            forceDownload: !config.enableCache,
-            data: imagesToCache,
-            onFileNaming: ({ index }) =>
-                CacheUtils.getFileName({
-                    book: imageList[index].id,
-                    chapter: `cover.${ImageCacheRevision}`,
-                    extension: FallbackCacheExtension,
-                }),
-            onImageLoaded: async (url, index) => {
-                browse.cachedImagesRecord[imageList[index].id] = {
-                    id: imageList[index].id,
-                    value: url,
-                };
-            },
-            shouldCancelLoad: (id) => {
-                const cancel = id !== browse.activeProcessId;
-                if (cancel) RapunzelLog.log("[loadBook] Skipping id ", id);
-                return cancel;
-            },
-        });
-
-        promise.catch(RapunzelLog.error);
-        // Handle the result of the image loading process
-        promise.finally(onFinish);
-
-        // Return the Promise for further handling, if needed
         return promise;
     };
 
     const getLatestBooks = async (
         page: number = 1,
-        clean: boolean = true,
+        clean: boolean = false,
+        force: boolean = false,
     ): Promise<string[]> => {
-        // If not cleaning and a search is already in progress, return an empty array
-        if (!clean && loading.latest) return [];
+        const cacheKey = getFeedCacheKey(config.repository);
+        if (latest.cacheKey && latest.cacheKey !== cacheKey) {
+            resetList(latest, cacheKey);
+        }
+        ensureListMetadata(latest, cacheKey);
+        if (!clean && (loading.latest || isPageLoading(latest, page))) return [];
+        if (!clean && !force && isPageLoaded(latest, page)) return [];
 
-        // Set the loader.browse flag to true to indicate that a search is in progress
         loading.latest = true;
-
-        // Define a callback to execute when the search process finishes, either successfully or not
-        const onFinish = () => {
-            loading.latest = false;
-        };
 
         // If cleaning, reset Browse state variables
         if (clean) {
-            latest.cachedImagesRecord = {};
-            latest.bookListRecord = {};
-            latest.activeProcessId = getNewId();
+            resetList(latest, cacheKey);
             latest.page = 1;
-            latest.rendered = [];
         }
+        ensureListMetadata(latest, cacheKey);
+        latest.loadedPages![String(page)] = {
+            status: "loading",
+            loadedAt: null,
+            entryIds: [],
+        };
 
         RapunzelLog.log("[getLatestBooks] Retrieving latest books");
 
@@ -449,91 +560,56 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If no search results, finish and return an empty array
         if (!bookListResults) {
-            onFinish();
+            latest.loadedPages![String(page)] = {
+                status: "failed",
+                loadedAt: null,
+                entryIds: [],
+            };
+            latest.hasNextPage = false;
+            loading.latest = false;
             return [];
         }
 
-        const { imagesToCache, bookDict, imageList } = getBookBaseData(
+        const data = getBookBaseData(
             bookListResults.results,
+            config.repository,
         );
-
-        // Update the LatestBooks state with search results and loaded images
-        latest.bookListRecord = {
-            ...latest.bookListRecord,
-            ...bookDict,
-        };
-
-        const newRenderOrder = imageList.map((item) => item.id);
-        latest.rendered = ListUtils.mergeUniqueValues(
-            latest.rendered,
-            newRenderOrder,
-        );
-
-        // If a specific page is provided in searchOptions, update the latest page
-        if (page) {
-            latest.page = page;
-        }
-
-        // Load images asynchronously using loadImageList utility
-        const promise = RapunzelCache.downloadImageList({
-            id: latest.activeProcessId,
-            data: imagesToCache,
-            forceDownload: !config.enableCache,
-            imagesPath: StaticLibraryPaths.MainFeed,
-            deviceDownloadPath: config.cacheTempImageLocation,
-            onFileNaming: ({ index }) =>
-                CacheUtils.getFileName({
-                    book: imageList[index].id,
-                    chapter: `cover.${ImageCacheRevision}`,
-                    extension: FallbackCacheExtension,
-                }),
-            onImageLoaded: async (url, index) => {
-                const newItem = {
-                    id: imageList[index].id,
-                    value: url,
-                };
-                latest.cachedImagesRecord[newItem.id] = newItem;
-            },
-            shouldCancelLoad: (id) => {
-                const cancel = id !== latest.activeProcessId;
-                if (cancel)
-                    RapunzelLog.log(
-                        "[getLatestBooks.loadImagelist.shouldCancelLoad] Skipping id ",
-                        id,
-                    );
-                return cancel;
-            },
+        mergeBookPage({ state: latest, result: bookListResults, data, page });
+        loading.latest = false;
+        return startCoverDownload({
+            state: latest,
+            data: data.imagesToCache,
+            imageList: data.imageList,
+            sourceIds: data.sourceIds,
+            imagesPath: `${StaticLibraryPaths.BookCovers}/${config.repository}`,
+            activeProcessId: latest.activeProcessId,
         });
-
-        promise.catch(RapunzelLog.error);
-        // Handle the result of the image loading process
-        promise.finally(onFinish);
-
-        // Return the Promise for further handling, if needed
-        return promise;
     };
 
     const getTrendingBooks = async (
-        clean: boolean = true,
+        clean: boolean = false,
+        force: boolean = false,
     ): Promise<string[]> => {
-        // If not cleaning and a search is already in progress, return an empty array
+        const cacheKey = getTrendingCacheKey(config.repository);
+        if (popular.cacheKey && popular.cacheKey !== cacheKey) {
+            resetList(popular, cacheKey);
+        }
+        ensureListMetadata(popular, cacheKey);
         if (!clean && loading.trending) return [];
+        if (!clean && !force && isPageLoaded(popular, 1)) return [];
 
-        // Set the loader.browse flag to true to indicate that a search is in progress
         loading.trending = true;
-
-        // Define a callback to execute when the search process finishes, either successfully or not
-        const onFinish = () => {
-            loading.trending = false;
-        };
 
         // If cleaning, reset Browse state variables
         if (clean) {
-            popular.cachedImagesRecord = {};
-            popular.bookListRecord = {};
-            popular.activeProcessId = getNewId();
-            popular.rendered = [];
+            resetList(popular, cacheKey);
         }
+        ensureListMetadata(popular, cacheKey);
+        popular.loadedPages!["1"] = {
+            status: "loading",
+            loadedAt: null,
+            entryIds: [],
+        };
 
         RapunzelLog.log("[getTrendingBooks] Retrieving latest books");
 
@@ -543,7 +619,12 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         );
 
         if (!trendingResults) {
-            onFinish();
+            popular.loadedPages!["1"] = {
+                status: "failed",
+                loadedAt: null,
+                entryIds: [],
+            };
+            loading.trending = false;
             return [];
         }
 
@@ -553,63 +634,20 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         };
 
         // If no search results, finish and return an empty array
-        if (!bookListResults) {
-            onFinish();
-            return [];
-        }
-
-        const { imagesToCache, bookDict, imageList } = getBookBaseData(
+        const data = getBookBaseData(
             bookListResults.results,
+            config.repository,
         );
-
-        // Update the LatestBooks state with search results and loaded images
-        popular.bookListRecord = {
-            ...popular.bookListRecord,
-            ...bookDict,
-        };
-
-        const newRenderOrder = imageList.map((item) => item.id);
-        popular.rendered = ListUtils.mergeUniqueValues(
-            popular.rendered,
-            newRenderOrder,
-        );
-
-        // Load images asynchronously using loadImageList utility
-        const promise = RapunzelCache.downloadImageList({
-            id: popular.activeProcessId,
-            data: imagesToCache,
-            forceDownload: !config.enableCache,
-            imagesPath: StaticLibraryPaths.Trending,
-            deviceDownloadPath: config.cacheTempImageLocation,
-            onFileNaming: ({ index }) =>
-                CacheUtils.getFileName({
-                    book: imageList[index].id,
-                    chapter: `cover.${ImageCacheRevision}`,
-                    extension: FallbackCacheExtension,
-                }),
-            onImageLoaded: async (url, index) => {
-                popular.cachedImagesRecord[imageList[index].id] = {
-                    id: imageList[index].id,
-                    value: url,
-                };
-            },
-            shouldCancelLoad: (id) => {
-                const cancel = id !== popular.activeProcessId;
-                if (cancel)
-                    RapunzelLog.log(
-                        "[getTrendingBooks.loadImagelist.shouldCancelLoad] Skipping id ",
-                        id,
-                    );
-                return cancel;
-            },
+        mergeBookPage({ state: popular, result: bookListResults, data, page: 1 });
+        loading.trending = false;
+        return startCoverDownload({
+            state: popular,
+            data: data.imagesToCache,
+            imageList: data.imageList,
+            sourceIds: data.sourceIds,
+            imagesPath: `${StaticLibraryPaths.BookCovers}/${config.repository}`,
+            activeProcessId: popular.activeProcessId,
         });
-
-        promise.catch(RapunzelLog.error);
-        // Handle the result of the image loading process
-        promise.finally(onFinish);
-
-        // Return the Promise for further handling, if needed
-        return promise;
     };
 
     return {

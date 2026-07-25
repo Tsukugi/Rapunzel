@@ -81,10 +81,13 @@ describe("initRapunzelStorage feed hydration", () => {
 
         const latestSnapshot: LatestBooksState = {
             activeProcessId: "",
-            page: 1,
+            page: 2,
             rendered: ["missing-file", "missing-book", ...validIds],
             bookListRecord: {
-                "missing-file": { id: "missing-file" } as any,
+                "missing-file": {
+                    id: "missing-file",
+                    cover: { uri: "remote-missing-cover" },
+                } as any,
                 ...Object.fromEntries(validIds.map((id) => [id, { id }])),
             },
             cachedImagesRecord: {
@@ -105,7 +108,10 @@ describe("initRapunzelStorage feed hydration", () => {
             activeProcessId: "",
             rendered: ["missing-file", "trending-valid"],
             bookListRecord: {
-                "missing-file": { id: "missing-file" } as any,
+                "missing-file": {
+                    id: "missing-file",
+                    cover: { uri: "remote-missing-cover" },
+                } as any,
                 "trending-valid": { id: "trending-valid" } as any,
             },
             cachedImagesRecord: {
@@ -176,18 +182,30 @@ describe("initRapunzelStorage feed hydration", () => {
         await flushAsync();
 
         expect(latestState.rendered).toHaveLength(MaxFeedItems);
-        expect(latestState.rendered[0]).toBe("valid-0");
-        expect(latestState.rendered[MaxFeedItems - 1]).toBe("valid-79");
-        expect(latestState.rendered).not.toContain("missing-file");
-        expect(latestState.rendered).not.toContain("missing-book");
-        expect(latestState.bookListRecord).not.toHaveProperty("missing-book");
+        expect(latestState.rendered[0]).toBe("NHentai:missing-file");
+        expect(latestState.rendered[MaxFeedItems - 1]).toBe("NHentai:valid-78");
+        expect(latestState.rendered).not.toContain("NHentai:missing-book");
+        expect(latestState.bookListRecord).not.toHaveProperty(
+            "NHentai:missing-book",
+        );
+        expect(
+            latestState.cachedImagesRecord["NHentai:missing-file"].value,
+        ).toBe("remote-missing-cover");
         expect(Object.keys(latestState.bookListRecord)).toHaveLength(
             MaxFeedItems,
         );
+        expect(latestState.page).toBe(2);
 
-        expect(trendingState.rendered).toEqual(["trending-valid"]);
+        expect(trendingState.rendered).toEqual([
+            "NHentai:missing-file",
+            "NHentai:trending-valid",
+        ]);
         expect(trendingState.bookListRecord).toEqual({
-            "trending-valid": { id: "trending-valid" },
+            "NHentai:missing-file": {
+                id: "missing-file",
+                cover: { uri: "remote-missing-cover" },
+            },
+            "NHentai:trending-valid": { id: "trending-valid" },
         });
     });
 });

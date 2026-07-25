@@ -26,6 +26,7 @@ jest.mock("../src/cache/useRapunzelCache", () => ({
     },
     StaticLibraryPaths: {
         SearchResults: "cache/search",
+        BookCovers: "cache/covers",
         MainFeed: "cache/main",
         Trending: "cache/trending",
         ReadBooks: "cache/read",
@@ -158,16 +159,16 @@ describe("useRapunzelLoader search and feeds", () => {
         expect(mockDownloadImageList).toHaveBeenCalledTimes(1);
 
         const downloadArgs = mockDownloadImageList.mock.calls[0][0];
-        expect(downloadArgs.imagesPath).toBe("cache/search");
+        expect(downloadArgs.imagesPath).toBe("cache/covers/NHentai");
         expect(downloadArgs.deviceDownloadPath).toBe("Temp");
         expect(downloadArgs.forceDownload).toBe(false);
         expect(downloadArgs.id).toBeDefined();
 
         expect(
-            mockStoreState.browse[0].bookListRecord["book-1"].cover.uri,
+            mockStoreState.browse[0].bookListRecord["NHentai:book-1"].cover.uri,
         ).toBe("cover-1");
         expect(
-            mockStoreState.browse[0].cachedImagesRecord["book-1"].value,
+            mockStoreState.browse[0].cachedImagesRecord["NHentai:book-1"].value,
         ).toBe("cached-0");
         expect(mockStoreState.browse[0].page).toBe(2);
         expect(mockStoreState.loading[0].browse).toBe(false);
@@ -199,16 +200,18 @@ describe("useRapunzelLoader search and feeds", () => {
 
         const { cachedImagesRecord } = mockStoreState.browse[0];
         expect(Object.keys(cachedImagesRecord)).toEqual([
-            "book-1",
-            "book-2",
-            "book-3",
+            "NHentai:book-1",
+            "NHentai:book-2",
+            "NHentai:book-3",
         ]);
         expect(Object.values(cachedImagesRecord).map((v) => v.id)).toEqual([
-            "book-1",
-            "book-2",
-            "book-3",
+            "NHentai:book-1",
+            "NHentai:book-2",
+            "NHentai:book-3",
         ]);
-        expect(cachedImagesRecord["book-3"].value).toBe("cached-reverse-2");
+        expect(cachedImagesRecord["NHentai:book-3"].value).toBe(
+            "cached-reverse-2",
+        );
     });
 
     test("loadSearch appends render order when paging", async () => {
@@ -230,11 +233,95 @@ describe("useRapunzelLoader search and feeds", () => {
         await loader.loadSearch("query", { page: 2 }, false);
 
         expect(mockStoreState.browse[0].rendered).toEqual([
-            "101",
-            "105",
-            "099",
-            "120",
+            "NHentai:101",
+            "NHentai:105",
+            "NHentai:099",
+            "NHentai:120",
         ]);
+    });
+
+    test("does not wait for covers or request an already loaded page twice", async () => {
+        const results = [{ id: "cached-page", cover: { uri: "cover" } }];
+        mockApiClient.search.mockResolvedValue({
+            page: 1,
+            results,
+            totalPages: 1,
+        });
+
+        let finishImages: (() => void) | undefined;
+        mockDownloadImageList = jest.fn(
+            () =>
+                new Promise<string[]>((resolve) => {
+                    finishImages = () => resolve(["cached-cover"]);
+                }),
+        );
+
+        const loader = useRapunzelLoader();
+        const firstLoad = loader.loadSearch("query", { page: 1 });
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(mockStoreState.loading[0].browse).toBe(false);
+        expect(mockStoreState.browse[0].rendered).toEqual([
+            "NHentai:cached-page",
+        ]);
+
+        const duplicateLoad = await loader.loadSearch(
+            "query",
+            { page: 1 },
+            false,
+        );
+        expect(duplicateLoad).toEqual([]);
+        expect(mockApiClient.search).toHaveBeenCalledTimes(1);
+
+        finishImages?.();
+        await firstLoad;
+    });
+
+    test("does not store Taihou nested proxies back into list state", async () => {
+        const loadedPages = new Proxy<Record<string, any>>(
+            {},
+            { set: (target, property, value) => Reflect.set(target, property, value) },
+        );
+        const entryMetaRecord = new Proxy<Record<string, any>>(
+            {},
+            { set: (target, property, value) => Reflect.set(target, property, value) },
+        );
+        const latestState = new Proxy(
+            {
+                activeProcessId: "",
+                bookListRecord: {},
+                cachedImagesRecord: {},
+                rendered: [],
+                page: 1,
+                loadedPages,
+                entryMetaRecord,
+            },
+            {
+                set: (target, property, value) => {
+                    if (
+                        (property === "loadedPages" && value === loadedPages) ||
+                        (property === "entryMetaRecord" &&
+                            value === entryMetaRecord)
+                    ) {
+                        throw new Error("nested proxy was assigned to the root");
+                    }
+                    return Reflect.set(target, property, value);
+                },
+            },
+        );
+        mockStoreState.latest[0] = latestState;
+        mockApiClient.getLatestBooks.mockResolvedValue({
+            page: 1,
+            totalPages: 1,
+            results: [{ id: "taihou-1", cover: { uri: "cover" } }],
+        });
+
+        await useRapunzelLoader().getLatestBooks(1);
+
+        expect(latestState.loadedPages["1"].status).toBe("loaded");
+        expect(latestState.entryMetaRecord["NHentai:taihou-1"].uid).toBe(
+            "NHentai:taihou-1",
+        );
     });
 
     test("getLatestBooks caches feed and tracks page", async () => {
@@ -246,10 +333,10 @@ describe("useRapunzelLoader search and feeds", () => {
 
         expect(mockApiClient.getLatestBooks).toHaveBeenCalledWith(3);
         const downloadArgs = mockDownloadImageList.mock.calls[0][0];
-        expect(downloadArgs.imagesPath).toBe("cache/main");
+        expect(downloadArgs.imagesPath).toBe("cache/covers/NHentai");
         expect(downloadArgs.deviceDownloadPath).toBe("Temp");
         expect(
-            mockStoreState.latest[0].bookListRecord["latest-1"].cover.uri,
+            mockStoreState.latest[0].bookListRecord["NHentai:latest-1"].cover.uri,
         ).toBe("latest-cover");
         expect(mockStoreState.latest[0].page).toBe(3);
         expect(mockStoreState.loading[0].latest).toBe(false);
@@ -268,10 +355,10 @@ describe("useRapunzelLoader search and feeds", () => {
 
         expect(mockApiClient.getTrendingBooks).toHaveBeenCalled();
         const downloadArgs = mockDownloadImageList.mock.calls[0][0];
-        expect(downloadArgs.imagesPath).toBe("cache/trending");
+        expect(downloadArgs.imagesPath).toBe("cache/covers/NHentai");
         expect(downloadArgs.deviceDownloadPath).toBe("Temp");
         expect(
-            mockStoreState.trending[0].bookListRecord["trend-1"].cover.uri,
+            mockStoreState.trending[0].bookListRecord["NHentai:trend-1"].cover.uri,
         ).toBe("trend-cover-1");
         expect(mockStoreState.loading[0].trending).toBe(false);
         expect(cached).toEqual(["cached-0", "cached-1"]);

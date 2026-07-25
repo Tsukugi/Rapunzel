@@ -18,6 +18,7 @@ export enum StaticLibraryPaths {
     MainFeed = `MainFeed`,
     Trending = `Trending`,
     SearchResults = "SearchResults",
+    BookCovers = "BookCovers",
     ReadBooks = "ReadBooks",
 }
 
@@ -84,6 +85,7 @@ export const RapunzelCache = {
                 removeContents(StaticLibraryPaths.MainFeed),
                 removeContents(StaticLibraryPaths.Trending),
                 removeContents(StaticLibraryPaths.SearchResults),
+                removeContents(StaticLibraryPaths.BookCovers),
                 removeContents(StaticLibraryPaths.ReadBooks),
             ];
 

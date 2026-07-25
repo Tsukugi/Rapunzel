@@ -50,10 +50,12 @@ const CachedImage: React.FC<CachedImageProps> = ({
 }) => {
     const [loading, setLoading] = useState(false);
     const [src, setSrc] = useState(image.uri);
+    const [fallbackAttempted, setFallbackAttempted] = useState(false);
 
     useEffect(() => {
         setSrc(image.uri);
-    }, [image.uri]);
+        setFallbackAttempted(false);
+    }, [image.uri, image.fallbackUri]);
 
     const { colors } = LocalTheme.useTheme();
     //<EmptyImageComponent onPress={() => onClick(image)} />
@@ -70,13 +72,19 @@ const CachedImage: React.FC<CachedImageProps> = ({
                 onLoadStart={() => setLoading(true)}
                 onLoadEnd={() => setLoading(false)}
                 onError={() => {
-                    src &&
-                        setSrc(
-                            CacheUtils.replaceExtension(
-                                src,
-                                FallbackCacheExtension,
-                            ),
-                        );
+                    const extensionFallback = src
+                        ? CacheUtils.replaceExtension(
+                              src,
+                              FallbackCacheExtension,
+                          )
+                        : undefined;
+                    const nextUri = image.fallbackUri || extensionFallback;
+                    if (!fallbackAttempted && nextUri && nextUri !== src) {
+                        setFallbackAttempted(true);
+                        setSrc(nextUri);
+                    } else {
+                        setSrc("");
+                    }
                     RapunzelLog.error(
                         `[CachedImage]: Image load failed ${src}`,
                     );

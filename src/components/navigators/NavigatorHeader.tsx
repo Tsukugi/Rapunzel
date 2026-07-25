@@ -36,6 +36,7 @@ export const NavigatorHeader = ({
         library: [library],
         router: [router],
     } = useRapunzelStore();
+    const { setItem: setStorageItem } = useRapunzelStorage();
 
     const { buildLibraryState } = LibraryUtils;
 
@@ -48,7 +49,7 @@ export const NavigatorHeader = ({
 
     const onRequestSearch = async (newValue: string) => {
         header.searchValue = newValue;
-        useRapunzelStorage().setItem(StorageEntries.searchText, newValue);
+        setStorageItem(StorageEntries.searchText, newValue);
 
         if (!newValue) return;
 
@@ -60,7 +61,7 @@ export const NavigatorHeader = ({
     };
     const onLibraryFilterSearch = async (newValue: string) => {
         header.searchValue = newValue;
-        useRapunzelStorage().setItem(StorageEntries.searchText, newValue);
+        setStorageItem(StorageEntries.searchText, newValue);
 
         const { rendered } = buildLibraryState(library.saved, config);
 
@@ -99,6 +100,11 @@ export const NavigatorHeader = ({
         }
     };
 
+    const onSearchClose = () => {
+        header.searchValue = "";
+        setStorageItem(StorageEntries.searchText, "");
+    };
+
     const searchSubmitBehaviour = (() => {
         switch (searchBehaviour) {
             default:
@@ -119,6 +125,7 @@ export const NavigatorHeader = ({
             openMenu={navigation.openDrawer}
             openOptions={() => {}}
             openSearch={() => {}}
+            onClose={onSearchClose}
         />
     );
 };

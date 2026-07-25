@@ -20,6 +20,8 @@ interface VirtualListProps<T> extends PropsWithChildren {
     onRefresh?: () => Promise<void>;
     onEndReached?: () => void;
     onStartReached?: () => void;
+    contentOffset?: { x: number; y: number };
+    onScrollPositionChange?: (offset: number) => void;
 }
 
 const VirtualList = <T,>({
@@ -36,12 +38,16 @@ const VirtualList = <T,>({
     onStartReached = () => {
         RapunzelLog.log("[onStartReached]: Reached");
     },
+    contentOffset,
+    onScrollPositionChange,
 }: VirtualListProps<T>) => {
     const {
         config: [config],
     } = useRapunzelStore();
 
     const [refreshing, setRefreshing] = React.useState(false);
+    const listRef = React.useRef<any>(null);
+    const restoredOffset = React.useRef(false);
 
     const onRefreshHandler = React.useCallback(() => {
         setRefreshing(true);
@@ -51,8 +57,28 @@ const VirtualList = <T,>({
 
     const { colors } = LocalTheme.useTheme();
 
+    React.useEffect(() => {
+        const offset = contentOffset?.y || 0;
+        if (restoredOffset.current || offset <= 0 || data.length === 0) {
+            return;
+        }
+
+        // Mark before scheduling so a page append cannot queue another restore
+        // before the first animation frame runs.
+        restoredOffset.current = true;
+        const frame = requestAnimationFrame(() => {
+            listRef.current?.scrollToOffset?.({
+                offset,
+                animated: false,
+            });
+        });
+
+        return () => cancelAnimationFrame(frame);
+    }, [contentOffset?.y, data.length]);
+
     return (
         <VirtualizedList
+            ref={listRef}
             style={{
                 ...styles.container,
                 ...style,
@@ -70,12 +96,18 @@ const VirtualList = <T,>({
             windowSize={6}
             endFillColor={colors.backdrop}
             renderItem={renderer}
-            keyExtractor={(_, index) => index.toString()}
+            keyExtractor={(item) => item.id}
             getItemCount={(_data) => _data.length}
             getItem={getItem}
+            onMomentumScrollEnd={(event) =>
+                onScrollPositionChange?.(event.nativeEvent.contentOffset.y)
+            }
+            onScrollEndDrag={(event) =>
+                onScrollPositionChange?.(event.nativeEvent.contentOffset.y)
+            }
             onStartReached={onStartReached}
             onEndReached={onEndReached}
-            onEndReachedThreshold={200}
+            onEndReachedThreshold={0.5}
         />
     );
 };

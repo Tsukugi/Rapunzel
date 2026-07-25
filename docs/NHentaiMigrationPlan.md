@@ -32,26 +32,28 @@ Keep Rapunzel's existing Lilith interface while moving NHentai content requests 
 
 ## Implementation notes
 
-- Feed and search list records use the v2 cover path on `https://t.nhentai.net`.
-- Detail page paths map to full images on `https://i.nhentai.net`.
-- One NHentai gallery remains one Lilith chapter.
-- Language IDs are mapped for English, Japanese, and Chinese/Mandarin. The requested language is preferred when a gallery has more than one.
-- Search v2 has no `per_page` parameter, so larger requested sizes fetch multiple API pages.
-- Cache filenames use a v2 revision so old low-resolution files are not reused.
-- Local library, cache, import/export, settings, and navigation do not depend on NHentai API changes.
-- HTTP 403 errors remain errors so Rapunzel can start WebView clearance for a real Cloudflare challenge.
-- HTTP 451 is not treated as a clearance challenge; it means the site is unavailable from the current region.
-- WebView validation now requires a non-empty API result.
+-   Feed and search list records use the v2 cover path on `https://t.nhentai.net`.
+-   Detail page paths map to full images on `https://i.nhentai.net`.
+-   One NHentai gallery remains one Lilith chapter.
+-   Language IDs are mapped for English, Japanese, and Chinese/Mandarin. The requested language is preferred when a gallery has more than one.
+-   Search v2 has no `per_page` parameter, so larger requested sizes fetch multiple API pages.
+-   Cache filenames use a v2 revision so old low-resolution files are not reused.
+-   Local library, cache, import/export, settings, and navigation do not depend on NHentai API changes.
+-   HTTP 403 errors remain errors so Rapunzel can start WebView clearance for a real Cloudflare challenge.
+-   HTTP 451 is not treated as a clearance challenge; it means the site is unavailable from the current region.
+-   WebView validation now requires a non-empty API result.
 
 ## Verification evidence
 
--   NH package tests: 9 suites, 25 tests passed.
+-   NH package tests: 9 suites, 27 tests passed.
 -   NH package build: passed.
 -   Live built-package v2 check: latest 25, trending 5, search 25.
 -   Live detail check: one book, one chapter, 30 pages, cover HTTP 200, page HTTP 200.
 -   Deployed APK feed check: latest and trending state populated; visible NH titles and v2 full cover URLs were present.
 -   Deployed APK search check: `/api/v2/search` returned 25 results and all 25 cover images loaded into the search cache.
 -   Deployed APK reader check: v2 detail request opened Reader and 63 page images were cached without an app error.
+-   Cover-path regression check: `.jpg.webp` and `.webp` list records map to matching cover paths and retain thumbnail fallbacks.
+-   Pagination regression check: Feed and Browse append pages without changing saved scroll offset or duplicating stable entry IDs.
 
 ## Remaining verification
 

@@ -15,6 +15,7 @@ interface HeaderBarProps extends LeftModeProps, UsesNavigation {
     openSearch: () => void;
     openOptions: () => void;
     onSubmit: (searchText: string) => void;
+    onClose?: () => void;
 }
 
 const HeaderBar = ({
@@ -26,6 +27,7 @@ const HeaderBar = ({
     openMenu,
     openOptions,
     onSubmit,
+    onClose,
 }: HeaderBarProps) => {
     const {
         reader: [reader],
@@ -70,6 +72,7 @@ const HeaderBar = ({
                     defaultValue={header.searchValue}
                     isLoading={isLoading}
                     onSubmit={onSubmit}
+                    onClose={onClose}
                 />
             ) : null}
 

@@ -17,6 +17,7 @@ export interface StyleProps {
 }
 export interface BrowserItemProps extends Partial<StyleProps> {
     cover?: string;
+    fallbackUri?: string;
     bookmarked?: boolean;
     bookBase: BookBase | null;
     onClick?: (bookBase: BookBase) => void;
@@ -29,6 +30,7 @@ const BrowseItem: FC<BrowserItemProps> = ({
     coverStyle,
     titleStyle,
     cover,
+    fallbackUri,
     bookBase,
     onClick = () => {},
     onLongClick = () => {},
@@ -56,9 +58,11 @@ const BrowseItem: FC<BrowserItemProps> = ({
 
     // Track the active cover; reset whenever a new book or cover arrives.
     const [src, setSrc] = useState(cover);
+    const [fallbackAttempted, setFallbackAttempted] = useState(false);
     useEffect(() => {
         setSrc(cover);
-    }, [cover]);
+        setFallbackAttempted(false);
+    }, [cover, fallbackUri]);
 
     // Some sources (e.g., transparent base64 placeholders) are not valid URLs
     // for React Native's fetch layer. Filter them out and show a fallback
@@ -125,13 +129,23 @@ const BrowseItem: FC<BrowserItemProps> = ({
                     style={{ ...styles.cover, ...coverStyle }}
                     source={{ uri: safeUri }}
                     onError={() => {
-                        safeUri &&
-                            setSrc(
-                                CacheUtils.replaceExtension(
-                                    safeUri,
-                                    FallbackCacheExtension,
-                                ),
-                            );
+                        const extensionFallback = safeUri
+                            ? CacheUtils.replaceExtension(
+                                  safeUri,
+                                  FallbackCacheExtension,
+                              )
+                            : undefined;
+                        const nextUri = fallbackUri || extensionFallback;
+                        if (
+                            !fallbackAttempted &&
+                            nextUri &&
+                            nextUri !== safeUri
+                        ) {
+                            setFallbackAttempted(true);
+                            setSrc(nextUri);
+                        } else {
+                            setSrc(undefined);
+                        }
                         RapunzelLog.error(
                             `[BrowserItem]: Image load failed ${safeUri}`,
                         );

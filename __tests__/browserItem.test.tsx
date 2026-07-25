@@ -94,4 +94,46 @@ describe("BrowseItem", () => {
         expect(fallbacks.length).toBeGreaterThanOrEqual(1);
         expect(covers.length).toBe(0);
     });
+
+    test("uses explicit fallback once, then shows no cover", () => {
+        const book = makeBook("book-4", "Fallback Cover", ["english"]);
+        const component = renderer.create(
+            <BrowseItem
+                bookBase={book}
+                cover="https://example.com/cover.jpg.webp"
+                fallbackUri="https://example.com/thumb.jpg.webp"
+            />,
+        );
+        act(() => {
+            component.update(
+                <BrowseItem
+                    bookBase={book}
+                    cover="https://example.com/cover.jpg.webp"
+                    fallbackUri="https://example.com/thumb.jpg.webp"
+                />,
+            );
+        });
+
+        let cover = component.root.findByProps({
+            testID: "browser-item-cover",
+        });
+        act(() => {
+            cover.props.onError();
+        });
+
+        cover = component.root.findByProps({ testID: "browser-item-cover" });
+        expect(cover.props.source.uri).toBe(
+            "https://example.com/thumb.jpg.webp",
+        );
+
+        act(() => {
+            cover.props.onError();
+        });
+
+        expect(
+            component.root.findByProps({
+                testID: "browser-item-cover-fallback",
+            }),
+        ).toBeTruthy();
+    });
 });

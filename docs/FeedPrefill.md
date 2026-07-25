@@ -1,43 +1,46 @@
-# Feed Prefill & Persistence
+# List cache lifecycle
 
-## Goal
-- Launch the app with a warm main feed, showing the last fetched latest/trending lists immediately.
-- Let network refresh progressively replace hydrated data without flicker.
-- Stay resilient: drop invalid entries, cap storage size/age.
+## Identity
 
-## Data to Persist (MMKV)
-- Keys: `feed.latest`, `feed.trending`.
-- Stored shape: `rendered`, `bookListRecord`, `cachedImagesRecord` (no `page` at the moment).
-- Source slices: `LatestBooksState` / `PopularBooksState`.
-- Only store what VirtualList render needs; capped to ~80 items.
-- Sanity: validate `file://` paths exist; drop missing/invalid entries on load.
+Every book entry uses a stable UID:
 
-## Hydration on Startup
-- After `initRapunzelStore` and inside `initRapunzelStorage`, read latest/trending entries separately.
-- For each entry:
-  - Validate files; rebuild `rendered`, `bookListRecord`, `cachedImagesRecord` from surviving items (capped).
-  - Seed `latest` (page remains default if none persisted) and `trending` state without triggering loaders.
-  - Keep `initialView = RapunzelMainFeed` unchanged.
-- Ensure the main feed’s “Trending” marker insertion still works with hydrated data.
+```text
+<repository>:<book id>
+```
 
-## Refresh Flow (Progressive Replace)
-- On focus/refresh:
-  - Start network fetches (`getLatestBooks`, `getTrendingBooks`) without clearing hydrated state.
-  - Only replace state once a fetch + image downloads finish; keep `rendered` order.
-  - Guard against concurrent loads with existing `loading.*` flags.
+The UID is used by `rendered`, `bookListRecord`, and `cachedImagesRecord`. A
+book returned by two pages is therefore one entry, not two entries.
 
-## Persist After Fetch
-- A watcher component (`FeedPersistence`) listens to `latest` / `trending` changes:
-  - Immediately persists once on mount, then on every slice update (debounced ~300ms).
-  - Serializes only `rendered`, `bookListRecord`, `cachedImagesRecord` and caps them to ~80 entries.
-  - Persisted payloads can be empty; hydration treats missing/empty data as “no feed cached”.
+## Two cache layers
 
-## Testing Checklist
-- Cold offline launch shows last feed immediately; no crash if storage empty.
-- Online launch refreshes and replaces hydrated entries smoothly (no flicker, no duplicates).
-- Missing/corrupt image files are pruned during hydration.
-- Pagination still works (latest page increments preserved; append from network).
-- Storage caps respected; old data evicted on save.
-- Automated coverage:
-  - `__tests__/storageHydration.test.ts` validates hydration pruning/capping behavior.
-  - `__tests__/feedPersistence.test.tsx` ensures persistence serializes the right payload and respects caps.
+- The list cache stores order, loaded pages, freshness, page state, and scroll
+  position.
+- The entry cache stores book data, the remote cover URL, the local cover URI,
+  and first/last loaded timestamps.
+
+The API page is complete as soon as its metadata is merged. Cover downloads run
+after that and do not block list rendering or the next page request.
+
+## Back navigation
+
+Returning from a reader keeps the current list, loaded pages, and scroll
+position. Focus does not clear a list. If the list is stale, page one is
+revalidated in the background and merged without removing existing entries.
+
+Pull-to-refresh is the explicit refresh action. It also merges results and
+keeps existing entries, so the visible list does not jump because of a cache
+reset.
+
+## Persistence
+
+Feed and Browse list snapshots are stored in MMKV. Browse also stores the
+current search text. On startup, list metadata is restored even when a local
+cover file is missing. The list is restored immediately; local file checks run
+in the background. Missing files fall back to the remote cover URL and can
+download again without delaying API requests.
+
+Feed data is fresh for 15 minutes. Browse data is fresh for 30 minutes. Feed
+snapshots are capped at 80 entries and Browse snapshots at 100 entries.
+
+All cover lists share `RapunzelLibrary/BookCovers/<repository>`, so the same
+book cover can be reused by Feed and Browse.

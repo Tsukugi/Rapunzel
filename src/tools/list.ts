@@ -38,6 +38,21 @@ const mergeUniqueValues = <T>(value: T[], newValues: T[]) => {
     return Array.from(currentSet);
 };
 
+const mergeVirtualItems = <T>(
+    value: VirtualItem<T>[],
+    newValues: VirtualItem<T>[],
+) => {
+    const byId = new Map(value.map((item) => [item.id, item]));
+    const order = value.map((item) => item.id);
+
+    newValues.forEach((item) => {
+        if (!byId.has(item.id)) order.push(item.id);
+        byId.set(item.id, item);
+    });
+
+    return order.map((id) => byId.get(id) as VirtualItem<T>);
+};
+
 const assignUpdatedList = <T>(
     value: T[],
     setter: React.Dispatch<React.SetStateAction<T[]>>,
@@ -48,6 +63,7 @@ const assignUpdatedList = <T>(
 
 export const ListUtils = {
     mergeUniqueValues,
+    mergeVirtualItems,
     assignUpdatedList,
     getVirtualItemHalf,
     getEmptyVirtualList,

@@ -28,13 +28,29 @@ const downloadImageWithFallback = async ({
 }: RequestImageWithFallback): Promise<string | null> => {
     const buildCandidates = (uri: string): string[] => {
         const candidates = new Set<string>([uri]);
+        const withoutExtension = CacheUtils.removeFileExtension(uri);
         SupportedExtensions.forEach((extension) => {
-            candidates.add(`${CacheUtils.removeFileExtension(uri)}.${extension}`);
+            candidates.add(`${withoutExtension}.${extension}`);
         });
+
+        // NHentai uses paths such as cover.jpg.webp. Keep CDN extension while
+        // trying each possible source extension in compound paths.
+        const withoutCompoundExtension =
+            CacheUtils.removeFileExtension(withoutExtension);
+        const finalExtension = CacheUtils.getExtensionFromUri(uri);
+        if (withoutCompoundExtension !== withoutExtension) {
+            SupportedExtensions.forEach((extension) => {
+                candidates.add(
+                    `${withoutCompoundExtension}.${extension}.${finalExtension}`,
+                );
+            });
+        }
         return Array.from(candidates);
     };
 
-    const tryCandidates = async (candidates: string[]): Promise<string | null> => {
+    const tryCandidates = async (
+        candidates: string[],
+    ): Promise<string | null> => {
         for (const candidate of candidates) {
             try {
                 const res = await downloadHandler(candidate);
@@ -64,7 +80,9 @@ const downloadImageWithFallback = async ({
         RapunzelLog.warn(
             `[downloadImageWithFallback] Trying fallbackUri after failures for ${url}`,
         );
-        const fallbackResult = await tryCandidates(buildCandidates(fallbackUri));
+        const fallbackResult = await tryCandidates(
+            buildCandidates(fallbackUri),
+        );
         if (fallbackResult) return fallbackResult;
     }
 
@@ -87,7 +105,7 @@ export interface DownloadAndCacheImageProps {
 /**
  * Asynchronously downloads and caches an image. If the image is already cached, returns the local path immediately.
  * @param {DownloadAndCacheImageProps} props - The properties needed for downloading and caching an image.
- * @returns {Promise<string>} - A Promise that resolves to the local path of the cached or newly downloaded image.
+ * @returns {Promise<string | null>} - A Promise that resolves to the local path of the cached or newly downloaded image. Returns null when download fails.
  */
 const downloadAndCacheImage = async ({
     uri,
@@ -96,7 +114,7 @@ const downloadAndCacheImage = async ({
     imageFileName,
     forceDownload = false,
     onImageCached = (path) => {},
-}: DownloadAndCacheImageProps): Promise<string> => {
+}: DownloadAndCacheImageProps): Promise<string | null> => {
     let imageFullPath = `${downloadPath}/${imageFileName}`;
 
     const exists = await RNFS.exists(imageFullPath);
@@ -128,7 +146,10 @@ const downloadAndCacheImage = async ({
                 },
             });
 
-            if (!successUri) throw new Error("Couldn't download image");
+            if (!successUri) {
+                onError(new Error("Couldn't download image"));
+                return null;
+            }
             const { removeFileExtension, getExtensionFromUri } = CacheUtils;
             const diffExtensionFound =
                 getExtensionFromUri(imageFullPath) !==
@@ -153,6 +174,7 @@ const downloadAndCacheImage = async ({
             }
         } catch (error) {
             onError(error);
+            return null;
         }
     } else {
         RapunzelLog.log(
@@ -197,14 +219,12 @@ const startLoadingImages = async ({
 }: StartLoadingImagesProps): Promise<string[]> => {
     const indexes: string[] = [];
 
-    const normalizeLilithImage = (
-        image: string | LilithImage,
-    ): LilithImage => {
+    const normalizeLilithImage = (image: string | LilithImage): LilithImage => {
         if (typeof image === "string") return { uri: image };
         return image;
     };
 
-    const onImageLoadedHandler = async (url: string) => {
+    const onImageLoadedHandler = async (url: string | null) => {
         const cancelProcess = shouldCancelLoad(id);
         if (!url || cancelProcess) {
             RapunzelLog.warn(
@@ -217,10 +237,10 @@ const startLoadingImages = async ({
         await onImageLoaded(url, indexes.length - 1);
     };
 
-    await PromiseTools.recursivePromiseChain<string>({
+    await PromiseTools.recursivePromiseChain<string | null>({
         promises: data.map((uri, index) => () => {
             const cancelProcess = shouldCancelLoad(id);
-            if (cancelProcess) return Promise.resolve(""); // This will interrupt the load chain;
+            if (cancelProcess) return Promise.resolve(null); // This will interrupt the load chain;
 
             const { uri: normalizedUri, fallbackUri } =
                 normalizeLilithImage(uri);

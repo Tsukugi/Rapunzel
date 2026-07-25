@@ -11,6 +11,7 @@ const ItemProvider = ({ item }: { item: BrowserItemProps | null }) => {
         <BrowseItem
             bookmarked={item.bookmarked}
             cover={item.cover}
+            fallbackUri={item.fallbackUri}
             bookBase={item.bookBase}
             onClick={item.onClick}
             onLongClick={item.onLongClick}

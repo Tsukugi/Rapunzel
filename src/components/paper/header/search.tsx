@@ -53,6 +53,8 @@ const PaperSearch = ({
 
     const onCloseHandler = () => {
         onClose();
+        header.searchValue = "";
+        setSearchQuery("");
         setIsSearchExpanded(false);
     };
 

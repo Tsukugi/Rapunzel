@@ -43,11 +43,33 @@ export interface ConfigState extends RapunzelConfigBase {
     cacheTempImageLocation: string;
 }
 
+export type ListPageStatus = "loading" | "loaded" | "failed";
+
+export interface ListPageState {
+    status: ListPageStatus;
+    loadedAt: number | null;
+    entryIds: string[];
+}
+
+export interface EntryCacheMetadata {
+    uid: string;
+    firstSeenAt: number;
+    lastFetchedAt: number;
+    coverCachedAt: number | null;
+}
+
 export interface BookBaseList {
     activeProcessId: string;
-    bookListRecord: Record<string, BookBase>; // Key as Ids
-    cachedImagesRecord: Record<string, VirtualItem<string>>; // Key as Ids // Should be deprecated soon
-    rendered: string[]; // Ordered list of book ids to render
+    /** Records are keyed by repository-scoped entry UID. */
+    bookListRecord: Record<string, BookBase>;
+    cachedImagesRecord: Record<string, VirtualItem<string>>;
+    rendered: string[];
+    cacheKey?: string;
+    loadedPages?: Record<string, ListPageState>;
+    entryMetaRecord?: Record<string, EntryCacheMetadata>;
+    lastFetchedAt?: number | null;
+    hasNextPage?: boolean;
+    scrollOffset?: number;
 }
 
 export interface BrowseState extends BookBaseList {

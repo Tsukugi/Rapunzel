@@ -114,6 +114,12 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         bookListRecord: {},
         cachedImagesRecord: {},
         rendered: [],
+        cacheKey: "",
+        loadedPages: {},
+        entryMetaRecord: {},
+        lastFetchedAt: null,
+        hasNextPage: true,
+        scrollOffset: 0,
     });
 
     RapunzelState.browse = useReactConfig<BrowseState>("browse", {

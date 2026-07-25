@@ -12,6 +12,7 @@ export enum StorageEntries {
     library = "library",
     feedLatest = "feed.latest",
     feedTrending = "feed.trending",
+    browse = "browse",
 }
 
 export namespace Storage {
@@ -22,10 +23,12 @@ export namespace Storage {
 export interface UseStorage {
     setItem: Storage.SetItem;
     instance: MMKVInstance;
+    ready?: Promise<void>;
 }
 
 export interface RapunzelStorageBase {
     instance: MMKVInstance;
+    ready: Promise<void>;
 }
 
 export const ImageCacheLocations = {

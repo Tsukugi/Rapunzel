@@ -30,7 +30,12 @@ jest.mock("react-native-fs", () => ({
 }));
 
 jest.mock("@atsu/lilith", () => ({
-    LilithImageExtension: { jpeg: "jpeg", png: "png", webp: "webp" },
+    LilithImageExtension: {
+        jpg: "jpg",
+        jpeg: "jpeg",
+        png: "png",
+        webp: "webp",
+    },
 }));
 
 const { DeviceCache } = require("../src/cache/cache");
@@ -58,6 +63,40 @@ describe("DeviceCache extra branches", () => {
             },
         });
         expect(res).toBeNull();
+    });
+
+    test("downloadImageWithFallback tries compound extensions", async () => {
+        const tried: string[] = [];
+        const res = await DeviceCache.downloadImageWithFallback({
+            url: "https://example.com/cover.webp.webp",
+            downloadHandler: async (url) => {
+                tried.push(url);
+                return {
+                    statusCode: url.endsWith("cover.jpg.webp") ? 200 : 404,
+                };
+            },
+        });
+
+        expect(res).toBe("https://example.com/cover.jpg.webp");
+        expect(tried).toContain("https://example.com/cover.jpg.webp");
+    });
+
+    test("downloadAndCacheImage returns null after all downloads fail", async () => {
+        mockExists.mockResolvedValue(false);
+        mockDownloadFile = jest.fn().mockReturnValue({
+            promise: Promise.resolve({ statusCode: 404 }),
+        });
+        const onImageCached = jest.fn();
+
+        const res = await DeviceCache.downloadAndCacheImage({
+            uri: "https://example.com/missing.jpg",
+            downloadPath: "/cache",
+            imageFileName: "missing.jpg",
+            onImageCached,
+        });
+
+        expect(res).toBeNull();
+        expect(onImageCached).not.toHaveBeenCalled();
     });
 
     test("downloadAndCacheImage forces download when file exists", async () => {
@@ -199,10 +238,7 @@ describe("DeviceCache extra branches", () => {
         mockReadDir.mockResolvedValue([{ name: "one.txt" }]);
         const transfers = await DeviceCache.copyFolder("from", "to");
 
-        expect(mockCopyFile).toHaveBeenCalledWith(
-            "from/one.txt",
-            "to/one.txt",
-        );
+        expect(mockCopyFile).toHaveBeenCalledWith("from/one.txt", "to/one.txt");
         expect(transfers.length).toBe(1);
         await Promise.all(transfers);
     });

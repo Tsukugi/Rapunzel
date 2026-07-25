@@ -14,6 +14,7 @@ import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
 import { ListUtils } from "../tools/list";
+import { FeedFreshnessMs, isFresh } from "../cache/listCache";
 
 interface RapunzelMainFeedProps extends UsesNavigation {}
 
@@ -31,51 +32,70 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         loading: [loading],
     } = useRapunzelStore();
 
-    const loadMainFeed = async (clean: boolean) => {
+    const loadMainFeed = async (force: boolean = false) => {
         const { getLatestBooks, getTrendingBooks } = useRapunzelLoader();
-        const trending = getTrendingBooks();
-        const latest = getLatestBooks(latestBooks.page, clean);
+        const refreshLatest =
+            force ||
+            latestBooks.rendered.length === 0 ||
+            !isFresh(latestBooks.lastFetchedAt, FeedFreshnessMs);
+        const refreshTrending =
+            force ||
+            trendingBooks.rendered.length === 0 ||
+            !isFresh(trendingBooks.lastFetchedAt, FeedFreshnessMs);
+        const trending = getTrendingBooks(false, refreshTrending);
+        const latest = getLatestBooks(1, false, refreshLatest);
 
         await Promise.all([trending, latest]);
     };
 
     useEffect(() => {
-        loadMainFeed(true);
+        void loadMainFeed(false).catch((error) =>
+            RapunzelLog.error("[RapunzelMainFeed] Initial feed load failed", error),
+        );
     }, []);
 
     useFocusEffect(
         useCallback(() => {
-            ListUtils.assignUpdatedList(
-                loadedTrendingBookImages,
-                setLoadedTrendingBookImages,
-                Object.values(trendingBooks.cachedImagesRecord),
-            );
-            ListUtils.assignUpdatedList(
-                latestBooksImages,
-                setLatestBooksImages,
-                includeImagesWithTrending(
-                    Object.values(latestBooks.cachedImagesRecord),
+            setLoadedTrendingBookImages((current) =>
+                ListUtils.mergeVirtualItems(
+                    current,
+                    Object.values(trendingBooks.cachedImagesRecord),
                 ),
             );
-            loadMainFeed(true);
+            setLatestBooksImages((current) =>
+                ListUtils.mergeVirtualItems(
+                    current,
+                    includeImagesWithTrending(
+                        Object.values(latestBooks.cachedImagesRecord),
+                    ),
+                ),
+            );
+            void loadMainFeed(false).catch((error) =>
+                RapunzelLog.error(
+                    "[RapunzelMainFeed] Focus feed load failed",
+                    error,
+                ),
+            );
         }, []),
     );
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
     useTrendingBooksEffect(({ cachedImagesRecord }) => {
-        ListUtils.assignUpdatedList(
-            loadedTrendingBookImages,
-            setLoadedTrendingBookImages,
-            Object.values(cachedImagesRecord),
+        setLoadedTrendingBookImages((current) =>
+            ListUtils.mergeVirtualItems(
+                current,
+                Object.values(cachedImagesRecord),
+            ),
         );
     });
 
     useLatestBooksEffect(({ cachedImagesRecord }) => {
-        ListUtils.assignUpdatedList(
-            latestBooksImages,
-            setLatestBooksImages,
-            includeImagesWithTrending(Object.values(cachedImagesRecord)),
+        setLatestBooksImages((current) =>
+            ListUtils.mergeVirtualItems(
+                current,
+                includeImagesWithTrending(Object.values(cachedImagesRecord)),
+            ),
         );
     });
 
@@ -94,6 +114,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
             );
             return;
         }
+        if (latestBooks.hasNextPage === false) return;
         useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     }, 1000);
     const onStartReachedHandler = () => {
@@ -106,20 +127,21 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
     const includeImagesWithTrending = (
         images: VirtualItem<string>[],
     ): VirtualItem<string>[] => {
-        if (images.length === 0 || images[0].id !== "Trending") {
-            images.unshift({
-                id: "Trending",
-                value: "Trending",
-            });
-        }
-        return images;
+        if (images.some((image) => image.id === "Trending")) return images;
+        return [{ id: "Trending", value: "Trending" }, ...images];
     };
+
+    const feedItems = latestBooksImages;
 
     return (
         <VirtualList
-            data={latestBooksImages.reverse()}
-            renderer={({ index }) => {
-                if (index === 0) {
+            data={feedItems}
+            contentOffset={{ x: 0, y: latestBooks.scrollOffset || 0 }}
+            onScrollPositionChange={(offset) => {
+                latestBooks.scrollOffset = offset;
+            }}
+            renderer={({ item }) => {
+                if (item.id === "Trending") {
                     return loadedTrendingBookImages.length > 0 ? (
                         <TrendingBooksFeed
                             virtualItems={loadedTrendingBookImages}
@@ -128,7 +150,6 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                     ) : null;
                 }
 
-                const { id } = latestBooksImages[index];
                 return (
                     <MainFeedItem
                         style={{
@@ -136,7 +157,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                             coverStyle: { height: 350 },
                         }}
                         item={getVirtualItemProps(
-                            latestBooks.bookListRecord[id],
+                            latestBooks.bookListRecord[item.id],
                         )}
                     />
                 );

@@ -86,6 +86,7 @@ export const useVirtualListEvents = ({
         return {
             bookmarked: isInLibrary,
             cover: bookBase.cover.uri,
+            fallbackUri: bookBase.cover.fallbackUri,
             bookBase,
             onClick: onClick || onBookSelectHandler,
             onLongClick: onLongClick || onBookSaveHandler,
