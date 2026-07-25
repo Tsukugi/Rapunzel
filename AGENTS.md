@@ -10,7 +10,7 @@ Rapunzel is a React Native 0.72 app for reading and downloading books and manga 
 - `__tests__/` contains Jest tests for app behavior and utilities.
 - `scripts/` contains release tooling and its tests.
 - `android/` and `ios/` contain native project files.
-- `docs/` contains behavior notes and troubleshooting details.
+- `docs/` contains behavior notes, troubleshooting details, the deployed smoke-test guide, and the cross-project test matrix.
 
 ## Commands
 
