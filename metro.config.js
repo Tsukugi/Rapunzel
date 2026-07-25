@@ -22,9 +22,20 @@ const blockList = exclusionList([
     new RegExp(`${toPlatformPath("__tests__")}.*`),
 ]);
 
+const siblingPackages = {
+    "@atsu/amagi": path.resolve(__dirname, "../AmagiChan"),
+    "@atsu/lilith": path.resolve(__dirname, "../Lilith"),
+    "@atsu/lilith-hentag": path.resolve(__dirname, "../LilithHentag"),
+    "@atsu/lilith-mangadex": path.resolve(__dirname, "../LilithMangaDex"),
+    "@atsu/lilith-nhentai": path.resolve(__dirname, "../LilithNHentai"),
+};
+
 const config = {
+    watchFolders: Object.values(siblingPackages),
     resolver: {
         blockList,
+        extraNodeModules: siblingPackages,
+        nodeModulesPaths: [path.resolve(__dirname, "node_modules")],
     },
     transformer: {
         // Inline requires can reduce startup time by deferring module evaluation.

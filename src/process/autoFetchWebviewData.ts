@@ -44,7 +44,13 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
             return false;
         }
         try {
-            await useLilithAPI().getTrendingBooks(); // Test a request, should be small
+            const trending = await useLilithAPI().getTrendingBooks(); // Test a request, should be small
+            if (trending.length === 0) {
+                RapunzelLog.warn(
+                    "[useAutoFetchWebviewData.validateData] API returned no data",
+                );
+                return false;
+            }
             RapunzelLog.log(
                 "[useAutoFetchWebviewData.validateData] Data seems valid",
             );

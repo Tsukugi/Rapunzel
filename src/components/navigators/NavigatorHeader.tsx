@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactElement } from "react";
 import { Dimensions, ViewStyle } from "react-native";
 import { ParamListBase } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
@@ -28,7 +28,7 @@ export const NavigatorHeader = ({
     showSearch,
     leftMode,
     searchBehaviour,
-}: NavigatorHeaderProps): ReactNode => {
+}: NavigatorHeaderProps): ReactElement => {
     const { width } = Dimensions.get("screen");
     const {
         config: [config],
