@@ -150,11 +150,17 @@ export class GitHubReleaseAutomation {
         console.log("🚀 Creating GitHub release...");
 
         try {
-            // Create the release with the APK asset
-            const cmd = `gh release create ${tag} -t "${title}" -n "${notes}" --draft=false "${apkPath}"`;
-            execSync(cmd, { stdio: "inherit", cwd: this.projectRoot });
+            const createCommand = `gh release create ${tag} -t "${title}" -n "${notes}" --draft=false`;
+            execSync(createCommand, { stdio: "inherit", cwd: this.projectRoot });
+
+            // Upload from a project-relative path. This avoids Windows drive-path parsing issues.
+            const assetPath = path
+                .relative(this.projectRoot, apkPath)
+                .replace(/\\/g, "/");
+            const uploadCommand = `gh release upload ${tag} "${assetPath}" --clobber`;
+            execSync(uploadCommand, { stdio: "inherit", cwd: this.projectRoot });
         } catch (error) {
-            throw new Error(`Failed to create GitHub release: ${error}`);
+            throw new Error(`Failed to create GitHub release or upload APK: ${error}`);
         }
     }
 }

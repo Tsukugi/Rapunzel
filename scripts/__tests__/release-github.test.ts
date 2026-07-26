@@ -79,13 +79,20 @@ describe('GitHubReleaseAutomation', () => {
   });
 
   describe('createGitHubRelease', () => {
-    it('should run the gh release create command', () => {
-      mockedExecSync.mockReturnValueOnce(Buffer.from(''));
+    it('should create the release and upload the APK', () => {
+      mockedExecSync
+        .mockReturnValueOnce(Buffer.from(''))
+        .mockReturnValueOnce(Buffer.from(''));
 
-      (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', '/path/to/apk');
+      const apkPath = path.join(realProjectRoot, 'builds', 'Rapunzel-0.8.3.apk');
+      (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', apkPath);
 
       expect(mockedExecSync).toHaveBeenCalledWith(
-        'gh release create v0.8.3 -t "Release v0.8.3" -n "Release notes" --draft=false "/path/to/apk"',
+        'gh release create v0.8.3 -t "Release v0.8.3" -n "Release notes" --draft=false',
+        { stdio: 'inherit', cwd: realProjectRoot }
+      );
+      expect(mockedExecSync).toHaveBeenCalledWith(
+        'gh release upload v0.8.3 "builds/Rapunzel-0.8.3.apk" --clobber',
         { stdio: 'inherit', cwd: realProjectRoot }
       );
     });
@@ -97,7 +104,20 @@ describe('GitHubReleaseAutomation', () => {
 
       expect(() => {
         (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', '/path/to/apk');
-      }).toThrow('Failed to create GitHub release: Error: Release failed');
+      }).toThrow('Failed to create GitHub release or upload APK: Error: Release failed');
+    });
+
+    it('should throw an error if the APK upload fails', () => {
+      mockedExecSync
+        .mockReturnValueOnce(Buffer.from(''))
+        .mockImplementationOnce(() => {
+          throw new Error('Upload failed');
+        });
+
+      const apkPath = path.join(realProjectRoot, 'builds', 'Rapunzel-0.8.3.apk');
+      expect(() => {
+        (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', apkPath);
+      }).toThrow('Failed to create GitHub release or upload APK: Error: Upload failed');
     });
   });
 
@@ -170,8 +190,11 @@ describe('GitHubReleaseAutomation', () => {
         ([cmd]) => typeof cmd === 'string' && cmd.includes('gh release create')
       );
       expect(releaseCall?.[0]).toContain('gh release create v0.8.2');
-      expect(releaseCall?.[0]).toContain(
-        path.join(realBuildsDir, 'Rapunzel-0.8.2.apk')
+      const uploadCall = mockedExecSync.mock.calls.find(
+        ([cmd]) => typeof cmd === 'string' && cmd.includes('gh release upload')
+      );
+      expect(uploadCall?.[0]).toContain(
+        'gh release upload v0.8.2 "builds/Rapunzel-0.8.2.apk" --clobber'
       );
     });
 
@@ -193,8 +216,11 @@ describe('GitHubReleaseAutomation', () => {
       expect(releaseCall?.[0]).toContain(
         'gh release create v0.8.2 -t "Release v0.8.2"'
       );
-      expect(releaseCall?.[0]).toContain(
-        path.join(realBuildsDir, 'Rapunzel-0.8.2.apk')
+      const uploadCall = mockedExecSync.mock.calls.find(
+        ([cmd]) => typeof cmd === 'string' && cmd.includes('gh release upload')
+      );
+      expect(uploadCall?.[0]).toContain(
+        'gh release upload v0.8.2 "builds/Rapunzel-0.8.2.apk" --clobber'
       );
     });
 
