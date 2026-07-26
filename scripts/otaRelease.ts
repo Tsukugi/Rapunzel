@@ -178,11 +178,18 @@ const buildBundle = (
     );
 };
 
-const getUploadFiles = (
+export const getUploadFiles = (
     releaseRoot: string,
     manifest: OtaManifest,
 ): string[] => {
-    const files = [path.join(releaseRoot, "latest.json")];
+    const uploadRoot = path.join(releaseRoot, "upload");
+    fs.rmSync(uploadRoot, { recursive: true, force: true });
+    fs.mkdirSync(uploadRoot, { recursive: true });
+
+    const manifestSource = path.join(releaseRoot, "latest.json");
+    const manifestTarget = path.join(uploadRoot, "latest.json");
+    fs.copyFileSync(manifestSource, manifestTarget);
+    const files = [manifestTarget];
     for (const [platform, platformManifest] of Object.entries(
         manifest.platforms,
     )) {
@@ -193,7 +200,9 @@ const getUploadFiles = (
         ]) {
             const localPath = path.join(platformRoot, file.path);
             const assetName = getAssetName(platform, file.path);
-            files.push(`${localPath}#${assetName}`);
+            const uploadPath = path.join(uploadRoot, assetName);
+            fs.copyFileSync(localPath, uploadPath);
+            files.push(uploadPath);
         }
     }
     return files;

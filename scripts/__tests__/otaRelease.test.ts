@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { afterEach, describe, expect, test } from "@jest/globals";
 
-import { createOtaManifest } from "../otaRelease";
+import { createOtaManifest, getUploadFiles } from "../otaRelease";
 
 describe("OTA release manifest", () => {
     const temporaryDirectories: string[] = [];
@@ -31,6 +31,10 @@ describe("OTA release manifest", () => {
         fs.writeFileSync(path.join(root, "ios", "main.jsbundle"), "ios");
 
         const manifest = createOtaManifest(root, "0.9.2");
+        fs.writeFileSync(
+            path.join(root, "latest.json"),
+            JSON.stringify(manifest),
+        );
 
         expect(manifest.platforms.android.bundle.bytes).toBe(7);
         expect(manifest.platforms.android.bundle.sha256).toBe(
@@ -41,6 +45,14 @@ describe("OTA release manifest", () => {
         );
         expect(manifest.platforms.android.assets[0].url).toContain(
             "ota-android-drawable-mdpi--mascot.png",
+        );
+
+        const uploadFiles = getUploadFiles(root, manifest);
+        expect(
+            new Set(uploadFiles.map((file) => path.basename(file))).size,
+        ).toBe(uploadFiles.length);
+        expect(uploadFiles).toContain(
+            path.join(root, "upload", "ota-android-index.android.bundle"),
         );
     });
 
