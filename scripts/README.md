@@ -2,10 +2,14 @@
 
 This project includes an automated release script to streamline the APK building process.
 
+For the complete Windows build, signing, publishing, and device verification
+process, see [docs/ReleaseProcess.md](../docs/ReleaseProcess.md).
+
 ## Overview
 
 The release script automates the following tasks:
 - Updates the version in `package.json`
+- Updates the version in `package-lock.json`
 - Updates the version in `android/app/build.gradle`
 - Builds the release APK using Gradle
 - Moves the generated APK to the `builds/` folder with the naming convention `Rapunzel-{version}.apk`
@@ -79,5 +83,5 @@ The script performs the following steps:
 1. **Version Check**: Determines the target version from command line arguments or package.json
 2. **Directory Setup**: Creates the builds directory if it doesn't exist
 3. **Version Update**: Updates the version in both package.json and Android build.gradle
-4. **APK Build**: Executes `./gradlew assembleRelease` in the android directory
+4. **APK Build**: Executes `gradlew.bat assembleRelease` on Windows or `./gradlew assembleRelease` on other systems
 5. **File Management**: Moves the generated APK to the builds folder with the correct naming
