@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-004: Hide the WebView drawer item
+
+- Status: resolved
+- Added: 2026-07-26
+- Resolved: 2026-07-26
+- Source: user request
+- Problem or goal: The WebView is no longer needed as a user-facing destination and should not be shown in the drawer.
+- Resolution: Removed the WebView drawer options while keeping its registered route available for the existing internal clearance flow.
+- Verification: Reviewed the drawer navigator logic confirming routes without `viewDrawerOptions` receive `display: none` for their drawer item.
+
 ### BL-003: Prevent default header search overflow
 
 - Status: resolved

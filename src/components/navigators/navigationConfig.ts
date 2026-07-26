@@ -89,9 +89,6 @@ const getViews = (): Partial<ViewDict> => {
             component: RapunzelWebView,
             icon: "wifi",
             headerOptions: {},
-            viewDrawerOptions: {
-                title: "WebView",
-            },
         },
         RapunzelChapterSelect: {
             component: RapunzelChapterSelect,
