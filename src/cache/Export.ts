@@ -2,7 +2,7 @@ import { Book } from "@atsu/lilith";
 import RNFS from "react-native-fs";
 import { RapunzelLog } from "../config/log";
 import { useRapunzelStore } from "../store/store";
-import { pickSingle } from "react-native-document-picker";
+import { isCancel, pickSingle } from "react-native-document-picker";
 import { useRapunzelStorage } from "./storage";
 import { StorageEntries } from "./interfaces";
 import { LibraryBook } from "../store/interfaces";
@@ -17,10 +17,10 @@ import { LibraryUtils } from "../tools/library";
  *
  * @async
  * @function exportLibraryAsJson
- * @returns {Promise<void>} - A promise that resolves when the export is complete.
+ * @returns {Promise<string>} - The path of the exported JSON file.
  *
  */
-const exportLibraryAsJson = async () => {
+const exportLibraryAsJson = async (): Promise<string> => {
     const {
         library: [library],
     } = useRapunzelStore();
@@ -34,10 +34,10 @@ const exportLibraryAsJson = async () => {
     }_${now.getHours()}.${now.getMinutes()}.${now.getSeconds()}`; // yyyy-mm-dd_hh.mm.ss
 
     await RNFS.mkdir(MigrateRoot);
-    await RNFS.writeFile(
-        `${MigrateRoot}/metadata_${dateTime}.json`,
-        JSON.stringify(jsonMetadata),
-    );
+    const exportPath = `${MigrateRoot}/metadata_${dateTime}.json`;
+    await RNFS.writeFile(exportPath, JSON.stringify(jsonMetadata));
+
+    return exportPath;
 };
 
 /**
@@ -49,24 +49,30 @@ const exportLibraryAsJson = async () => {
  *
  * @async
  * @function importLibraryFromJson
- * @returns {Promise<void>} - A promise that resolves when the import is complete.
+ * @returns {Promise<number | null>} - The number of imported books, or null when the picker is canceled.
  *
  * @throws {Error} If the file could not be selected or read.
  */
-const importLibraryFromJson = async () => {
+const importLibraryFromJson = async (): Promise<number | null> => {
     const {
         config: [config],
         library: [library],
     } = useRapunzelStore();
 
-    const picked = await pickSingle({
-        mode: "open",
-        copyTo: "documentDirectory",
-        allowMultiSelection: false,
-    });
+    let picked: Awaited<ReturnType<typeof pickSingle>>;
+    try {
+        picked = await pickSingle({
+            mode: "open",
+            copyTo: "documentDirectory",
+            allowMultiSelection: false,
+        });
+    } catch (error) {
+        if (isCancel(error)) return null;
+        throw error;
+    }
     if (!picked.fileCopyUri) {
         RapunzelLog.error("[importLibraryFromJson] FileCopyUri was not found");
-        return;
+        return null;
     }
     const backup = await RNFS.readFile(picked.fileCopyUri);
     const parsedBackup: Record<string, LibraryBook> = JSON.parse(backup);
@@ -85,6 +91,8 @@ const importLibraryFromJson = async () => {
 
     const { setItem } = useRapunzelStorage();
     setItem(StorageEntries.library, library.saved);
+
+    return backupKeys.length;
 };
 
 export const Export = {

@@ -19,6 +19,7 @@ export interface RapunzelSelectProps {
     initialValue: string[];
     list: string[];
     multi?: boolean;
+    disabled?: boolean;
     onSelect: (newValue: string[]) => void;
 }
 export const RapunzelSelect: FC<RapunzelSelectProps> = ({
@@ -26,6 +27,7 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
     initialValue,
     list,
     multi = false,
+    disabled = false,
     onSelect,
 }) => {
     const { colors } = LocalTheme.useTheme();
@@ -73,6 +75,7 @@ export const RapunzelSelect: FC<RapunzelSelectProps> = ({
             selectedArrayList={stateValues.selectedList}
             errorText={stateValues.error}
             multiEnable={multi}
+            disabled={disabled}
         />
     );
 };

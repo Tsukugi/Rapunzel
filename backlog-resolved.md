@@ -4,7 +4,15 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
-No backlog items are recorded as resolved yet.
+### BL-001: Confirm and show progress for settings actions
+
+- Status: resolved
+- Added: 2026-07-26
+- Resolved: 2026-07-26
+- Source: user request and UX review
+- Problem or goal: Important settings actions did not consistently ask for confirmation or show progress while they ran.
+- Resolution: Added confirmation dialogs for import, library migration, and both cache-clearing actions. Added loading and disabled states, result messages, cache-size failure feedback, disabled cache selectors during actions, and theme-aware Danger Zone styling. Cache cleanup now reports failures instead of silently treating them as success.
+- Verification: Focused `cacheScreen` tests passed; full Jest suite passed with 19 suites and 92 tests. Source checks for the changed settings components passed. Repository-wide lint and TypeScript checks still contain pre-existing errors.
 
 ## Item format
 

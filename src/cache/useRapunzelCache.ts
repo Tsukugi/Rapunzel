@@ -67,63 +67,74 @@ export const RapunzelCache = {
 
     /**
      * Asynchronously clears temp directory covers.
-     * @returns {Promise<void>} - A Promise that resolves once the covers is successfully cleared.
+     * @returns {Promise<boolean>} - Whether all existing temporary cache folders were cleared.
      */
-    clearTempCache: async (): Promise<void> => {
+    clearTempCache: async (): Promise<boolean> => {
         const {
             config: [config],
         } = useRapunzelStore();
 
         const RapunzelLibrary = `${config.cacheTempImageLocation}/${StaticLibraryPaths.RootFolderName}`;
 
-        const removeContents = async (folder: string) => {
-            await RNFS.unlink(`${RapunzelLibrary}/${folder}`);
-        };
-
         try {
-            const processes = [
-                removeContents(StaticLibraryPaths.MainFeed),
-                removeContents(StaticLibraryPaths.Trending),
-                removeContents(StaticLibraryPaths.SearchResults),
-                removeContents(StaticLibraryPaths.BookCovers),
-                removeContents(StaticLibraryPaths.ReadBooks),
+            const folders = [
+                StaticLibraryPaths.MainFeed,
+                StaticLibraryPaths.Trending,
+                StaticLibraryPaths.SearchResults,
+                StaticLibraryPaths.BookCovers,
+                StaticLibraryPaths.ReadBooks,
             ];
+            const folderPaths = await Promise.all(
+                folders.map(async (folder) => {
+                    const path = `${RapunzelLibrary}/${folder}`;
+                    return (await RNFS.exists(path)) ? path : null;
+                }),
+            );
 
-            await Promise.allSettled(processes);
+            await Promise.all(
+                folderPaths
+                    .filter((path): path is string => path !== null)
+                    .map((path) => RNFS.unlink(path)),
+            );
 
             RapunzelLog.log(
                 "[clearTempCache] Temp cache cleared successfully.",
             );
+            return true;
         } catch (error) {
             RapunzelLog.error("[clearTempCache] Error clearing cache:", error);
+            return false;
         }
     },
 
     /**
      * Asynchronously clears Library directory covers.
-     * @returns {Promise<void>} - A Promise that resolves once the covers is successfully cleared.
-     */ clearLibraryCache: async (): Promise<void> => {
+     * @returns {Promise<boolean>} - Whether all library image files were cleared.
+     */ clearLibraryCache: async (): Promise<boolean> => {
         const {
             config: [config],
         } = useRapunzelStore();
 
         try {
             const RapunzelLibrary = `${config.cachelibraryLocation}/${StaticLibraryPaths.RootFolderName}`;
-            const items = await RNFS.readDir(
-                `${RapunzelLibrary}/${StaticLibraryPaths.ReadBooks}`,
-            );
+            const readBooksPath = `${RapunzelLibrary}/${StaticLibraryPaths.ReadBooks}`;
+            if (!(await RNFS.exists(readBooksPath))) return true;
+
+            const items = await RNFS.readDir(readBooksPath);
             const processes = items.map((item) => RNFS.unlink(item.path));
 
-            await Promise.allSettled(processes);
+            await Promise.all(processes);
 
             RapunzelLog.log(
                 "[clearLibraryCache] Library cache cleared successfully.",
             );
+            return true;
         } catch (error) {
             RapunzelLog.error(
                 "[clearLibraryCache] Error clearing cache:",
                 error,
             );
+            return false;
         }
     },
 
@@ -131,12 +142,12 @@ export const RapunzelCache = {
     applyLibraryBookAndCoverStoragePatch: (
         storedLibrary: Record<string, LibraryBook>,
         onSuccess: (newLibrary: Record<string, LibraryBook>) => void,
-    ) => {
+    ): Promise<Record<string, LibraryBook>> => {
         const {
             config: [config],
         } = useRapunzelStore();
         const newLib: Record<string, LibraryBook> = {};
-        Promise.all(
+        return Promise.all(
             Object.keys(storedLibrary).map(async (key) => {
                 const [savedRepo, bookId] = key.split(".");
                 const bookPath = `${config.cachelibraryLocation}/${StaticLibraryPaths.RootFolderName}/${StaticLibraryPaths.ReadBooks}/${savedRepo}/${bookId}`;
@@ -166,6 +177,7 @@ export const RapunzelCache = {
             }),
         ).then(() => {
             onSuccess(newLib);
+            return newLib;
         });
     },
 };
