@@ -22,7 +22,7 @@ const manifest = {
     schema: 1,
     platforms: {
         android: {
-            version: "0.9.3",
+            version: "0.9.4",
             nativeCompatibility: "rn-0.72.6-hermes",
             bundle: {
                 path: "index.android.bundle",
@@ -61,7 +61,7 @@ describe("OTA update service", () => {
 
         const update = await checkForOtaUpdate("android");
 
-        expect(update?.platformManifest.version).toBe("0.9.3");
+        expect(update?.platformManifest.version).toBe("0.9.4");
         expect(fetchMock).toHaveBeenCalledWith(
             "https://github.com/Tsukugi/Rapunzel/releases/latest/download/latest.json",
             { headers: { "Cache-Control": "no-cache" } },
@@ -86,14 +86,14 @@ describe("OTA update service", () => {
             1,
             expect.objectContaining({
                 fromUrl: "https://example.com/index.android.bundle",
-                toFile: "/documents/ota/android/0.9.3/index.android.bundle",
+                toFile: "/documents/ota/android/0.9.4/index.android.bundle",
             }),
         );
         expect(jest.mocked(RNFS).downloadFile).toHaveBeenNthCalledWith(
             2,
             expect.objectContaining({
                 fromUrl: "https://example.com/assets_mascot.png",
-                toFile: "/documents/ota/android/0.9.3/drawable-mdpi/assets_mascot.png",
+                toFile: "/documents/ota/android/0.9.4/drawable-mdpi/assets_mascot.png",
             }),
         );
         expect(jest.mocked(RNFS).moveFile).toHaveBeenCalledWith(

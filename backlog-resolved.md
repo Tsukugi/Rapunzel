@@ -4,6 +4,26 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-008: Publish direct release 0.9.3
+
+- Status: resolved
+- Added: 2026-07-27
+- Resolved: 2026-07-27
+- Source: user request and release verification
+- Problem or goal: Publish the next directly distributed Rapunzel APK and its
+  React Native code update while retaining the private release signing key.
+- Resolution: Bumped the app to version 0.9.3 and Android versionCode 9, built
+  the release APK with the private release certificate, created GitHub release
+  `v0.9.3`, and uploaded the Android and iOS OTA bundles plus their Metro
+  assets. Fixed the OTA runner so it waits for bundle output to stabilize
+  before creating manifest hashes.
+- Verification: The APK reports package `com.rapunzel`, versionCode 9, and
+  versionName 0.9.3. Its certificate matches the private release fingerprint.
+  The online release has 30 assets, all 29 manifest files are present, the
+  manifest has zero digest mismatches, and the APK digest matches GitHub.
+  Focused OTA tests passed (5 tests), and the full Jest suite passed (29
+  suites, 123 tests).
+
 ### BL-007: Use a private release signing keystore
 
 - Status: resolved
