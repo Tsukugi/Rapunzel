@@ -37,13 +37,37 @@ export interface OtaManifest {
 const getAssetName = (platform: string, relativePath: string): string =>
     `ota-${platform}-${relativePath.replace(/[\\/]/g, "--")}`;
 
-const REACT_NATIVE_RUNNER = [
+export const REACT_NATIVE_RUNNER = [
+    'const fs = require("fs");',
+    "const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));",
+    "const waitForBundle = async (file) => {",
+    "  const deadline = Date.now() + 10000;",
+    "  let previousSize = -1;",
+    "  let stableSince = 0;",
+    "  while (Date.now() < deadline) {",
+    "    if (fs.existsSync(file)) {",
+    "      const size = fs.statSync(file).size;",
+    "      if (size > 0 && size === previousSize && Date.now() - stableSince >= 100) {",
+    "        return;",
+    "      }",
+    "      if (size !== previousSize) {",
+    "        previousSize = size;",
+    "        stableSince = Date.now();",
+    "      }",
+    "    }",
+    "    await wait(25);",
+    "  }",
+    '  throw new Error("Bundle output did not stabilize: " + file);',
+    "};",
     'const cli = require("@react-native-community/cli");',
     'const metro = require("@react-native-community/cli-plugin-metro");',
     "const args = JSON.parse(process.argv[1]);",
-    "Promise.resolve(cli.loadConfig()).then((context) => metro.loadMetroConfig(context, args)).then((config) => metro.buildBundleWithConfig(args, config)).then(() => process.exit(0), (error) => {",
+    "Promise.resolve(cli.loadConfig()).then((context) => metro.loadMetroConfig(context, args)).then((config) => metro.buildBundleWithConfig(args, config)).then(() => waitForBundle(args.bundleOutput).then(() => process.exit(0), (error) => {",
     "  console.error(error);",
-    "  process.exit(1);",
+    "  process.exitCode = 1;",
+    "}), (error) => {",
+    "  console.error(error);",
+    "  process.exitCode = 1;",
     "});",
 ].join(" ");
 

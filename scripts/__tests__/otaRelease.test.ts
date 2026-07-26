@@ -3,7 +3,11 @@ import * as os from "os";
 import * as path from "path";
 import { afterEach, describe, expect, test } from "@jest/globals";
 
-import { createOtaManifest, getUploadFiles } from "../otaRelease";
+import {
+    createOtaManifest,
+    getUploadFiles,
+    REACT_NATIVE_RUNNER,
+} from "../otaRelease";
 
 describe("OTA release manifest", () => {
     const temporaryDirectories: string[] = [];
@@ -12,6 +16,15 @@ describe("OTA release manifest", () => {
         for (const directory of temporaryDirectories.splice(0)) {
             fs.rmSync(directory, { recursive: true, force: true });
         }
+    });
+
+    test("lets Metro finish writing before the runner exits", () => {
+        expect(REACT_NATIVE_RUNNER).toContain(
+            "waitForBundle(args.bundleOutput).then(() => process.exit(0)",
+        );
+        expect(REACT_NATIVE_RUNNER).toContain(
+            "Date.now() - stableSince >= 100",
+        );
     });
 
     test("describes bundles and assets with release URLs and hashes", () => {
