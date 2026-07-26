@@ -24,7 +24,9 @@ This file records backlog items that were completed. Keep the history concise an
   files and `latest.json`, updater-specific ESLint and `git diff --check`
   passed, and generated output was removed. iOS build verification requires
   macOS/Xcode. Repository-wide lint and TypeScript checks still report
-  pre-existing unrelated diagnostics.
+  pre-existing unrelated diagnostics. Published release `v0.9.2` was verified
+  with 30 assets: the APK, `latest.json`, and all 28 manifest files. The local
+  APK SHA-256 matched GitHub: `4e3254f1bfcd757af8e81b43e34031ea6c7f10f0bdb49e5e7a8c3af2977a646e`.
 
 ### BL-006: Replace drawer repository covers with mascots
 
