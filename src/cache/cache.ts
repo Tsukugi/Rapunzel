@@ -191,6 +191,11 @@ interface FileNamingProps {
     index: number;
 }
 
+interface LoadedImageResult {
+    url: string | null;
+    index: number;
+}
+
 export interface StartLoadingImagesProps {
     id?: string;
     data: Array<string | LilithImage>;
@@ -224,7 +229,10 @@ const startLoadingImages = async ({
         return image;
     };
 
-    const onImageLoadedHandler = async (url: string | null) => {
+    const onImageLoadedHandler = async ({
+        url,
+        index,
+    }: LoadedImageResult) => {
         const cancelProcess = shouldCancelLoad(id);
         if (!url || cancelProcess) {
             RapunzelLog.warn(
@@ -234,18 +242,18 @@ const startLoadingImages = async ({
         }
         indexes.push(url);
         RapunzelLog.log(`[startLoadingImages] ${url} loaded`);
-        await onImageLoaded(url, indexes.length - 1);
+        await onImageLoaded(url, index);
     };
 
-    await PromiseTools.recursivePromiseChain<string | null>({
-        promises: data.map((uri, index) => () => {
+    await PromiseTools.recursivePromiseChain<LoadedImageResult>({
+        promises: data.map((uri, index) => async () => {
             const cancelProcess = shouldCancelLoad(id);
-            if (cancelProcess) return Promise.resolve(null); // This will interrupt the load chain;
+            if (cancelProcess) return { url: null, index }; // This will interrupt the load chain;
 
             const { uri: normalizedUri, fallbackUri } =
                 normalizeLilithImage(uri);
 
-            return downloadAndCacheImage({
+            const url = await downloadAndCacheImage({
                 uri: normalizedUri,
                 fallbackUri,
                 downloadPath,
@@ -254,6 +262,8 @@ const startLoadingImages = async ({
                     index,
                 }),
             });
+
+            return { url, index };
         }),
         onPromiseSettled: onImageLoadedHandler,
     });

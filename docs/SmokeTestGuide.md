@@ -3,6 +3,9 @@
 Use this with [SmokeTest.md](SmokeTest.md). Smoke tests must use APK installed
 on emulator. Metro or older installed APK is not evidence for current checkout.
 
+For emulator commands, physical-phone testing, screenshots, and blocked ADB
+input, see [DeviceTesting.md](DeviceTesting.md).
+
 ## Prepare local siblings
 
 Rapunzel uses local links. These directories must exist beside Rapunzel:

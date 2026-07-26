@@ -223,6 +223,31 @@ describe("DeviceCache extra branches", () => {
         expect(result).toEqual(["file:///cache/0.jpg"]);
     });
 
+    test("preserves the original page index when a previous page fails", async () => {
+        mockExists.mockResolvedValue(false);
+        mockDownloadFile = jest.fn(({ fromUrl }) => ({
+            promise: Promise.resolve({
+                statusCode: fromUrl.includes("page-2") ? 404 : 200,
+            }),
+        }));
+
+        const loaded: Array<{ url: string; index: number }> = [];
+        const result = await DeviceCache.startLoadingImages({
+            data: [
+                "https://example.com/page-1.jpg",
+                "https://example.com/page-2.jpg",
+                "https://example.com/page-3.jpg",
+            ],
+            imagesPath: "/cache",
+            onFileNaming: ({ index }) => `${index}.jpg`,
+            onImageLoaded: async (url: string, index: number) =>
+                loaded.push({ url, index }),
+        });
+
+        expect(result).toEqual(["file:///cache/0.jpg", "file:///cache/2.jpg"]);
+        expect(loaded.map(({ index }) => index)).toEqual([0, 2]);
+    });
+
     test("ensureCreateDeepFolders creates nested paths", async () => {
         jest.useFakeTimers();
         const promise = DeviceCache.ensureCreateDeepFolders("a/b", "/root");

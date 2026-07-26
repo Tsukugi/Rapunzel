@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Dimensions, Image, ImageProps, StyleSheet } from "react-native";
+import React from "react";
+import { Dimensions, ImageProps, StyleSheet } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     useAnimatedStyle,
@@ -47,7 +47,7 @@ const PinchableImage: React.FC<PinchableBoxProps> = React.memo(
                 width: scaledWidth * scale.value,
                 height: scaledHeight * scale.value,
             };
-        }, [scale.value]);
+        }, [scale.value, image.width, image.height]);
 
         return (
             <GestureDetector gesture={pinchGesture}>
