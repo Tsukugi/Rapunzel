@@ -95,12 +95,29 @@ android {
             keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
         }
 
+        def releaseStoreFile = keystoreProperties['MYAPP_UPLOAD_STORE_FILE']
+        def releaseStorePassword = keystoreProperties['MYAPP_UPLOAD_STORE_PASSWORD']
+        def releaseKeyAlias = keystoreProperties['MYAPP_UPLOAD_KEY_ALIAS']
+        def releaseKeyPassword = keystoreProperties['MYAPP_UPLOAD_KEY_PASSWORD']
+        def releaseSigningConfigured = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
         release {
-            if (keystoreProperties['MYAPP_UPLOAD_STORE_FILE']) {
-                storeFile file(keystoreProperties['MYAPP_UPLOAD_STORE_FILE'])
-                storePassword keystoreProperties['MYAPP_UPLOAD_STORE_PASSWORD']
-                keyAlias keystoreProperties['MYAPP_UPLOAD_KEY_ALIAS']
-                keyPassword keystoreProperties['MYAPP_UPLOAD_KEY_PASSWORD']
+            if (releaseSigningConfigured) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+
+        gradle.taskGraph.whenReady { taskGraph ->
+            def hasReleaseTask = taskGraph.allTasks.any { it.name.toLowerCase().contains('release') }
+            if (hasReleaseTask && !releaseSigningConfigured) {
+                throw new GradleException(
+                    "Release signing requires MYAPP_UPLOAD_STORE_FILE, " +
+                    "MYAPP_UPLOAD_STORE_PASSWORD, " +
+                    "MYAPP_UPLOAD_KEY_ALIAS, and MYAPP_UPLOAD_KEY_PASSWORD in android/local.properties."
+                )
             }
         }
     }

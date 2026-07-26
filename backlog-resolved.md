@@ -4,6 +4,27 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-007: Use a private release signing keystore
+
+- Status: resolved
+- Added: 2026-07-26
+- Resolved: 2026-07-26
+- Source: user request
+- Problem or goal: Release APKs must not use the committed debug keystore, while
+  the private release key must remain stable so directly installed APKs can be
+  replaced by future releases.
+- Resolution: Generated a new private `release.keystore` outside the public
+  repository, configured release signing to read its path and credentials from
+  ignored `android/local.properties`, and kept debug and emulator variants on
+  the debug key. Release Gradle tasks now fail when the private signing values
+  are missing instead of falling back to debug signing. Documented the required
+  private keystore and its fingerprint in the release and OTA documentation.
+- Verification: `assembleRelease` passed. The resulting APK was verified with
+  `apksigner` and has certificate SHA-256 fingerprint
+  `34:64:ea:f9:60:01:d4:18:19:89:91:87:f9:87:37:09:12:03:b3:38:22:1a:d8:ea:7e:b2:5a:44:7b:af:cb:2c`.
+  The private keystore and `android/local.properties` are not tracked by Git;
+  the installable APK is ignored under `builds/`.
+
 ### BL-005: Add OTA React Native bundle updater
 
 - Status: resolved

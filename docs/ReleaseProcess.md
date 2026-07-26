@@ -20,31 +20,46 @@ npm i
 
 ## Configure the signing key
 
-The release build reads its signing values from `android/local.properties`.
-That file is ignored by Git. Keep the keystore and passwords outside the repo.
+The release build must use one dedicated `release.keystore`. Keep this file
+outside the public repository, for example at
+`C:/private/rapunzel-release/release.keystore`. Do not commit it, add it to a
+release asset, or put it in the public repository. Back it up privately for the
+lifetime of the app.
+
+Do not replace it with `debug.keystore` or generate another release key. An APK
+signed with a different key cannot update an installed Rapunzel copy.
+
+The release build reads only the signing credentials from
+`android/local.properties`. That file is ignored by Git and must not be
+committed.
 
 Example:
 
 ```properties
-MYAPP_UPLOAD_STORE_FILE=C:/private/rapunzel-release.jks
+MYAPP_UPLOAD_STORE_FILE=C:/private/rapunzel-release/release.keystore
 MYAPP_UPLOAD_STORE_PASSWORD=<store-password>
-MYAPP_UPLOAD_KEY_ALIAS=<key-alias>
+MYAPP_UPLOAD_KEY_ALIAS=rapunzel-release
 MYAPP_UPLOAD_KEY_PASSWORD=<key-password>
 ```
 
 Check the certificate before building:
 
 ```powershell
-keytool -list -v -keystore C:/private/rapunzel-release.jks
+keytool -list -v -keystore C:/private/rapunzel-release/release.keystore
 ```
 
-The certificate fingerprint must match the app already installed on devices that
-will receive an update. A release APK signed with a different key cannot update
-the existing app. Do not uninstall the old app to work around this; that can
-remove its data.
+The dedicated release certificate fingerprint is:
 
-For a test-only build, the Android debug key can be used. It is not a production
-release key and must not be used for a public release.
+```text
+34:64:EA:F9:60:01:D4:18:19:89:91:87:F9:87:37:09:12:03:B3:38:22:1A:D8:EA:7E:B2:5A:44:7B:AF:CB:2C
+```
+
+Compare this fingerprint with every release APK before distributing it. A
+release APK signed with a different key cannot update the existing app. Do not
+uninstall the old app to work around this; that can remove its data.
+
+The committed `debug.keystore` is not a release key and must never be used for
+a release or OTA-compatible APK.
 
 ## Run checks
 
@@ -162,11 +177,18 @@ stop and find the original release keystore.
 
 ## Clean up
 
-If a temporary signing file was used, remove it after the build:
+Keep the private `release.keystore` and local credentials available for the
+next release. Do not delete or replace the keystore.
+
+`android/local.properties` remains ignored and must not be committed. Confirm
+the local credentials are ignored and no release keystore is tracked:
+
+Check the worktree after the build:
 
 ```powershell
-Remove-Item -LiteralPath android\local.properties -Force
+git check-ignore -v android/local.properties
+git ls-files | Select-String 'release\.keystore'
 git status --short
 ```
 
-The worktree should contain no temporary signing files or generated APKs.
+Generated APKs should remain outside Git.

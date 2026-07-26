@@ -140,6 +140,11 @@ Add a release command that:
 The release command must refuse to publish a bundle whose native compatibility
 identifier does not match the app build configuration.
 
+Android release APKs must be signed with the private `release.keystore`. The
+keystore is part of the app's update identity, must stay outside the public
+repository, and must not be replaced. Release credentials stay in the ignored
+`android/local.properties` file.
+
 ## Test and review passes
 
 ### Pass 1: shared updater core
