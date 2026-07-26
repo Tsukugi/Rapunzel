@@ -21,6 +21,8 @@ interface VirtualListProps<T> extends PropsWithChildren {
     onEndReached?: () => void;
     onStartReached?: () => void;
     contentOffset?: { x: number; y: number };
+    /** Called during scrolling. The settled callback below stays end-of-scroll only. */
+    onScroll?: (offset: number) => void;
     onScrollPositionChange?: (offset: number) => void;
 }
 
@@ -39,6 +41,7 @@ const VirtualList = <T,>({
         RapunzelLog.log("[onStartReached]: Reached");
     },
     contentOffset,
+    onScroll,
     onScrollPositionChange,
 }: VirtualListProps<T>) => {
     const {
@@ -99,6 +102,8 @@ const VirtualList = <T,>({
             keyExtractor={(item) => item.id}
             getItemCount={(_data) => _data.length}
             getItem={getItem}
+            scrollEventThrottle={16}
+            onScroll={(event) => onScroll?.(event.nativeEvent.contentOffset.y)}
             onMomentumScrollEnd={(event) =>
                 onScrollPositionChange?.(event.nativeEvent.contentOffset.y)
             }

@@ -24,13 +24,40 @@ export interface RouterState {
 export interface HeaderState {
     searchValue: string;
 }
+
+export enum ReaderMode {
+    Scroll = "scroll",
+    SinglePage = "single-page",
+}
+
+export enum ReaderImageFit {
+    Width = "width",
+    Height = "height",
+    Auto = "auto",
+}
+
+export interface ReaderSettings {
+    mode: ReaderMode;
+    imageFit: ReaderImageFit;
+}
+
 export interface ReaderState {
     activeProcessId: string;
     book: Book | null;
     chapter: Chapter | null;
     cachedImages: VirtualItem<RapunzelImage>[];
     chapterPage: number;
+    mode: ReaderMode;
+    imageFit: ReaderImageFit;
 }
+
+export const isReaderMode = (value: unknown): value is ReaderMode =>
+    value === ReaderMode.Scroll || value === ReaderMode.SinglePage;
+
+export const isReaderImageFit = (value: unknown): value is ReaderImageFit =>
+    value === ReaderImageFit.Width ||
+    value === ReaderImageFit.Height ||
+    value === ReaderImageFit.Auto;
 export interface ConfigState extends RapunzelConfigBase {
     apiLoaderConfig: LilithHeaders;
     apiLoaderTimestamps: ApiLoaderTimestamps;

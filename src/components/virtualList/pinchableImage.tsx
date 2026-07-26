@@ -5,17 +5,19 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
 } from "react-native-reanimated";
-import { RapunzelImage } from "../../store/interfaces";
+import { RapunzelImage, ReaderImageFit } from "../../store/interfaces";
+import { getFittedImageDimensions } from "./imageFit";
 
 interface PinchableBoxProps extends Partial<ImageProps> {
     image: RapunzelImage;
     onLoadStart: () => void;
     onLoadEnd: () => void;
+    imageFit?: ReaderImageFit;
 }
 
-const { width } = Dimensions.get("screen");
+const viewport = Dimensions.get("screen");
 const PinchableImage: React.FC<PinchableBoxProps> = React.memo(
-    ({ image, onLoadEnd, ...props }) => {
+    ({ image, imageFit = ReaderImageFit.Width, onLoadEnd, ...props }) => {
         const scale = useSharedValue(1);
         const savedScale = useSharedValue(1);
         const pinchGesture = Gesture.Pinch()
@@ -26,28 +28,18 @@ const PinchableImage: React.FC<PinchableBoxProps> = React.memo(
                 savedScale.value = scale.value;
             });
 
-        const animatedStyle = useAnimatedStyle(() => {
-            const scaleValuesToWidth = (
-                desiredWidth: number,
-                width: number,
-                height: number,
-            ) => {
-                const scaleFactor = desiredWidth / width;
-                const scaledWidth = width * scaleFactor;
-                const scaledHeight = height * scaleFactor;
-                return { scaledWidth, scaledHeight };
-            };
+        const fittedDimensions = getFittedImageDimensions(
+            image,
+            viewport,
+            imageFit,
+        );
 
-            const { scaledWidth, scaledHeight } = scaleValuesToWidth(
-                width,
-                image.width || width,
-                image.height || width * 1.4,
-            );
+        const animatedStyle = useAnimatedStyle(() => {
             return {
-                width: scaledWidth * scale.value,
-                height: scaledHeight * scale.value,
+                width: fittedDimensions.width * scale.value,
+                height: fittedDimensions.height * scale.value,
             };
-        }, [scale.value, image.width, image.height]);
+        }, [scale.value, fittedDimensions.width, fittedDimensions.height]);
 
         return (
             <GestureDetector gesture={pinchGesture}>

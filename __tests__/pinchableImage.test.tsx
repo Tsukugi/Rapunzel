@@ -1,6 +1,7 @@
 import React from "react";
 import renderer, { act } from "react-test-renderer";
 import { describe, expect, jest, test } from "@jest/globals";
+import { ReaderImageFit } from "../src/store/interfaces";
 
 // The mock needs to preserve dependency behavior so this test can reproduce
 // stale animated dimensions.
@@ -52,9 +53,9 @@ jest.mock("react-native-reanimated", () => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { default: PinchableImage } = require(
-    "../src/components/virtualList/pinchableImage",
-);
+const {
+    default: PinchableImage,
+} = require("../src/components/virtualList/pinchableImage");
 
 describe("PinchableImage sizing", () => {
     test("updates the fitted height when image dimensions arrive after mount", () => {
@@ -80,5 +81,22 @@ describe("PinchableImage sizing", () => {
 
         const style = view.root.findByType("image").props.style;
         expect(style[1]).toEqual({ width: 360, height: 720 });
+    });
+
+    test("supports height fitting for reader pages", () => {
+        const view = renderer.create(
+            <PinchableImage
+                image={{ uri: "page", width: 1200, height: 1800 }}
+                imageFit={ReaderImageFit.Height}
+                onLoadStart={jest.fn()}
+                onLoadEnd={jest.fn()}
+            />,
+        );
+
+        const style = view.root.findByType("image").props.style;
+        expect(style[1]).toEqual({
+            width: 533.3333333333333,
+            height: 800,
+        });
     });
 });

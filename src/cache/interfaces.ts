@@ -10,6 +10,7 @@ export enum StorageEntries {
     repository = "repository",
     config = "config",
     library = "library",
+    readerSettings = "readerSettings",
     feedLatest = "feed.latest",
     feedTrending = "feed.trending",
     browse = "browse",

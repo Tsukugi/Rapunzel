@@ -1,5 +1,5 @@
 import { Appbar, Searchbar } from "react-native-paper";
-import { Dimensions, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { RapunzelLog } from "../../../config/log";
 import { useFocusEffect } from "@react-navigation/native";
@@ -59,20 +59,22 @@ const PaperSearch = ({
     };
 
     return isSearchExpanded ? (
-        <Searchbar
-            placeholder={placeholder}
-            style={styles.Searchbar}
-            inputStyle={{
-                paddingTop: 0,
-            }}
-            traileringIcon="close"
-            onSubmitEditing={onSubmitHandler}
-            onTraileringIconPress={onCloseHandler}
-            onChangeText={onChangeHandler}
-            loading={isLoading}
-            value={searchQuery}
-            defaultValue={defaultValue}
-        />
+        <View style={styles.searchContainer}>
+            <Searchbar
+                placeholder={placeholder}
+                style={styles.Searchbar}
+                inputStyle={{
+                    paddingTop: 0,
+                }}
+                traileringIcon="close"
+                onSubmitEditing={onSubmitHandler}
+                onTraileringIconPress={onCloseHandler}
+                onChangeText={onChangeHandler}
+                loading={isLoading}
+                value={searchQuery}
+                defaultValue={defaultValue}
+            />
+        </View>
     ) : (
         <Appbar.Action
             icon="magnify"
@@ -83,10 +85,14 @@ const PaperSearch = ({
     );
 };
 
-const { width } = Dimensions.get("screen");
 const styles = StyleSheet.create({
+    searchContainer: {
+        flex: 1,
+        minWidth: 0,
+    },
     Searchbar: {
-        minWidth: width * 0.7,
+        flex: 1,
+        minWidth: 0,
         height: 45,
     },
 });

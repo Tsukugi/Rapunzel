@@ -16,6 +16,9 @@ import {
     LatestBooksState,
     LibraryBook,
     PopularBooksState,
+    ReaderSettings,
+    isReaderImageFit,
+    isReaderMode,
 } from "../store/interfaces";
 import { LibraryUtils } from "../tools/library";
 import RNFS from "react-native-fs";
@@ -93,6 +96,7 @@ export const initRapunzelStorage = () => {
     const [config] = store.config;
     const [header] = store.header;
     const [library] = store.library;
+    const [reader] = store.reader;
     const [router] = store.router;
     const browse = store.browse?.[0];
     const [latest] = store.latest;
@@ -144,6 +148,18 @@ export const initRapunzelStorage = () => {
         }),
     );
 
+    getMap<Partial<ReaderSettings>>(
+        StorageEntries.readerSettings,
+        setIfValid((settings) => {
+            if (isReaderMode(settings.mode)) {
+                reader.mode = settings.mode;
+            }
+            if (isReaderImageFit(settings.imageFit)) {
+                reader.imageFit = settings.imageFit;
+            }
+        }),
+    );
+
     interface SafeBookBaseList<T extends BookBaseList> {
         snapshot: T;
         localFiles: Array<{ id: string; path: string }>;
@@ -171,7 +187,8 @@ export const initRapunzelStorage = () => {
         const imageRecord: Record<string, VirtualItem<string>> = {};
         Object.entries(snapshot.cachedImagesRecord || {}).forEach(
             ([storedId, image]) => {
-                const uid = idMap[storedId] || getEntryUid(repository, storedId);
+                const uid =
+                    idMap[storedId] || getEntryUid(repository, storedId);
                 imageRecord[uid] = { ...image, id: uid };
             },
         );
@@ -186,8 +203,7 @@ export const initRapunzelStorage = () => {
         );
 
         const renderedIds = (snapshot.rendered || []).map(
-            (storedId) =>
-                idMap[storedId] || getEntryUid(repository, storedId),
+            (storedId) => idMap[storedId] || getEntryUid(repository, storedId),
         );
         const safeRendered: string[] = [];
         const safeBookListRecord: Record<string, BookBase> = {};

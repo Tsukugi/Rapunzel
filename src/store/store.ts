@@ -19,6 +19,8 @@ import {
     TaihouEffect,
     UIState,
     UseReactTaihou,
+    ReaderImageFit,
+    ReaderMode,
 } from "./interfaces";
 
 import { useEffect } from "react";
@@ -103,6 +105,8 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         chapter: null,
         cachedImages: [],
         chapterPage: 1,
+        mode: ReaderMode.Scroll,
+        imageFit: ReaderImageFit.Width,
     });
 
     RapunzelState.header = useReactConfig<HeaderState>("header", {

@@ -183,6 +183,10 @@ Result: ____  Notes: ______________________________
 -   [ ] Scroll through the first several pages. Confirm images load progressively.
 -   [ ] Confirm the reader remains responsive while pages load.
 -   [ ] Pull to refresh. Confirm the reader remains usable and does not clear valid pages unexpectedly.
+-   [ ] After the header hides, scroll down, then scroll up. Confirm it appears on upward movement and hides immediately when moving down or after three seconds without upward movement.
+-   [ ] Confirm the header shows the book title and the options menu can save/unsave the book.
+-   [ ] Open Reader settings. Confirm Scroll down is the default, Single page uses invisible left/right page tap areas, and the selected mode is retained after reopening Reader.
+-   [ ] Check Fit to width, Fit to height, and Auto. Confirm each choice changes the page bounds as expected and is retained after reopening Reader.
 -   [ ] Use the header/drawer navigation to leave Reader and return to Feed.
 
 Result: ____  Notes: ______________________________

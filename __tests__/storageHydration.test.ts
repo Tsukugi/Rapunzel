@@ -10,6 +10,9 @@ import {
     LibraryState,
     LilithRepo,
     PopularBooksState,
+    ReaderImageFit,
+    ReaderMode,
+    ReaderState,
     RouterState,
 } from "../src/store/interfaces";
 
@@ -45,6 +48,15 @@ describe("initRapunzelStorage feed hydration", () => {
 
         const header: HeaderState = { searchValue: "" };
         const library: LibraryState = { saved: {}, rendered: [] };
+        const reader: ReaderState = {
+            activeProcessId: "",
+            book: null,
+            chapter: null,
+            cachedImages: [],
+            chapterPage: 1,
+            mode: ReaderMode.Scroll,
+            imageFit: ReaderImageFit.Width,
+        };
         const router: RouterState = {
             currentRoute: ViewNames.RapunzelBrowse,
             history: [],
@@ -69,6 +81,7 @@ describe("initRapunzelStorage feed hydration", () => {
             config: [config],
             header: [header],
             library: [library],
+            reader: [reader],
             router: [router],
             latest: [latestState],
             trending: [trendingState],
@@ -135,6 +148,14 @@ describe("initRapunzelStorage feed hydration", () => {
                 if (key === StorageEntries.feedLatest) return latestSnapshot;
                 if (key === StorageEntries.feedTrending)
                     return trendingSnapshot;
+                if (key === StorageEntries.readerSettings) {
+                    const settings = {
+                        mode: ReaderMode.SinglePage,
+                        imageFit: ReaderImageFit.Auto,
+                    };
+                    cb?.(null, settings);
+                    return settings;
+                }
                 return null;
             }),
             getItem: jest.fn(),
@@ -207,5 +228,7 @@ describe("initRapunzelStorage feed hydration", () => {
             },
             "NHentai:trending-valid": { id: "trending-valid" },
         });
+        expect(reader.mode).toBe(ReaderMode.SinglePage);
+        expect(reader.imageFit).toBe(ReaderImageFit.Auto);
     });
 });

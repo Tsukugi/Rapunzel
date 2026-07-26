@@ -66,7 +66,7 @@ const HeaderBar = ({
                 openMenu={openMenu}
                 leftMode={leftMode}
             />
-            <Appbar.Content mode={"small"} title={""} />
+            {!showSearch ? <Appbar.Content mode={"small"} title={""} /> : null}
             {showSearch ? (
                 <PaperSearch
                     defaultValue={header.searchValue}

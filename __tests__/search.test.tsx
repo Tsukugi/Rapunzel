@@ -58,4 +58,14 @@ describe("PaperSearch", () => {
         searchbar = component.root.findByType("Searchbar");
         expect(searchbar.props.value).toBe("");
     });
+
+    test("allows the expanded search field to shrink inside the header", () => {
+        mockHeader = { searchValue: "english" };
+        const component = renderer.create(<PaperSearch />);
+        const searchbar = component.root.findByType("Searchbar" as any);
+
+        expect(searchbar.props.style).toEqual(
+            expect.objectContaining({ flex: 1, minWidth: 0 }),
+        );
+    });
 });

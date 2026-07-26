@@ -8,6 +8,9 @@ interface CapturedListProps {
     contentOffset?: { x: number; y: number };
     keyExtractor: (item: VirtualItem<string>, index: number) => string;
     onEndReachedThreshold?: number;
+    onScroll?: (event: {
+        nativeEvent: { contentOffset: { y: number } };
+    }) => void;
 }
 
 const mockVirtualizedList = jest.fn((props: Record<string, unknown>) => {
@@ -58,10 +61,7 @@ describe("VirtualList pagination behavior", () => {
             { id: "book-1", value: "Book 1" },
             { id: "book-2", value: "Book 2" },
         ];
-        const secondPage = [
-            ...firstPage,
-            { id: "book-3", value: "Book 3" },
-        ];
+        const secondPage = [...firstPage, { id: "book-3", value: "Book 3" }];
         const list = renderer.create(
             <VirtualListForTest
                 data={firstPage}
@@ -93,8 +93,10 @@ describe("VirtualList pagination behavior", () => {
         const originalCancelAnimationFrame = global.cancelAnimationFrame;
         const requestAnimationFrame = jest.fn(() => 1);
         const cancelAnimationFrame = jest.fn();
-        global.requestAnimationFrame = requestAnimationFrame as unknown as typeof global.requestAnimationFrame;
-        global.cancelAnimationFrame = cancelAnimationFrame as unknown as typeof global.cancelAnimationFrame;
+        global.requestAnimationFrame =
+            requestAnimationFrame as unknown as typeof global.requestAnimationFrame;
+        global.cancelAnimationFrame =
+            cancelAnimationFrame as unknown as typeof global.cancelAnimationFrame;
 
         try {
             const firstPage: VirtualItem<string>[] = [
@@ -122,6 +124,26 @@ describe("VirtualList pagination behavior", () => {
             global.requestAnimationFrame = originalRequestAnimationFrame;
             global.cancelAnimationFrame = originalCancelAnimationFrame;
         }
+    });
+
+    test("exposes continuous scroll offsets without changing settled callbacks", () => {
+        const onScroll = jest.fn();
+        const list = renderer.create(
+            <VirtualListForTest
+                data={[{ id: "book-1", value: "Book 1" }]}
+                onScroll={onScroll}
+            />,
+        );
+
+        const props = mockVirtualizedList.mock
+            .lastCall?.[0] as unknown as CapturedListProps;
+        props.onScroll?.({
+            nativeEvent: { contentOffset: { y: 120 } },
+        });
+
+        expect(onScroll).toHaveBeenCalledWith(120);
+        expect(props.onEndReachedThreshold).toBeLessThanOrEqual(1);
+        list.unmount();
     });
 });
 

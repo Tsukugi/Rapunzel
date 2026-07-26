@@ -9,7 +9,7 @@ import {
 import { ActivityIndicator, Icon } from "react-native-paper";
 import { LocalTheme } from "../../../themes";
 import PinchableImage from "./pinchableImage";
-import { RapunzelImage } from "../../store/interfaces";
+import { RapunzelImage, ReaderImageFit } from "../../store/interfaces";
 import { FallbackCacheExtension } from "../../api/loader";
 import { CacheUtils } from "../../cache/CacheUtils";
 import { RapunzelLog } from "../../config/log";
@@ -41,11 +41,13 @@ const LoadingComponent = () => {
 interface CachedImageProps extends Partial<ImageProps> {
     image: RapunzelImage;
     onClick: (image: RapunzelImage) => void;
+    imageFit?: ReaderImageFit;
 }
 
 const CachedImage: React.FC<CachedImageProps> = ({
     image,
     onClick,
+    imageFit,
     ...props
 }) => {
     const [loading, setLoading] = useState(false);
@@ -69,6 +71,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
             {loading && <LoadingComponent />}
             <PinchableImage
                 {...props}
+                imageFit={imageFit}
                 onLoadStart={() => setLoading(true)}
                 onLoadEnd={() => setLoading(false)}
                 onError={() => {
