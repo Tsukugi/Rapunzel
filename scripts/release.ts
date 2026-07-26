@@ -99,8 +99,27 @@ export class ReleaseAutomation {
 
         packageJson.version = version;
         fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+        this.updatePackageLockVersion(version);
 
         console.log("✅ Updated package.json version");
+    }
+
+    private updatePackageLockVersion(version: string): void {
+        const packageLockPath = path.join(this.projectRoot, "package-lock.json");
+        if (!fs.existsSync(packageLockPath)) return;
+
+        const packageLock = JSON.parse(
+            fs.readFileSync(packageLockPath, "utf8"),
+        );
+        packageLock.version = version;
+        if (packageLock.packages?.[""]) {
+            packageLock.packages[""].version = version;
+        }
+
+        fs.writeFileSync(
+            packageLockPath,
+            JSON.stringify(packageLock, null, 2),
+        );
     }
 
     private updateAndroidVersion(version: string): void {
@@ -153,11 +172,12 @@ export class ReleaseAutomation {
 
     private stageReleaseChanges(version: string): string[] {
         console.log("🗂️ Staging release artifacts...");
+        const gitPath = (...segments: string[]) =>
+            path.join(...segments).replace(/\\/g, "/");
         const releaseFiles = [
             "package.json",
             "package-lock.json",
-            path.join("android", "app", "build.gradle"),
-            path.join("builds", `Rapunzel-${version}.apk`),
+            gitPath("android", "app", "build.gradle"),
         ];
 
         const existingFiles = releaseFiles
@@ -222,7 +242,9 @@ export class ReleaseAutomation {
 
         try {
             // Run the gradle assembleRelease command
-            execSync("./gradlew assembleRelease", {
+            const gradleCommand =
+                process.platform === "win32" ? "gradlew.bat" : "./gradlew";
+            execSync(`${gradleCommand} assembleRelease`, {
                 cwd: androidDir,
                 stdio: "inherit",
                 env: { ...process.env },
@@ -319,11 +341,6 @@ for (let i = 0; i < args.length; i++) {
 
 // Only run the main process if this file is executed directly (not imported)
 if (require.main === module) {
-    if (!version) {
-        console.error("No version provided, please provide a version.");
-        process.exit(1);
-    }
-
     // Run the release automation
     const releaseAutomation = new ReleaseAutomation();
     releaseAutomation.run(version, doGitHubRelease).catch((error) => {

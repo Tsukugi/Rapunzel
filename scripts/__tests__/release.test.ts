@@ -36,8 +36,6 @@ describe('ReleaseAutomation', () => {
     // Create instance
     releaseAutomation = new ReleaseAutomation();
 
-    // Keep path.resolve as-is, but allow join to behave normally.
-    jest.spyOn(path, 'join').mockImplementation((...paths: string[]) => paths.join('/'));
   });
 
   afterEach(() => {
@@ -145,10 +143,9 @@ describe('ReleaseAutomation', () => {
         'package.json',
         'package-lock.json',
         'android/app/build.gradle',
-        'builds/Rapunzel-0.8.3.apk',
       ]);
       expect(mockedExecSync).toHaveBeenCalledWith(
-        'git add "package.json" "package-lock.json" "android/app/build.gradle" "builds/Rapunzel-0.8.3.apk"',
+        'git add "package.json" "package-lock.json" "android/app/build.gradle"',
         { cwd: realProjectRoot, stdio: 'inherit' }
       );
     });
@@ -214,11 +211,16 @@ describe('ReleaseAutomation', () => {
 
       (releaseAutomation as any).buildReleaseAPK();
 
-      expect(mockedExecSync).toHaveBeenCalledWith('./gradlew assembleRelease', {
+      expect(mockedExecSync).toHaveBeenCalledWith(
+        process.platform === 'win32'
+          ? 'gradlew.bat assembleRelease'
+          : './gradlew assembleRelease',
+        {
         cwd: path.join(realProjectRoot, 'android'),
         stdio: 'inherit',
         env: expect.anything(),
-      });
+        }
+      );
     });
 
     it('should throw an error if the gradle command fails', () => {

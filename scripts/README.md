@@ -56,7 +56,7 @@ npm run release
 
 ## Generated Files
 
-The release script creates a `builds/` directory (if it doesn't exist) and places the APK file there with the naming scheme:
+The release script creates an ignored `builds/` directory (if it doesn't exist) and places the APK file there with the naming scheme:
 `Rapunzel-{version}.apk`
 
 For example, if you release version 0.8.3, the APK will be located at:
@@ -68,6 +68,9 @@ For example, if you release version 0.8.3, the APK will be located at:
 - Android development environment set up
 - Access to Gradle and Android SDK
 - Project dependencies installed (`npm install`)
+
+The APK is kept out of Git and is uploaded as a GitHub release asset by
+`npm run release -- --version X.X.X --github`.
 
 ## How It Works
 
