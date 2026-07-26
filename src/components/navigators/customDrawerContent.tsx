@@ -6,12 +6,8 @@ import {
 import { Image } from "react-native";
 import { Avatar, Divider } from "react-native-paper";
 import { useRapunzelStore } from "../../store/store";
-import { LilithRepo } from "../../store/interfaces";
-interface CustomDrawerContent extends DrawerContentComponentProps {}
-
-const safeImage =
-    "https://mangadex.org/covers/27c025f4-d9f7-4ff7-bb43-2c5cc816fbb1/dfa37bb8-a156-494d-ae7d-9536d290c384.jpg.512.jpg";
-const unsafeImage = "https://i4.nhentai.net/galleries/2694657/3.jpg";
+import { getRepositoryMascot } from "./repositoryMascots";
+type CustomDrawerContent = DrawerContentComponentProps;
 
 const CustomDrawerContent = ({
     state,
@@ -22,11 +18,7 @@ const CustomDrawerContent = ({
         config: [config],
     } = useRapunzelStore();
 
-    const getImage = () => {
-        return config.repository === LilithRepo.NHentai
-            ? unsafeImage
-            : safeImage;
-    };
+    const mascot = getRepositoryMascot(config.repository);
 
     return (
         <DrawerContentScrollView>
@@ -35,9 +27,7 @@ const CustomDrawerContent = ({
                     width: 400,
                     height: 200,
                 }}
-                source={{
-                    uri: getImage(),
-                }}
+                source={mascot}
             />
             <Avatar.Image
                 size={128}
@@ -48,9 +38,7 @@ const CustomDrawerContent = ({
 
                     zIndex: 2,
                 }}
-                source={{
-                    uri: getImage(),
-                }}
+                source={mascot}
             />
             <Divider />
             <DrawerItemList
