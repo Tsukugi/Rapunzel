@@ -90,8 +90,9 @@ const OtaUpdateControl = () => {
                         description={`Installed app code: ${OTA_BUILD_VERSION}`}
                     />
                     <Text>
-                        Downloads JavaScript and bundled assets directly. Native
-                        app changes still need a new build.
+                        Downloads the JavaScript bundle and bundled assets as
+                        one verified archive. Native app changes still need a
+                        new build.
                     </Text>
                     {state === "available" && update !== null ? (
                         <Text>

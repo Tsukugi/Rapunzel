@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, jest, test } from "@jest/globals";
+import { fromByteArray } from "base64-js";
+import { zipSync } from "fflate";
 import RNFS from "react-native-fs";
 
 import { checkForOtaUpdate, downloadOtaUpdate } from "../src/ota/updateService";
@@ -19,28 +21,28 @@ jest.mock("react-native-fs", () => ({
 }));
 
 const manifest = {
-    schema: 1,
+    schema: 2,
     platforms: {
         android: {
-            version: "0.9.4",
+            version: "0.9.5",
             nativeCompatibility: "rn-0.72.6-hermes",
-            bundle: {
-                path: "index.android.bundle",
-                url: "https://example.com/index.android.bundle",
+            archive: {
+                path: "Rapunzel-0.9.5.android.ota.zip",
+                url: "https://example.com/Rapunzel-0.9.5.android.ota.zip",
                 sha256: "a".repeat(64),
                 bytes: 1,
             },
-            assets: [
-                {
-                    path: "drawable-mdpi/assets_mascot.png",
-                    url: "https://example.com/assets_mascot.png",
-                    sha256: "a".repeat(64),
-                    bytes: 1,
-                },
-            ],
+            bundlePath: "index.android.bundle",
         },
     },
 };
+
+const archiveBase64 = fromByteArray(
+    zipSync({
+        "index.android.bundle": new Uint8Array([1]),
+        "drawable-mdpi/assets_mascot.png": new Uint8Array([2]),
+    }),
+);
 
 describe("OTA update service", () => {
     const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
@@ -61,7 +63,7 @@ describe("OTA update service", () => {
 
         const update = await checkForOtaUpdate("android");
 
-        expect(update?.platformManifest.version).toBe("0.9.4");
+        expect(update?.platformManifest.version).toBe("0.9.5");
         expect(fetchMock).toHaveBeenCalledWith(
             "https://github.com/Tsukugi/Rapunzel/releases/latest/download/latest.json",
             { headers: { "Cache-Control": "no-cache" } },
@@ -79,21 +81,33 @@ describe("OTA update service", () => {
         const update = await checkForOtaUpdate("android");
         if (update === null) throw new Error("Expected an available update");
 
+        jest.mocked(RNFS).readFile.mockResolvedValue(archiveBase64);
         await downloadOtaUpdate(update);
 
-        expect(jest.mocked(RNFS).downloadFile).toHaveBeenCalledTimes(2);
+        expect(jest.mocked(RNFS).downloadFile).toHaveBeenCalledTimes(1);
+        expect(jest.mocked(RNFS).downloadFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+                fromUrl:
+                    "https://example.com/Rapunzel-0.9.5.android.ota.zip",
+                toFile:
+                    "/documents/ota/android/0.9.5/Rapunzel-0.9.5.android.ota.zip",
+            }),
+        );
+        expect(jest.mocked(RNFS).writeFile).toHaveBeenCalledWith(
+            "/documents/ota/android/0.9.5/index.android.bundle",
+            "AQ==",
+            "base64",
+        );
+        expect(jest.mocked(RNFS).writeFile).toHaveBeenCalledWith(
+            "/documents/ota/android/0.9.5/drawable-mdpi/assets_mascot.png",
+            "Ag==",
+            "base64",
+        );
         expect(jest.mocked(RNFS).downloadFile).toHaveBeenNthCalledWith(
             1,
             expect.objectContaining({
-                fromUrl: "https://example.com/index.android.bundle",
-                toFile: "/documents/ota/android/0.9.4/index.android.bundle",
-            }),
-        );
-        expect(jest.mocked(RNFS).downloadFile).toHaveBeenNthCalledWith(
-            2,
-            expect.objectContaining({
-                fromUrl: "https://example.com/assets_mascot.png",
-                toFile: "/documents/ota/android/0.9.4/drawable-mdpi/assets_mascot.png",
+                fromUrl:
+                    "https://example.com/Rapunzel-0.9.5.android.ota.zip",
             }),
         );
         expect(jest.mocked(RNFS).moveFile).toHaveBeenCalledWith(

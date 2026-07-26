@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { afterEach, describe, expect, test } from "@jest/globals";
+import { unzipSync } from "fflate";
 
 import {
     createOtaManifest,
@@ -27,7 +28,7 @@ describe("OTA release manifest", () => {
         );
     });
 
-    test("describes bundles and assets with release URLs and hashes", () => {
+    test("describes one archive per platform with release URLs and hashes", () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), "rapunzel-ota-"));
         temporaryDirectories.push(root);
         fs.mkdirSync(path.join(root, "android"), { recursive: true });
@@ -49,23 +50,44 @@ describe("OTA release manifest", () => {
             JSON.stringify(manifest),
         );
 
-        expect(manifest.platforms.android.bundle.bytes).toBe(7);
-        expect(manifest.platforms.android.bundle.sha256).toBe(
-            "f60ed56a9c8275894022fe5a7a1625c33bdb55b729bb4e38962af4d1613eda25",
+        expect(manifest.platforms.android.bundlePath).toBe(
+            "index.android.bundle",
         );
-        expect(manifest.platforms.android.assets[0].path).toBe(
+        expect(manifest.platforms.android.archive.path).toBe(
+            "Rapunzel-0.9.2.android.ota.zip",
+        );
+        expect(manifest.platforms.android.archive.bytes).toBeGreaterThan(0);
+        expect(manifest.platforms.android.archive.url).toContain(
+            "ota-android-Rapunzel-0.9.2.android.ota.zip",
+        );
+
+        const archive = unzipSync(
+            new Uint8Array(
+                fs.readFileSync(
+                    path.join(
+                        root,
+                        "android",
+                        "Rapunzel-0.9.2.android.ota.zip",
+                    ),
+                ),
+            ),
+        );
+        expect(Object.keys(archive).sort()).toEqual([
             "drawable-mdpi/mascot.png",
-        );
-        expect(manifest.platforms.android.assets[0].url).toContain(
-            "ota-android-drawable-mdpi--mascot.png",
-        );
+            "index.android.bundle",
+        ]);
 
         const uploadFiles = getUploadFiles(root, manifest);
         expect(
             new Set(uploadFiles.map((file) => path.basename(file))).size,
         ).toBe(uploadFiles.length);
+        expect(uploadFiles).toHaveLength(3);
         expect(uploadFiles).toContain(
-            path.join(root, "upload", "ota-android-index.android.bundle"),
+            path.join(
+                root,
+                "upload",
+                "ota-android-Rapunzel-0.9.2.android.ota.zip",
+            ),
         );
     });
 

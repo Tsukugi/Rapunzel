@@ -9,25 +9,18 @@ import {
 const hash = "a".repeat(64);
 
 const validManifest = {
-    schema: 1,
+    schema: 2,
     platforms: {
         android: {
             version: "0.9.2",
             nativeCompatibility: "rn-0.72.6-hermes",
-            bundle: {
-                path: "index.android.bundle",
+            archive: {
+                path: "Rapunzel-0.9.2.android.ota.zip",
                 url: "https://example.com/index.android.bundle",
                 sha256: hash,
                 bytes: 100,
             },
-            assets: [
-                {
-                    path: "drawable-mdpi/assets_mascot.png",
-                    url: "https://example.com/assets_mascot.png",
-                    sha256: hash,
-                    bytes: 20,
-                },
-            ],
+            bundlePath: "index.android.bundle",
         },
     },
 };
@@ -46,9 +39,9 @@ describe("OTA manifest", () => {
                 platforms: {
                     android: {
                         ...validManifest.platforms.android,
-                        bundle: {
-                            ...validManifest.platforms.android.bundle,
-                            path: "../bundle",
+                        archive: {
+                            ...validManifest.platforms.android.archive,
+                            path: "../archive.zip",
                             url: "http://example.com/bundle",
                         },
                     },
@@ -57,21 +50,18 @@ describe("OTA manifest", () => {
         ).toThrow();
     });
 
-    test("rejects duplicate asset paths", () => {
+    test("rejects an unsafe extracted bundle path", () => {
         expect(() =>
             parseOtaManifest({
                 ...validManifest,
                 platforms: {
                     android: {
                         ...validManifest.platforms.android,
-                        assets: [
-                            validManifest.platforms.android.assets[0],
-                            validManifest.platforms.android.assets[0],
-                        ],
+                        bundlePath: "../index.android.bundle",
                     },
                 },
             }),
-        ).toThrow("Duplicate OTA file path");
+        ).toThrow("bundlePath must be a safe relative path");
     });
 });
 

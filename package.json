@@ -1,6 +1,6 @@
 {
   "name": "@atsu/rapunzel",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -19,7 +19,9 @@
     "@react-native-cookies/cookies": "^6.2.1",
     "@react-navigation/drawer": "^6.6.6",
     "@react-navigation/native": "^6.1.9",
+    "base64-js": "^1.5.1",
     "cheerio": "1.0.0-rc.12",
+    "fflate": "^0.8.3",
     "react": "18.2.0",
     "react-native": "0.72.6",
     "react-native-document-picker": "^9.3.1",

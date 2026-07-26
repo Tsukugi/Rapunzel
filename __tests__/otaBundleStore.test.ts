@@ -62,12 +62,7 @@ describe("OTA active bundle records", () => {
                     version: "0.9.2",
                     nativeCompatibility: "rn-0.72.6-hermes",
                 },
-                {
-                    path: "index.android.bundle",
-                    url: "https://example.com/index.android.bundle",
-                    sha256: "a".repeat(64),
-                    bytes: 1,
-                },
+                "index.android.bundle",
             ),
         ).toEqual({
             version: "0.9.2",

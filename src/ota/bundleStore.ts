@@ -1,5 +1,8 @@
 import RNFS from "react-native-fs";
-import { OTA_MANIFEST_SCHEMA, OTA_NATIVE_COMPATIBILITY } from "./constants";
+import {
+    OTA_ACTIVE_RECORD_SCHEMA,
+    OTA_NATIVE_COMPATIBILITY,
+} from "./constants";
 import { compareVersions, isSafeRelativePath } from "./manifest";
 import {
     OtaActiveRecord,
@@ -84,7 +87,7 @@ export const isValidOtaActiveRecord = (
     if (typeof value !== "object" || value === null) return false;
     const record = value as Record<string, unknown>;
     if (
-        record.schema !== OTA_MANIFEST_SCHEMA ||
+        record.schema !== OTA_ACTIVE_RECORD_SCHEMA ||
         record.nativeCompatibility !== OTA_NATIVE_COMPATIBILITY
     ) {
         return false;
@@ -139,11 +142,11 @@ export const writeOtaActiveRecord = async (
 export const createBundleReference = (
     root: string,
     manifest: { version: string; nativeCompatibility: string },
-    bundle: OtaFileManifest,
+    bundlePath: string,
 ): OtaBundleReference => ({
     version: manifest.version,
     nativeCompatibility: manifest.nativeCompatibility,
-    bundlePath: getSafePath(root, bundle.path),
+    bundlePath: getSafePath(root, bundlePath),
     assetRoot: root,
 });
 
@@ -160,12 +163,17 @@ export const getOtaReleaseRoot = (
 export const getOtaFilePath = (root: string, relativePath: string): string =>
     getSafePath(root, relativePath);
 
+export const getOtaArchivePath = (
+    root: string,
+    archivePath: string,
+): string => getSafePath(root, archivePath);
+
 export const activatePendingBundle = async (
     reference: OtaBundleReference,
 ): Promise<void> => {
     const current = await readOtaActiveRecord();
     await writeOtaActiveRecord({
-        schema: OTA_MANIFEST_SCHEMA,
+        schema: OTA_ACTIVE_RECORD_SCHEMA,
         nativeCompatibility: OTA_NATIVE_COMPATIBILITY,
         ...(current?.current ? { current: current.current } : {}),
         pending: {
@@ -186,7 +194,7 @@ export const markPendingBundleSuccessful = async (): Promise<void> => {
         assetRoot: current.pending.assetRoot,
     };
     await writeOtaActiveRecord({
-        schema: OTA_MANIFEST_SCHEMA,
+        schema: OTA_ACTIVE_RECORD_SCHEMA,
         nativeCompatibility: OTA_NATIVE_COMPATIBILITY,
         current: reference,
     });
@@ -221,4 +229,8 @@ export const downloadAndVerifyOtaFile = async (
     if (hash !== file.sha256) {
         throw new Error(`OTA SHA-256 mismatch for ${file.path}`);
     }
+};
+
+export const removeOtaFile = async (path: string): Promise<void> => {
+    await removeIfExists(path);
 };

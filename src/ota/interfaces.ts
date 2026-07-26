@@ -10,13 +10,13 @@ export interface OtaFileManifest {
 export interface OtaPlatformManifest {
     version: string;
     nativeCompatibility: string;
-    bundle: OtaFileManifest;
-    assets: OtaFileManifest[];
+    archive: OtaFileManifest;
+    bundlePath: string;
     notes?: string;
 }
 
 export interface OtaManifest {
-    schema: 1;
+    schema: 2;
     platforms: Partial<Record<OtaPlatform, OtaPlatformManifest>>;
 }
 

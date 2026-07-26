@@ -117,17 +117,17 @@ Then publish the existing APK later:
 npm run release-github -- --version 0.9.1
 ```
 
-After the GitHub release exists, build and upload the direct React Native code
-update assets:
+After the GitHub release exists, build and upload one direct React Native code
+update ZIP per platform:
 
 ```powershell
 npm run ota-release -- --version 0.9.1 --notes "Direct code update"
 npm run ota-release -- --version 0.9.1 --upload
 ```
 
-The OTA command writes `latest.json`, Android and iOS bundles, and their Metro
-assets under the ignored `builds/ota/` directory. The upload command adds them
-to the existing `v0.9.1` release. It does not build or install an APK.
+The OTA command writes `latest.json`, one Android ZIP, and one iOS ZIP under
+the ignored `builds/ota/` directory. The upload command adds those three files
+to the existing release. It does not build or install an APK.
 
 ## Verify the release
 

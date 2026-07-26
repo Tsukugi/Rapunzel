@@ -116,22 +116,19 @@ const parsePlatform = (
         );
     }
 
-    if (!Array.isArray(data.assets)) {
-        throw new Error(`platforms.${platform}.assets must be an array`);
-    }
-
-    const assets = data.assets.map((asset, index) =>
-        parseFile(asset, `platforms.${platform}.assets[${index}]`),
+    const bundlePath = asString(
+        data.bundlePath,
+        `platforms.${platform}.bundlePath`,
     );
-    const paths = new Set([
-        parseFile(data.bundle, `platforms.${platform}.bundle`).path,
-    ]);
-    assets.forEach((asset) => {
-        if (paths.has(asset.path)) {
-            throw new Error(`Duplicate OTA file path: ${asset.path}`);
-        }
-        paths.add(asset.path);
-    });
+    if (!isSafeRelativePath(bundlePath)) {
+        throw new Error(
+            `platforms.${platform}.bundlePath must be a safe relative path`,
+        );
+    }
+    const archive = parseFile(
+        data.archive,
+        `platforms.${platform}.archive`,
+    );
 
     const notes = data.notes;
     if (notes !== undefined && typeof notes !== "string") {
@@ -141,8 +138,8 @@ const parsePlatform = (
     return {
         version,
         nativeCompatibility,
-        bundle: parseFile(data.bundle, `platforms.${platform}.bundle`),
-        assets,
+        archive,
+        bundlePath,
         ...(notes === undefined ? {} : { notes }),
     };
 };

@@ -36,56 +36,48 @@ application remains the loader and security boundary.
 - `react-native-fs` is already available for internal file storage, download,
   atomic moves, and SHA-256 hashing.
 - Rapunzel has three statically required mascot PNGs. An OTA release must ship
-  the bundle and its Metro assets together.
+  the bundle and its Metro assets together in one archive per platform.
 - The existing worktree contains user changes to the mascot feature. Those
   changes must not be reverted or reformatted as part of this work.
 
 ## Update format
 
-The manifest is versioned and contains only data needed to decide whether a
-bundle can be installed:
+The manifest is versioned and contains one verified ZIP archive per platform:
 
 ```json
 {
-  "schema": 1,
+  "schema": 2,
   "platforms": {
     "android": {
       "version": "0.9.2",
       "nativeCompatibility": "rn-0.72.6-hermes",
-      "bundle": {
-        "path": "index.android.bundle",
-        "url": "https://github.com/Tsukugi/Rapunzel/releases/download/v0.9.2/Rapunzel-0.9.2.android.bundle",
+      "archive": {
+        "path": "Rapunzel-0.9.4.android.ota.zip",
+        "url": "https://github.com/Tsukugi/Rapunzel/releases/download/v0.9.4/ota-android-Rapunzel-0.9.4.android.ota.zip",
         "sha256": "...",
         "bytes": 123456
       },
-      "assets": [
-        {
-          "path": "drawable-mdpi/assets_mascots_nhentai.png",
-          "url": "https://github.com/Tsukugi/Rapunzel/releases/download/v0.9.2/Rapunzel-0.9.2.android.nhentai.png",
-          "sha256": "...",
-          "bytes": 123456
-        }
-      ],
+      "bundlePath": "index.android.bundle",
       "notes": "..."
     },
     "ios": {
       "version": "0.9.2",
       "nativeCompatibility": "rn-0.72.6-hermes",
-      "bundle": {
-        "path": "main.jsbundle",
-        "url": "https://github.com/Tsukugi/Rapunzel/releases/download/v0.9.2/Rapunzel-0.9.2.ios.bundle",
+      "archive": {
+        "path": "Rapunzel-0.9.4.ios.ota.zip",
+        "url": "https://github.com/Tsukugi/Rapunzel/releases/download/v0.9.4/ota-ios-Rapunzel-0.9.4.ios.ota.zip",
         "sha256": "...",
         "bytes": 123456
       },
-      "assets": []
+      "bundlePath": "main.jsbundle"
     }
   }
 }
 ```
 
 The current manifest URL is a build constant in the updater. A release must
-not be activated when the schema, version, native compatibility, URLs, file
-sizes, or hashes are invalid.
+not be activated when the schema, version, native compatibility, archive URL,
+archive size, or archive hash is invalid.
 
 ## Runtime design
 
@@ -94,10 +86,11 @@ sizes, or hashes are invalid.
 2. The native host returns the active bundle path when one exists; otherwise it
    returns the embedded bundle.
 3. The React Native Settings action fetches and validates the manifest.
-4. The updater downloads the bundle and asset archive to temporary paths.
-5. It checks the exact byte count and SHA-256 values before activation.
-6. It extracts assets into a versioned private directory and writes an atomic
-   active-bundle record.
+4. The updater downloads one platform ZIP archive to a temporary path.
+5. It checks the exact byte count and SHA-256 value before extraction.
+6. It rejects unsafe ZIP paths, excessive entry counts, and oversized expanded
+   data, then extracts the bundle and assets into a versioned private directory
+   and writes an atomic active-bundle record.
 7. The next launch uses the new bundle. The old record remains available until
    the new bundle has started successfully.
 8. If the app restarts after failing to start the pending bundle, the native
@@ -134,7 +127,8 @@ Add a release command that:
 - collects Metro assets needed by the bundle;
 - calculates SHA-256 and byte counts;
 - writes `latest.json`;
-- publishes the bundle, asset archive, and manifest as GitHub Release assets;
+- publishes one ZIP archive per platform and the manifest as GitHub Release
+  assets;
 - never commits generated bundles, archives, or private signing material.
 
 The release command must refuse to publish a bundle whose native compatibility
@@ -150,8 +144,9 @@ repository, and must not be replaced. Release credentials stay in the ignored
 ### Pass 1: shared updater core
 
 - Manifest schema validation.
+- ZIP path and expanded-size validation.
 - Version and native-compatibility comparison.
-- File-size and SHA-256 validation.
+- Archive file-size and SHA-256 validation.
 - Temporary-file and atomic-activation behavior.
 - Rejection leaves the active record unchanged.
 
@@ -201,7 +196,7 @@ and user-data preservation.
 1. Install a directly distributed build whose embedded version is lower than
    the test release.
 2. Build OTA files with
-   `npm run ota-release -- --version 0.9.2 --notes "OTA smoke test"`.
+   `npm run ota-release -- --version 0.9.4 --notes "OTA smoke test"`.
 3. Publish the generated files to the matching GitHub release, or use
    `--upload` when that release already exists.
 4. Open Settings, choose Check for code update, download the update, close the
@@ -213,8 +208,8 @@ and user-data preservation.
 
 ## Completion criteria
 
-- A valid bundle can be downloaded, verified, activated on next launch, and
-  loaded on Android.
+- A valid platform ZIP can be downloaded, verified, extracted, activated on
+  next launch, and loaded on Android.
 - The same manifest and bundle format is supported by the iOS native loader.
 - Invalid, incompatible, incomplete, or tampered updates never become active.
 - A failed new bundle can return to the embedded or previous bundle.

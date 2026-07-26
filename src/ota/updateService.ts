@@ -1,12 +1,14 @@
 import { Platform } from "react-native";
 
 import { OTA_BUILD_VERSION, OTA_MANIFEST_URL } from "./constants";
+import { extractOtaArchive } from "./archive";
 import {
     downloadAndVerifyOtaFile,
     activatePendingBundle,
     createBundleReference,
-    getOtaFilePath,
+    getOtaArchivePath,
     getOtaReleaseRoot,
+    removeOtaFile,
     readOtaActiveRecord,
 } from "./bundleStore";
 import {
@@ -16,7 +18,6 @@ import {
     parseOtaManifest,
 } from "./manifest";
 import {
-    OtaFileManifest,
     OtaManifest,
     OtaPlatform,
     OtaPlatformManifest,
@@ -79,27 +80,6 @@ export const checkForOtaUpdate = async (
     return { manifest, platform, platformManifest, currentVersion };
 };
 
-const downloadFile = async (
-    file: OtaFileManifest,
-    root: string,
-    fileIndex: number,
-    fileCount: number,
-    onProgress?: (progress: OtaDownloadProgress) => void,
-): Promise<void> => {
-    await downloadAndVerifyOtaFile(
-        file,
-        getOtaFilePath(root, file.path),
-        (bytesWritten, contentLength) =>
-            onProgress?.({
-                file: file.path,
-                fileIndex,
-                fileCount,
-                bytesWritten,
-                contentLength,
-            }),
-    );
-};
-
 export const downloadOtaUpdate = async (
     update: OtaUpdate,
     onProgress?: (progress: OtaDownloadProgress) => void,
@@ -108,19 +88,31 @@ export const downloadOtaUpdate = async (
         update.platform,
         update.platformManifest.version,
     );
-    const files = [
-        update.platformManifest.bundle,
-        ...update.platformManifest.assets,
-    ];
-
-    for (const [index, file] of files.entries()) {
-        await downloadFile(file, root, index + 1, files.length, onProgress);
-    }
+    const archive = update.platformManifest.archive;
+    const archivePath = getOtaArchivePath(root, archive.path);
+    await downloadAndVerifyOtaFile(
+        archive,
+        archivePath,
+        (bytesWritten, contentLength) =>
+            onProgress?.({
+                file: archive.path,
+                fileIndex: 1,
+                fileCount: 1,
+                bytesWritten,
+                contentLength,
+            }),
+    );
+    await extractOtaArchive(
+        archivePath,
+        root,
+        update.platformManifest.bundlePath,
+    );
+    await removeOtaFile(archivePath);
 
     const reference = createBundleReference(
         root,
         update.platformManifest,
-        update.platformManifest.bundle,
+        update.platformManifest.bundlePath,
     );
     await activatePendingBundle(reference);
     return reference;

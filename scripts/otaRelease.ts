@@ -2,6 +2,7 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import { execFileSync } from "child_process";
+import { zipSync } from "fflate";
 import {
     OTA_MANIFEST_SCHEMA,
     OTA_NATIVE_COMPATIBILITY,
@@ -21,13 +22,13 @@ interface OtaFile {
 interface OtaPlatform {
     version: string;
     nativeCompatibility: string;
-    bundle: OtaFile;
-    assets: OtaFile[];
+    archive: OtaFile;
+    bundlePath: string;
     notes?: string;
 }
 
 export interface OtaManifest {
-    schema: 1;
+    schema: 2;
     platforms: {
         android: OtaPlatform;
         ios: OtaPlatform;
@@ -122,17 +123,25 @@ const buildPlatformManifest = (
         throw new Error(`Missing ${platform} OTA bundle: ${bundlePath}`);
     }
 
-    const files = listFiles(directory);
-    const bundle = describeFile(platform, directory, bundlePath, tag);
-    const assets = files
-        .filter((filePath) => filePath !== bundlePath)
-        .map((filePath) => describeFile(platform, directory, filePath, tag));
+    const archiveName = `Rapunzel-${version}.${platform}.ota.zip`;
+    const archivePath = path.join(directory, archiveName);
+    const files = listFiles(directory).filter(
+        (filePath) => filePath !== archivePath,
+    );
+    const entries: Record<string, Uint8Array> = {};
+    files.forEach((filePath) => {
+        const relativePath = path
+            .relative(directory, filePath)
+            .replace(/\\/g, "/");
+        entries[relativePath] = new Uint8Array(fs.readFileSync(filePath));
+    });
+    fs.writeFileSync(archivePath, zipSync(entries, { level: 6 }));
 
     return {
         version,
         nativeCompatibility: OTA_NATIVE_COMPATIBILITY,
-        bundle,
-        assets,
+        archive: describeFile(platform, directory, archivePath, tag),
+        bundlePath: bundleName,
         ...(notes === undefined ? {} : { notes }),
     };
 };
@@ -218,16 +227,12 @@ export const getUploadFiles = (
         manifest.platforms,
     )) {
         const platformRoot = path.join(releaseRoot, platform);
-        for (const file of [
-            platformManifest.bundle,
-            ...platformManifest.assets,
-        ]) {
-            const localPath = path.join(platformRoot, file.path);
-            const assetName = getAssetName(platform, file.path);
-            const uploadPath = path.join(uploadRoot, assetName);
-            fs.copyFileSync(localPath, uploadPath);
-            files.push(uploadPath);
-        }
+        const file = platformManifest.archive;
+        const localPath = path.join(platformRoot, file.path);
+        const assetName = getAssetName(platform, file.path);
+        const uploadPath = path.join(uploadRoot, assetName);
+        fs.copyFileSync(localPath, uploadPath);
+        files.push(uploadPath);
     }
     return files;
 };
