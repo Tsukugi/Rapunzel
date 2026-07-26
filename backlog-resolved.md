@@ -4,6 +4,38 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-005: Add OTA React Native bundle updater
+
+- Status: resolved
+- Added: 2026-07-26
+- Resolved: 2026-07-26
+- Source: user request
+- Problem or goal: Directly distributed Rapunzel builds need to download and
+  activate new React Native code without installing a new APK or IPA.
+- Resolution: Added Android and iOS native bundle selection with a versioned,
+  app-private OTA directory, pending activation, startup-attempt tracking, and
+  fallback to the embedded or last known-good bundle. Added manifest parsing,
+  HTTPS downloads, byte-count and SHA-256 verification, atomic activation,
+  Settings update controls, and a Metro release command that writes GitHub
+  Release metadata for both platforms and their assets.
+- Verification: Focused OTA/App tests passed (16 tests), the full Jest suite
+  passed (29 suites, 122 tests), Android Java compilation passed, the real OTA
+  release command generated both bundles plus 15 Android and 11 iOS asset
+  files and `latest.json`, updater-specific ESLint and `git diff --check`
+  passed, and generated output was removed. iOS build verification requires
+  macOS/Xcode. Repository-wide lint and TypeScript checks still report
+  pre-existing unrelated diagnostics.
+
+### BL-006: Replace drawer repository covers with mascots
+
+- Status: resolved
+- Added: 2026-07-26
+- Resolved: 2026-07-26
+- Source: user request
+- Problem or goal: The drawer used remote manga cover/page images instead of a consistent repository identity for each Lilith repository.
+- Resolution: Added three original adult anime reader mascots with glasses, inspired by the requested Taihou mood without copying her design. Each mascot now uses a full-bleed palette associated with its repository instead of the Rapunzel icon background: charcoal/coral for NHentai, orange/charcoal/cream for MangaDex, and moss/gray/charcoal for E-Hentai. Mapped each `LilithRepo` value to its bundled mascot for both drawer image placements.
+- Verification: Inspected all three regenerated PNGs, confirmed 512px output and no app-icon background, passed the focused repository mascot Jest and ESLint checks, passed the full Jest suite (27 suites, 117 tests), and installed/launched `com.rapunzel` on Xiaomi device `42adce68`. The repository-wide lint and TypeScript commands still report pre-existing unrelated diagnostics.
+
 ### BL-004: Hide the WebView drawer item
 
 - Status: resolved

@@ -34,6 +34,12 @@ public class MainApplication extends Application implements ReactApplication {
         }
 
         @Override
+        protected String getJSBundleFile() {
+          return OtaBundleLoader.getBundleFile(
+              MainApplication.this, BuildConfig.DEBUG, BuildConfig.VERSION_NAME);
+        }
+
+        @Override
         protected boolean isNewArchEnabled() {
           return BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
         }
