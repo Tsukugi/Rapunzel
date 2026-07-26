@@ -11,6 +11,8 @@ Rapunzel is a React Native 0.72 app for reading and downloading books and manga 
 - `scripts/` contains release tooling and its tests.
 - `android/` and `ios/` contain native project files.
 - `docs/` contains behavior notes, troubleshooting details, the deployed smoke-test guide, and the cross-project test matrix.
+- `backlog.md` contains open work.
+- `backlog-resolved.md` contains completed backlog items and their verification history.
 
 ## Commands
 
@@ -30,6 +32,8 @@ Rapunzel is a React Native 0.72 app for reading and downloading books and manga 
 - Keep changes small and consistent with the existing React Native architecture.
 - Do not add secrets, credentials, generated build output, or local machine state.
 - Preserve user changes already present in the worktree.
+- Keep `backlog.md` and `backlog-resolved.md` current for every task. Add newly discovered or requested work to `backlog.md`, and move completed items to `backlog-resolved.md` with the resolution and verification details.
+- Before handing off work, review both backlog files and document any backlog change made by the task. Do not mark an item resolved without recording how it was verified.
 
 ## Verification
 
