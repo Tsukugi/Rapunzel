@@ -4,6 +4,25 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-009: Package OTA updates as one ZIP per platform
+
+- Status: resolved
+- Added: 2026-07-27
+- Resolved: 2026-07-27
+- Source: user request
+- Problem or goal: GitHub releases contained a separate asset for every Metro
+  bundle file, making OTA releases unnecessarily noisy.
+- Resolution: Added manifest schema 2 with one archive per platform. The
+  release tool creates Android and iOS ZIP files, while the updater verifies
+  and extracts one archive with safe-path, entry-count, and expanded-size
+  checks before activation. Published the ZIP-aware transition APK as release
+  `v0.9.4`.
+- Verification: Full Jest passed (30 suites, 125 tests), focused OTA tests
+  passed (18 tests), OTA-specific lint passed, the Android release APK built
+  and verified with versionCode 10 and the private release certificate, and
+  GitHub release `v0.9.4` contains exactly four assets with zero manifest
+  digest mismatches.
+
 ### BL-008: Publish direct release 0.9.3
 
 - Status: resolved
