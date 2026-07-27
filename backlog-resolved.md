@@ -4,6 +4,22 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-010: Publish direct release 0.9.5
+
+- Status: resolved
+- Added: 2026-07-27
+- Resolved: 2026-07-27
+- Source: user request and release verification
+- Problem or goal: Publish the next directly distributed Rapunzel APK using
+  the single-ZIP OTA format.
+- Resolution: Bumped the app to version 0.9.5 and Android versionCode 11,
+  built the signed APK, created GitHub release `v0.9.5`, and uploaded one
+  Android OTA ZIP, one iOS OTA ZIP, and `latest.json` using manifest schema 2.
+- Verification: The APK certificate matches the private release fingerprint.
+  Both ZIPs contain their required platform bundle, their local hashes and
+  byte counts match `latest.json`, and GitHub release `v0.9.5` has exactly
+  four assets with all four remote SHA-256 digests matching the local files.
+
 ### BL-009: Package OTA updates as one ZIP per platform
 
 - Status: resolved

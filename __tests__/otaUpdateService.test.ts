@@ -24,11 +24,11 @@ const manifest = {
     schema: 2,
     platforms: {
         android: {
-            version: "0.9.5",
+            version: "0.9.6",
             nativeCompatibility: "rn-0.72.6-hermes",
             archive: {
-                path: "Rapunzel-0.9.5.android.ota.zip",
-                url: "https://example.com/Rapunzel-0.9.5.android.ota.zip",
+                path: "Rapunzel-0.9.6.android.ota.zip",
+                url: "https://example.com/Rapunzel-0.9.6.android.ota.zip",
                 sha256: "a".repeat(64),
                 bytes: 1,
             },
@@ -63,7 +63,7 @@ describe("OTA update service", () => {
 
         const update = await checkForOtaUpdate("android");
 
-        expect(update?.platformManifest.version).toBe("0.9.5");
+        expect(update?.platformManifest.version).toBe("0.9.6");
         expect(fetchMock).toHaveBeenCalledWith(
             "https://github.com/Tsukugi/Rapunzel/releases/latest/download/latest.json",
             { headers: { "Cache-Control": "no-cache" } },
@@ -88,18 +88,18 @@ describe("OTA update service", () => {
         expect(jest.mocked(RNFS).downloadFile).toHaveBeenCalledWith(
             expect.objectContaining({
                 fromUrl:
-                    "https://example.com/Rapunzel-0.9.5.android.ota.zip",
+                    "https://example.com/Rapunzel-0.9.6.android.ota.zip",
                 toFile:
-                    "/documents/ota/android/0.9.5/Rapunzel-0.9.5.android.ota.zip",
+                    "/documents/ota/android/0.9.6/Rapunzel-0.9.6.android.ota.zip",
             }),
         );
         expect(jest.mocked(RNFS).writeFile).toHaveBeenCalledWith(
-            "/documents/ota/android/0.9.5/index.android.bundle",
+            "/documents/ota/android/0.9.6/index.android.bundle",
             "AQ==",
             "base64",
         );
         expect(jest.mocked(RNFS).writeFile).toHaveBeenCalledWith(
-            "/documents/ota/android/0.9.5/drawable-mdpi/assets_mascot.png",
+            "/documents/ota/android/0.9.6/drawable-mdpi/assets_mascot.png",
             "Ag==",
             "base64",
         );
@@ -107,7 +107,7 @@ describe("OTA update service", () => {
             1,
             expect.objectContaining({
                 fromUrl:
-                    "https://example.com/Rapunzel-0.9.5.android.ota.zip",
+                    "https://example.com/Rapunzel-0.9.6.android.ota.zip",
             }),
         );
         expect(jest.mocked(RNFS).moveFile).toHaveBeenCalledWith(
