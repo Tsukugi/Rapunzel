@@ -28,9 +28,9 @@ application remains the loader and security boundary.
 
 ## Current constraints
 
-- Android uses React Native 0.72.6 with Hermes enabled. The Android host
-  currently loads the embedded bundle because `getJSBundleFile()` is not
-  overridden.
+- Android uses React Native 0.72.6 with Hermes enabled. The Android host loads
+  a validated file bundle when one is active and otherwise uses the embedded
+  bundle. Android OTA archives must contain Hermes bytecode.
 - iOS currently returns the embedded `main.jsbundle` from
   `sourceURLForBridge`.
 - `react-native-fs` is already available for internal file storage, download,
@@ -89,8 +89,9 @@ archive size, or archive hash is invalid.
 4. The updater downloads one platform ZIP archive to a temporary path.
 5. It checks the exact byte count and SHA-256 value before extraction.
 6. It rejects unsafe ZIP paths, excessive entry counts, and oversized expanded
-   data, then extracts the bundle and assets into a versioned private directory
-   and writes an atomic active-bundle record.
+   data, rejects a non-Hermes Android bundle, then extracts the bundle and
+   assets into a versioned private directory and writes an atomic active-bundle
+   record.
 7. The next launch uses the new bundle. The old record remains available until
    the new bundle has started successfully.
 8. If the app restarts after failing to start the pending bundle, the native

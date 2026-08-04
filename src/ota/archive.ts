@@ -4,9 +4,14 @@ import RNFS from "react-native-fs";
 
 import { getOtaFilePath } from "./bundleStore";
 import { isSafeRelativePath } from "./manifest";
+import { OtaPlatform } from "./interfaces";
 
 const MAX_ARCHIVE_ENTRIES = 512;
 const MAX_EXTRACTED_BYTES = 64 * 1024 * 1024;
+const HERMES_BYTECODE_HEADER = new Uint8Array([0xc6, 0x1f, 0xbc, 0x03]);
+
+const isHermesBytecode = (content: Uint8Array): boolean =>
+    HERMES_BYTECODE_HEADER.every((byte, index) => content[index] === byte);
 
 const ensureDirectory = async (path: string): Promise<void> => {
     if (!(await RNFS.exists(path))) {
@@ -29,6 +34,7 @@ export const extractOtaArchive = async (
     archivePath: string,
     root: string,
     bundlePath: string,
+    platform: OtaPlatform = "ios",
 ): Promise<void> => {
     if (!isSafeRelativePath(bundlePath)) {
         throw new Error(`Unsafe OTA bundle path: ${bundlePath}`);
@@ -64,6 +70,11 @@ export const extractOtaArchive = async (
         }
         if (relativePath === bundlePath) {
             bundleBytes = content.byteLength;
+            if (platform === "android" && !isHermesBytecode(content)) {
+                throw new Error(
+                    "Android OTA bundle is not Hermes bytecode",
+                );
+            }
         }
     }
 

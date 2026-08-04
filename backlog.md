@@ -12,6 +12,9 @@ This file lists work that is still open. Keep it short, current, and specific.
 - Problem or goal: The Android OTA archive was carrying plain Metro source
   while the release APK carries Hermes bytecode. A downloaded update could
   fail during the first startup and roll back to the embedded bundle.
+- Current work: Release generation now compiles Android bundles with the
+  repository Hermes compiler, and the updater rejects a plain Android bundle
+  before it can become pending.
 - Acceptance criteria: Android OTA generation compiles the bundle with the
   repository's Hermes compiler, the uploaded archive contains the bytecode
   format, and a supported installed APK applies the update and starts again

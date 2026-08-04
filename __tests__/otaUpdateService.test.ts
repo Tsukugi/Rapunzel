@@ -39,7 +39,9 @@ const manifest = {
 
 const archiveBase64 = fromByteArray(
     zipSync({
-        "index.android.bundle": new Uint8Array([1]),
+        "index.android.bundle": new Uint8Array([
+            0xc6, 0x1f, 0xbc, 0x03, 1,
+        ]),
         "drawable-mdpi/assets_mascot.png": new Uint8Array([2]),
     }),
 );
@@ -95,7 +97,7 @@ describe("OTA update service", () => {
         );
         expect(jest.mocked(RNFS).writeFile).toHaveBeenCalledWith(
             "/documents/ota/android/0.9.6/index.android.bundle",
-            "AQ==",
+            "xh+8AwE=",
             "base64",
         );
         expect(jest.mocked(RNFS).writeFile).toHaveBeenCalledWith(

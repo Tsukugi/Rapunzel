@@ -106,6 +106,7 @@ export const downloadOtaUpdate = async (
         archivePath,
         root,
         update.platformManifest.bundlePath,
+        update.platform,
     );
     await removeOtaFile(archivePath);
 
