@@ -4,6 +4,25 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-011: Make Android OTA bundles match the Hermes release format
+
+- Status: resolved
+- Added: 2026-08-04
+- Resolved: 2026-08-04
+- Source: user report and focused OTA artifact check
+- Problem or goal: The Android OTA archive carried plain Metro source while
+  the release APK carried Hermes bytecode, so the first updated startup could
+  fail and roll back to the embedded bundle.
+- Resolution: Android OTA generation now compiles the bundle with the
+  repository Hermes compiler. Android archive extraction also rejects a
+  non-Hermes bundle before activation.
+- Verification: Focused OTA tests and the full Jest suite passed (30 suites,
+  127 tests). Release `v0.9.6` contains one Android ZIP whose bundle starts
+  with the Hermes bytecode header. On Xiaomi device `42adce68`, a same-signed
+  0.9.4 baseline downloaded the exact GitHub v0.9.6 ZIP, started the OTA
+  bundle without a Hermes or script-load error, marked it current, and started
+  successfully again after a clean force-stop.
+
 ### BL-010: Publish direct release 0.9.5
 
 - Status: resolved
