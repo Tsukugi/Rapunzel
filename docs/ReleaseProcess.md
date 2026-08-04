@@ -129,6 +129,10 @@ The OTA command writes `latest.json`, one Android ZIP, and one iOS ZIP under
 the ignored `builds/ota/` directory. The upload command adds those three files
 to the existing release. It does not build or install an APK.
 
+The Android OTA bundle is compiled with the React Native Hermes compiler from
+`node_modules/react-native/sdks/hermesc`, matching the Hermes format used by
+the release APK. Do not upload a plain Metro Android bundle.
+
 ## Verify the release
 
 Check the release and asset:

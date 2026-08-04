@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test } from "@jest/globals";
 import { unzipSync } from "fflate";
 
 import {
+    compileAndroidBundle,
     createOtaManifest,
     getUploadFiles,
     REACT_NATIVE_RUNNER,
@@ -26,6 +27,20 @@ describe("OTA release manifest", () => {
         expect(REACT_NATIVE_RUNNER).toContain(
             "Date.now() - stableSince >= 100",
         );
+    });
+
+    test("compiles Android OTA bundles to Hermes bytecode", () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), "rapunzel-hermes-"));
+        temporaryDirectories.push(root);
+        const bundlePath = path.join(root, "index.android.bundle");
+        fs.writeFileSync(bundlePath, "var answer = 42;");
+
+        compileAndroidBundle(path.resolve(__dirname, "..", ".."), bundlePath);
+
+        expect(fs.readFileSync(bundlePath).subarray(0, 4).toString("hex")).toBe(
+            "c61fbc03",
+        );
+        expect(fs.existsSync(`${bundlePath}.hbc`)).toBe(false);
     });
 
     test("describes one archive per platform with release URLs and hashes", () => {

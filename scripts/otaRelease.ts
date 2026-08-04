@@ -72,6 +72,50 @@ export const REACT_NATIVE_RUNNER = [
     "});",
 ].join(" ");
 
+const getHermesExecutable = (projectRoot: string): string => {
+    const platformDirectory =
+        process.platform === "win32"
+            ? "win64-bin"
+            : process.platform === "darwin"
+            ? "osx-bin"
+            : "linux64-bin";
+    const executableName = process.platform === "win32" ? "hermesc.exe" : "hermesc";
+    const executable = path.join(
+        projectRoot,
+        "node_modules",
+        "react-native",
+        "sdks",
+        "hermesc",
+        platformDirectory,
+        executableName,
+    );
+    if (!fs.existsSync(executable)) {
+        throw new Error(`Missing Hermes compiler: ${executable}`);
+    }
+    return executable;
+};
+
+export const compileAndroidBundle = (
+    projectRoot: string,
+    bundlePath: string,
+): void => {
+    const bytecodePath = `${bundlePath}.hbc`;
+    fs.rmSync(bytecodePath, { force: true });
+    execFileSync(
+        getHermesExecutable(projectRoot),
+        [
+            "-emit-binary",
+            "-max-diagnostic-width=80",
+            "-out",
+            bytecodePath,
+            bundlePath,
+            "-O",
+        ],
+        { cwd: projectRoot, stdio: "inherit" },
+    );
+    fs.renameSync(bytecodePath, bundlePath);
+};
+
 const listFiles = (directory: string): string[] => {
     const files: string[] = [];
     const visit = (currentDirectory: string) => {
@@ -209,6 +253,9 @@ const buildBundle = (
         ["-e", REACT_NATIVE_RUNNER, JSON.stringify(bundleArgs)],
         { cwd: projectRoot, stdio: "inherit" },
     );
+    if (platform === "android") {
+        compileAndroidBundle(projectRoot, bundleOutput);
+    }
 };
 
 export const getUploadFiles = (

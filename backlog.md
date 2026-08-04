@@ -4,7 +4,18 @@ This file lists work that is still open. Keep it short, current, and specific.
 
 ## Open items
 
-No open items are recorded yet.
+### BL-011: Make Android OTA bundles match the Hermes release format
+
+- Status: open
+- Added: 2026-08-04
+- Source: user report and focused OTA artifact check
+- Problem or goal: The Android OTA archive was carrying plain Metro source
+  while the release APK carries Hermes bytecode. A downloaded update could
+  fail during the first startup and roll back to the embedded bundle.
+- Acceptance criteria: Android OTA generation compiles the bundle with the
+  repository's Hermes compiler, the uploaded archive contains the bytecode
+  format, and a supported installed APK applies the update and starts again
+  without rollback.
 
 ## Item format
 

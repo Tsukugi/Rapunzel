@@ -124,6 +124,8 @@ Add a release command that:
 
 - builds Android and iOS release bundles with the repository's current Metro
   configuration;
+- compiles the Android OTA bundle with the same Hermes compiler used by the
+  Android release APK;
 - collects Metro assets needed by the bundle;
 - calculates SHA-256 and byte counts;
 - writes `latest.json`;
