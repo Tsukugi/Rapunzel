@@ -405,10 +405,10 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             ...state.bookListRecord,
             ...data.bookDict,
         };
-        state.rendered = ListUtils.mergeUniqueValues(
-            state.rendered,
-            newRenderOrder,
-        );
+        state.rendered =
+            page === 1
+                ? ListUtils.mergeUniqueValues(newRenderOrder, state.rendered)
+                : ListUtils.mergeUniqueValues(state.rendered, newRenderOrder);
 
         data.imageList.forEach((item, index) => {
             const existing = state.cachedImagesRecord[item.id];

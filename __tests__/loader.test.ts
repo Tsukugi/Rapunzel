@@ -343,6 +343,37 @@ describe("useRapunzelLoader search and feeds", () => {
         expect(cached).toEqual(["cached-0"]);
     });
 
+    test("revalidation puts new page-one entries before cached entries", async () => {
+        mockApiClient.getLatestBooks
+            .mockResolvedValueOnce({
+                page: 1,
+                totalPages: 1,
+                results: [
+                    { id: "old-1", cover: { uri: "old-cover-1" } },
+                    { id: "old-2", cover: { uri: "old-cover-2" } },
+                ],
+            })
+            .mockResolvedValueOnce({
+                page: 1,
+                totalPages: 1,
+                results: [
+                    { id: "new-1", cover: { uri: "new-cover-1" } },
+                    { id: "old-1", cover: { uri: "old-cover-1" } },
+                ],
+            });
+
+        const loader = useRapunzelLoader();
+        await loader.getLatestBooks(1);
+        await loader.getLatestBooks(1, false, true);
+
+        expect(mockApiClient.getLatestBooks).toHaveBeenCalledTimes(2);
+        expect(mockStoreState.latest[0].rendered).toEqual([
+            "NHentai:new-1",
+            "NHentai:old-1",
+            "NHentai:old-2",
+        ]);
+    });
+
     test("getTrendingBooks caches feed", async () => {
         const results = [
             { id: "trend-1", cover: { uri: "trend-cover-1" } },

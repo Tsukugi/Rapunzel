@@ -4,6 +4,21 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-012: Show newly fetched feed entries at the top
+
+- Status: resolved
+- Added: 2026-08-06
+- Resolved: 2026-08-06
+- Source: user report and focused regression test
+- Problem or goal: Main-menu feed refreshes could fetch page one but append new
+  entries after the cached list, making fresh books appear to be missing.
+- Resolution: Page-one revalidation now places the API order before retained
+  entries, while later pages still append. The main feed now follows the
+  store's rendered order for both latest and trending images.
+- Verification: Focused loader and main-feed lifecycle tests passed (15 tests),
+  including a two-fetch regression case that reproduces the stale-looking
+  order.
+
 ### BL-011: Make Android OTA bundles match the Hermes release format
 
 - Status: resolved

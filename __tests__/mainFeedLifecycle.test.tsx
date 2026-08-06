@@ -9,6 +9,8 @@ const mockVirtualList = jest.fn((props: Record<string, unknown>) => {
     void props;
     return null;
 });
+const mockLatestEffect = jest.fn();
+const mockTrendingEffect = jest.fn();
 
 const mockLatest = {
     activeProcessId: "",
@@ -35,8 +37,8 @@ jest.mock("@react-navigation/native", () => ({
 jest.mock("../src/store/store", () => ({
     useRapunzelStore: () => ({
         config: [{ debug: false }],
-        latest: [mockLatest, jest.fn()],
-        trending: [mockTrending, jest.fn()],
+        latest: [mockLatest, mockLatestEffect],
+        trending: [mockTrending, mockTrendingEffect],
         loading: [{ latest: false, trending: false }, jest.fn()],
     }),
 }));
@@ -77,6 +79,20 @@ describe("RapunzelMainFeed lifecycle", () => {
         mockGetLatestBooks.mockClear();
         mockGetTrendingBooks.mockClear();
         mockVirtualList.mockClear();
+        mockLatestEffect.mockClear();
+        mockTrendingEffect.mockClear();
+        Object.assign(mockLatest, {
+            bookListRecord: {},
+            cachedImagesRecord: {},
+            rendered: [],
+            lastFetchedAt: null,
+        });
+        Object.assign(mockTrending, {
+            bookListRecord: {},
+            cachedImagesRecord: {},
+            rendered: [],
+            lastFetchedAt: null,
+        });
     });
 
     test("loads both feed lists when the screen first mounts", async () => {
@@ -124,6 +140,52 @@ describe("RapunzelMainFeed lifecycle", () => {
         props.onEndReached?.();
 
         expect(mockGetLatestBooks).toHaveBeenCalledWith(2, false);
+        screen!.unmount();
+    });
+
+    test("renders revalidated latest entries in store order", async () => {
+        const RapunzelMainFeed = require("../src/views/RapunzelMainFeed")
+            .default;
+
+        let screen: ReactTestRenderer | undefined;
+        await act(async () => {
+            screen = renderer.create(
+                <RapunzelMainFeed
+                    navigation={{
+                        navigate: jest.fn(),
+                        canGoBack: jest.fn(() => false),
+                        goBack: jest.fn(),
+                    }}
+                    route={ViewNames.RapunzelMainFeed}
+                />,
+            );
+        });
+
+        const updateLatestImages = mockLatestEffect.mock.calls[0][0] as (state: {
+            cachedImagesRecord: Record<
+                string,
+                { id: string; value: string }
+            >;
+            rendered: string[];
+        }) => void;
+        await act(async () => {
+            updateLatestImages({
+                cachedImagesRecord: {
+                    "NHentai:new-1": { id: "NHentai:new-1", value: "new" },
+                    "NHentai:old-1": { id: "NHentai:old-1", value: "old" },
+                },
+                rendered: ["NHentai:new-1", "NHentai:old-1"],
+            });
+        });
+
+        const props = mockVirtualList.mock.lastCall?.[0] as {
+            data?: Array<{ id: string }>;
+        };
+        expect(props.data?.map((item) => item.id)).toEqual([
+            "Trending",
+            "NHentai:new-1",
+            "NHentai:old-1",
+        ]);
         screen!.unmount();
     });
 });
