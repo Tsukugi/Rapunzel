@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-014: Publish the OTA manifest with the Android release
+
+- Status: resolved
+- Added: 2026-08-06
+- Resolved: 2026-08-06
+- Source: user-reported manifest 404 and release asset verification
+- Problem or goal: Release v0.9.7 contained the APK but not `latest.json`, so the updater manifest URL returned HTTP 404.
+- Resolution: Built the 0.9.7 Android Hermes and iOS OTA bundles, generated the schema 2 manifest, and uploaded `latest.json` plus both platform archives to the existing GitHub release.
+- Verification: The manifest URL returns HTTP 200 and parses as Android/iOS version 0.9.7. Both archive URLs return HTTP 200, and the release lists all four assets with matching SHA-256 values.
+
 ### BL-013: Stop reader header flicker
 
 - Status: resolved
