@@ -4,6 +4,7 @@ import { describe, expect, jest, test } from "@jest/globals";
 
 import {
     ReaderHeaderAutoHideMs,
+    ReaderHeaderScrollThreshold,
     useReaderHeaderVisibility,
 } from "../src/tools/useReaderHeaderVisibility";
 
@@ -18,12 +19,14 @@ const Probe = forwardRef<HeaderVisibilityHandle>((_props, ref) => {
 });
 
 describe("reader header visibility", () => {
-    test("shows on upward scroll and hides immediately on downward scroll", () => {
+    test("starts hidden, shows on upward scroll, and hides on downward scroll", () => {
         const ref = React.createRef<HeaderVisibilityHandle>();
         let view!: ReturnType<typeof renderer.create>;
         act(() => {
             view = renderer.create(<Probe ref={ref} />);
         });
+
+        expect(view.toJSON()).toBe("hidden");
 
         act(() => {
             ref.current?.onScroll(100);
@@ -65,5 +68,42 @@ describe("reader header visibility", () => {
 
         view.unmount();
         jest.useRealTimers();
+    });
+
+    test("ignores small scroll offset jitter", () => {
+        const ref = React.createRef<HeaderVisibilityHandle>();
+        let view!: ReturnType<typeof renderer.create>;
+        act(() => {
+            view = renderer.create(<Probe ref={ref} />);
+        });
+
+        expect(view.toJSON()).toBe("hidden");
+
+        act(() => {
+            ref.current?.onScroll(100);
+        });
+        expect(view.toJSON()).toBe("hidden");
+
+        act(() => {
+            ref.current?.onScroll(99);
+        });
+        expect(view.toJSON()).toBe("hidden");
+
+        act(() => {
+            ref.current?.onScroll(100);
+        });
+        expect(view.toJSON()).toBe("hidden");
+
+        act(() => {
+            ref.current?.onScroll(99);
+        });
+        expect(view.toJSON()).toBe("hidden");
+
+        act(() => {
+            ref.current?.onScroll(100 - ReaderHeaderScrollThreshold);
+        });
+        expect(view.toJSON()).toBe("visible");
+
+        view.unmount();
     });
 });

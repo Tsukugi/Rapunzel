@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const ReaderHeaderAutoHideMs = 3000;
+export const ReaderHeaderScrollThreshold = 8;
 
 /**
  * Shows controls while the reader moves toward the beginning of the chapter.
@@ -8,7 +9,7 @@ export const ReaderHeaderAutoHideMs = 3000;
  * controls stay visible for the configured timeout.
  */
 export const useReaderHeaderVisibility = (resetKey: string) => {
-    const [visible, setVisible] = useState(true);
+    const [visible, setVisible] = useState(false);
     const previousOffset = useRef(0);
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,15 +34,19 @@ export const useReaderHeaderVisibility = (resetKey: string) => {
 
     useEffect(() => {
         previousOffset.current = 0;
-        show();
+        clearHideTimer();
+        setVisible(false);
 
         return clearHideTimer;
-    }, [clearHideTimer, resetKey, show]);
+    }, [clearHideTimer, resetKey]);
 
     const onScroll = useCallback(
         (offset: number) => {
             const normalizedOffset = Math.max(0, offset);
             const direction = normalizedOffset - previousOffset.current;
+
+            if (Math.abs(direction) < ReaderHeaderScrollThreshold) return;
+
             previousOffset.current = normalizedOffset;
 
             if (direction < 0) {

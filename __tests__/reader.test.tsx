@@ -8,9 +8,15 @@ const mockVirtualList = jest.fn((_props: Record<string, unknown>) => null);
 const mockReaderHeader = jest.fn((_props: Record<string, unknown>) => null);
 let mockReaderState: any;
 
-jest.mock("@react-navigation/native", () => ({
-    useFocusEffect: jest.fn(),
-}));
+jest.mock("@react-navigation/native", () => {
+    const ReactActual = jest.requireActual<typeof React>("react");
+
+    return {
+        useFocusEffect: (effect: () => void | (() => void)) => {
+            ReactActual.useEffect(effect, [effect]);
+        },
+    };
+});
 
 jest.mock("../src/store/store", () => ({
     useRapunzelStore: () => ({
@@ -102,7 +108,7 @@ describe("RapunzelReader header wiring", () => {
             mockReaderHeader.mock.lastCall?.[0] as Record<string, unknown>;
         const onScroll = listProps.onScroll as (offset: number) => void;
 
-        expect(headerProps().visible).toBe(true);
+        expect(headerProps().visible).toBe(false);
 
         act(() => {
             onScroll(120);
@@ -113,6 +119,50 @@ describe("RapunzelReader header wiring", () => {
             onScroll(80);
         });
         expect(headerProps().visible).toBe(true);
+
+        act(() => {
+            view.unmount();
+        });
+    });
+
+    test("keeps the header hidden when progressive image loading changes the cache array", () => {
+        let view!: ReturnType<typeof renderer.create>;
+        act(() => {
+            view = renderer.create(
+                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+            );
+        });
+
+        const listProps = mockVirtualList.mock.lastCall?.[0] as Record<
+            string,
+            unknown
+        >;
+        const headerProps = () =>
+            mockReaderHeader.mock.lastCall?.[0] as Record<string, unknown>;
+        const onScroll = listProps.onScroll as (offset: number) => void;
+
+        act(() => {
+            onScroll(120);
+        });
+        expect(headerProps().visible).toBe(false);
+
+        act(() => {
+            mockReaderState = {
+                ...mockReaderState,
+                cachedImages: [
+                    ...mockReaderState.cachedImages,
+                    {
+                        id: "2",
+                        value: { uri: "page-2", width: 100, height: 140 },
+                    },
+                ],
+            };
+            view.update(
+                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+            );
+        });
+
+        expect(headerProps().visible).toBe(false);
 
         act(() => {
             view.unmount();

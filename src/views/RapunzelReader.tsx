@@ -29,7 +29,6 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
         VirtualItem<RapunzelImage>[]
     >([]);
     const [singlePageIndex, setSinglePageIndex] = useState(0);
-    const [readerFocusKey, setReaderFocusKey] = useState(0);
     const {
         reader: [reader, readerEffect],
         library: [library, libraryEffect],
@@ -39,25 +38,26 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
     const { setItem: setStorageItem } = useRapunzelStorage();
     const currentBookRef = useRef(reader.book);
     currentBookRef.current = reader.book;
+    const currentReaderRef = useRef(reader);
+    currentReaderRef.current = reader;
     const [isSaved, setIsSaved] = useState(false);
 
     const readerMode = reader.mode || ReaderMode.Scroll;
     const readerImageFit = reader.imageFit || ReaderImageFit.Width;
     const { visible: headerVisible, onScroll: onReaderScroll } =
         useReaderHeaderVisibility(
-            `${String(reader.chapter?.id || "")}:${readerFocusKey}`,
+            String(reader.chapter?.id || ""),
         );
 
     const updateImages = useCallback(() => {
-        setLoadedImages(reader.cachedImages);
-    }, [reader.cachedImages]);
+        setLoadedImages(currentReaderRef.current.cachedImages);
+    }, []);
 
     useRouter({ route: ViewNames.RapunzelReader, navigation });
 
     useFocusEffect(
         useCallback(() => {
             updateImages();
-            setReaderFocusKey((current) => current + 1);
         }, [updateImages]),
     );
 
