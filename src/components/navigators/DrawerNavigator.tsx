@@ -12,6 +12,7 @@ import { ViewDict, ViewNavigationData } from "./navigationConfig";
 import CustomDrawerContent from "./customDrawerContent";
 import { NavigatorHeader } from "./NavigatorHeader";
 import { useRapunzelStore } from "../../store/store";
+import { getViewEntries } from "./viewEntries";
 
 interface DrawerNavigatorProps {
     views: Partial<ViewDict>;
@@ -66,10 +67,10 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
             initialRouteName={config.initialView}
             backBehavior={"history"}
         >
-            {Object.values(views).map((view, index) => (
+            {getViewEntries(views).map(([name, view]) => (
                 <Drawer.Screen
-                    key={index}
-                    name={view.component.name}
+                    key={name}
+                    name={name}
                     component={view.component}
                     options={useOptions(view)}
                 />

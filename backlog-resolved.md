@@ -22,7 +22,7 @@ This file records backlog items that were completed. Keep the history concise an
 - Source: user report and focused reproduction tests
 - Problem or goal: The reader header reappeared during progressive page loading and alternated visibility when native scroll offsets jittered by a few pixels.
 - Resolution: The header now starts hidden, ignores scroll deltas below 8 pixels, appears only after meaningful upward movement, hides on meaningful downward movement, and still auto-hides after three seconds. Reader image updates no longer reset header visibility because the focus refresh callback is stable and no longer changes a header reset key.
-- Verification: Focused reader and header visibility suites passed (5 tests). Focused ESLint passed with no errors, and `git diff --check` passed. Full Jest remains blocked by two pre-existing OTA update test failures; repository-wide lint and TypeScript checks retain existing unrelated diagnostics.
+- Verification: Focused reader and header visibility suites passed (5 tests). Focused ESLint passed with no errors, `git diff --check` passed, and the full Jest suite passed (31 suites, 132 tests). Repository-wide lint and TypeScript checks retain existing unrelated diagnostics.
 
 ### BL-012: Show newly fetched feed entries at the top
 

@@ -39,6 +39,14 @@ Rapunzel is a React Native 0.72 app for reading and downloading books and manga 
 
 Before handing off a code change, run the most relevant focused tests, then `npm test`, `npm run lint`, and `npx tsc --noEmit` when the local toolchain supports them. Review the final diff and report any check that could not run.
 
+## Release verification
+
+- MUST test the update before publishing it or reaching out to the user about a new release.
+- Build and test the exact APK, OTA bundles, manifest, and release assets that will be published.
+- For an Android update, install the older build, apply the update, and confirm the app starts and the changed behavior works.
+- Verify the public manifest returns HTTP 200, has the expected version and URLs, and that every published asset is downloadable with the expected hash.
+- If the update cannot be tested, stop and report the release as blocked. Do not publish it or describe it as ready.
+
 ## Commits
 
 If a commit is requested, use a clear title and a summary of at least 50 words that explains what changed and why. Do not put file paths in the commit message.
