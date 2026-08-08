@@ -65,7 +65,40 @@ describe("PaperSearch", () => {
         const searchbar = component.root.findByType("Searchbar" as any);
 
         expect(searchbar.props.style).toEqual(
-            expect.objectContaining({ flex: 1, minWidth: 0 }),
+            expect.objectContaining({ flexShrink: 1, width: "100%" }),
+        );
+    });
+
+    test("keeps the expanded search field centered inside the appbar height", () => {
+        mockHeader = { searchValue: "english" };
+        const component = renderer.create(<PaperSearch />);
+        const searchbar = component.root.findByType("Searchbar" as any);
+        const searchContainer = component.root.find(
+            (node) => String(node.type) === "View",
+        );
+
+        expect(searchContainer.props.style).toEqual(
+            expect.objectContaining({
+                alignSelf: "stretch",
+                justifyContent: "center",
+            }),
+        );
+        expect(searchbar.props.style).toEqual(
+            expect.objectContaining({
+                flexGrow: 0,
+                flexShrink: 1,
+                height: 48,
+                width: "100%",
+            }),
+        );
+        expect(searchbar.props.inputStyle).toEqual(
+            expect.objectContaining({ minHeight: 0 }),
+        );
+        expect(searchbar.props.inputStyle).toEqual(
+            expect.objectContaining({
+                paddingVertical: 0,
+                textAlignVertical: "center",
+            }),
         );
     });
 });

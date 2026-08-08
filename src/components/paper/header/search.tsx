@@ -64,7 +64,9 @@ const PaperSearch = ({
                 placeholder={placeholder}
                 style={styles.Searchbar}
                 inputStyle={{
-                    paddingTop: 0,
+                    minHeight: 0,
+                    paddingVertical: 0,
+                    textAlignVertical: "center",
                 }}
                 traileringIcon="close"
                 onSubmitEditing={onSubmitHandler}
@@ -87,13 +89,16 @@ const PaperSearch = ({
 
 const styles = StyleSheet.create({
     searchContainer: {
+        alignSelf: "stretch",
         flex: 1,
         minWidth: 0,
+        justifyContent: "center",
     },
     Searchbar: {
-        flex: 1,
-        minWidth: 0,
-        height: 45,
+        flexGrow: 0,
+        flexShrink: 1,
+        height: 48,
+        width: "100%",
     },
 });
 

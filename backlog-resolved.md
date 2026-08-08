@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-017: Keep header search within the appbar height
+
+- Status: resolved
+- Added: 2026-08-08
+- Resolved: 2026-08-08
+- Source: user report and focused reproduction test
+- Problem or goal: The expanded header search field could fill the whole appbar with inconsistent vertical spacing, overflow the available header height, and render query text above the field center.
+- Resolution: The search container now fills the appbar row and centers a fixed 48dp search field. The internal text input minimum height and vertical padding are disabled, with Android text alignment explicitly centered.
+- Verification: Focused regression tests failed before each layout fix and passed afterward. Focused search/header tests passed (4 tests), the full Jest suite passed (32 suites, 137 tests), the release APK built and updated the same-signed emulator package, and live emulator screenshots confirmed centered field/text plus successful close interaction without fatal errors. Repository-wide lint and TypeScript checks retain pre-existing diagnostics.
+
 ### BL-016: Stabilize reader fast scrolling
 
 - Status: resolved
