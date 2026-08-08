@@ -50,7 +50,7 @@ jest.mock("../themes", () => ({
 }));
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => ({
+    getRapunzelStore: () => ({
         config: [{ debug: false }],
     }),
 }));

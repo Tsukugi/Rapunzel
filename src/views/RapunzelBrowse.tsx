@@ -1,12 +1,12 @@
 import React, { FC, useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import VirtualList from "../components/virtualList/virtualList";
-import { useRapunzelLoader } from "../api/loader";
+import { getRapunzelLoader } from "../api/loader";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 import CoupleItem from "../components/paper/item/coupleItem";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import { ListUtils } from "../tools/list";
 import { RapunzelLog } from "../config/log";
@@ -16,7 +16,7 @@ import {
     isFresh,
 } from "../cache/listCache";
 
-interface RapunzelBrowseProps extends UsesNavigation {}
+type RapunzelBrowseProps = UsesNavigation
 
 const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
     const [loadedImages, setLoadedImages] = useState<VirtualItem<string>[]>([]);
@@ -25,7 +25,7 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         config: [config],
         loading: [loading],
         browse: [browse, browseEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     useRouter({ route: ViewNames.RapunzelBrowse, navigation });
 
@@ -66,14 +66,20 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
                 browse.rendered.length === 0 ||
                 !isFresh(browse.lastFetchedAt, BrowseFreshnessMs)
             ) {
-                useRapunzelLoader().loadSearch(
+                getRapunzelLoader().loadSearch(
                     header.searchValue,
                     { page: 1 },
                     false,
                     true,
                 );
             }
-        }, []),
+        }, [
+            browse.cacheKey,
+            browse.lastFetchedAt,
+            browse.rendered.length,
+            config.repository,
+            header.searchValue,
+        ]),
     );
 
     const { getVirtualItemProps } = useVirtualListEvents({ navigation });
@@ -86,7 +92,7 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
             return;
         }
         if (browse.hasNextPage === false) return;
-        useRapunzelLoader().loadSearch(
+        getRapunzelLoader().loadSearch(
             header.searchValue,
             {
                 page: browse.page + 1,

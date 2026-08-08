@@ -1,16 +1,20 @@
 import { describe, expect, jest, test } from "@jest/globals";
 import React from "react";
 import renderer, { act } from "react-test-renderer";
+import { Appbar, Searchbar } from "react-native-paper";
 
 let mockHeader: { searchValue: string };
+type MockProps = Record<string, unknown>;
 
 jest.mock("react-native-paper", () => {
     const React = require("react");
     return {
         Appbar: {
-            Action: (props: any) => React.createElement("AppbarAction", props),
+            Action: (props: MockProps) =>
+                React.createElement("AppbarAction", props),
         },
-        Searchbar: (props: any) => React.createElement("Searchbar", props),
+        Searchbar: (props: MockProps) =>
+            React.createElement("Searchbar", props),
     };
 });
 
@@ -22,7 +26,7 @@ jest.mock("@react-navigation/native", () => ({
 }));
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => ({
+    getRapunzelStore: () => ({
         header: [mockHeader, jest.fn()],
     }),
 }));
@@ -42,7 +46,7 @@ describe("PaperSearch", () => {
         mockHeader = { searchValue: "english" };
         const component = renderer.create(<PaperSearch />);
 
-        let searchbar = component.root.findByType("Searchbar");
+        let searchbar = component.root.findByType(Searchbar);
         expect(searchbar.props.value).toBe("english");
 
         act(() => {
@@ -50,19 +54,19 @@ describe("PaperSearch", () => {
         });
 
         expect(mockHeader.searchValue).toBe("");
-        expect(component.root.findByType("AppbarAction")).toBeTruthy();
+        expect(component.root.findByType(Appbar.Action)).toBeTruthy();
 
         act(() => {
-            component.root.findByType("AppbarAction").props.onPress();
+            component.root.findByType(Appbar.Action).props.onPress();
         });
-        searchbar = component.root.findByType("Searchbar");
+        searchbar = component.root.findByType(Searchbar);
         expect(searchbar.props.value).toBe("");
     });
 
     test("allows the expanded search field to shrink inside the header", () => {
         mockHeader = { searchValue: "english" };
         const component = renderer.create(<PaperSearch />);
-        const searchbar = component.root.findByType("Searchbar" as any);
+        const searchbar = component.root.findByType(Searchbar);
 
         expect(searchbar.props.style).toEqual(
             expect.objectContaining({ flexShrink: 1, width: "100%" }),
@@ -72,7 +76,7 @@ describe("PaperSearch", () => {
     test("keeps the expanded search field centered inside the appbar height", () => {
         mockHeader = { searchValue: "english" };
         const component = renderer.create(<PaperSearch />);
-        const searchbar = component.root.findByType("Searchbar" as any);
+        const searchbar = component.root.findByType(Searchbar);
         const searchContainer = component.root.find(
             (node) => String(node.type) === "View",
         );

@@ -1,13 +1,15 @@
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 
-interface ExecuteOnlyOnDebugProps<T> {
-    executable: (...args: any[]) => T;
-    args: any[];
+interface ExecuteOnlyOnDebugProps<TArgs extends unknown[], TResult> {
+    executable: (...args: TArgs) => TResult;
+    args: TArgs;
 }
-const executeOnlyOnDebug = <T>(props: ExecuteOnlyOnDebugProps<T>) => {
+const executeOnlyOnDebug = <TArgs extends unknown[], TResult>(
+    props: ExecuteOnlyOnDebugProps<TArgs, TResult>,
+) => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
     if (config.debug) return props.executable(...props.args);
     return null;
 };

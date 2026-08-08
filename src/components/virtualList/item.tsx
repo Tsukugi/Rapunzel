@@ -1,5 +1,4 @@
 import { View, Text } from "react-native";
-import { VirtualItem } from "./interfaces";
 import { StyleSheet } from "react-native";
 
 type ItemProps = {

@@ -1,10 +1,9 @@
 import { Appbar, Searchbar } from "react-native-paper";
 import { StyleSheet, View } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { RapunzelLog } from "../../../config/log";
 import { useFocusEffect } from "@react-navigation/native";
-import { useRapunzelStore } from "../../../store/store";
-import { ViewNames } from "../../navigators/interfaces";
+import { getRapunzelStore } from "../../../store/store";
 
 interface PaperSearchProps {
     defaultValue?: string;
@@ -19,13 +18,13 @@ const PaperSearch = ({
     defaultValue = "",
     placeholder = "Search",
     isLoading = false,
-    onValueChange = () => {},
-    onSubmit = () => {},
-    onClose = () => {},
+    onValueChange = () => undefined,
+    onSubmit = () => undefined,
+    onClose = () => undefined,
 }: PaperSearchProps) => {
     const {
         header: [header, headerEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const [isSearchExpanded, setIsSearchExpanded] = useState<boolean>(
         !!header.searchValue,
@@ -40,11 +39,12 @@ const PaperSearch = ({
         useCallback(() => {
             setSearchQuery(header.searchValue);
             RapunzelLog.log({ header });
-        }, []),
+        }, [header]),
     );
 
     const onChangeHandler = (text: string) => {
         setSearchQuery(text);
+        onValueChange(text);
     };
 
     const onSubmitHandler = () => {

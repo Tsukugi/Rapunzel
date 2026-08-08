@@ -1,4 +1,4 @@
-import { useColorScheme, Appearance } from "react-native";
+import { useColorScheme } from "react-native";
 import { DefaultTheme, MD3Theme } from "react-native-paper";
 
 const lightTheme: MD3Theme = {

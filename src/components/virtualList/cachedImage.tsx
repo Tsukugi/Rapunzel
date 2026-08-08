@@ -69,31 +69,35 @@ const CachedImage: React.FC<CachedImageProps> = ({
             }}
         >
             {loading && <LoadingComponent />}
-            <PinchableImage
-                {...props}
-                imageFit={imageFit}
-                onLoadStart={() => setLoading(true)}
-                onLoadEnd={() => setLoading(false)}
-                onError={() => {
-                    const extensionFallback = src
-                        ? CacheUtils.replaceExtension(
-                              src,
-                              FallbackCacheExtension,
-                          )
-                        : undefined;
-                    const nextUri = image.fallbackUri || extensionFallback;
-                    if (!fallbackAttempted && nextUri && nextUri !== src) {
-                        setFallbackAttempted(true);
-                        setSrc(nextUri);
-                    } else {
-                        setSrc("");
-                    }
-                    RapunzelLog.error(
-                        `[CachedImage]: Image load failed ${src}`,
-                    );
-                }}
-                image={{ ...image, uri: src }}
-            />
+            {src ? (
+                <PinchableImage
+                    {...props}
+                    imageFit={imageFit}
+                    onLoadStart={() => setLoading(true)}
+                    onLoadEnd={() => setLoading(false)}
+                    onError={() => {
+                        const extensionFallback = src
+                            ? CacheUtils.replaceExtension(
+                                  src,
+                                  FallbackCacheExtension,
+                              )
+                            : undefined;
+                        const nextUri = image.fallbackUri || extensionFallback;
+                        if (!fallbackAttempted && nextUri && nextUri !== src) {
+                            setFallbackAttempted(true);
+                            setSrc(nextUri);
+                        } else {
+                            setSrc("");
+                        }
+                        RapunzelLog.error(
+                            `[CachedImage]: Image load failed ${src}`,
+                        );
+                    }}
+                    image={{ ...image, uri: src }}
+                />
+            ) : (
+                <EmptyImageComponent onPress={() => onClick(image)} />
+            )}
         </View>
     );
 };

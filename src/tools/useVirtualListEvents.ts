@@ -1,11 +1,10 @@
 import { BookBase } from "@atsu/lilith";
-import { useRapunzelLoader } from "../api/loader";
-import { useRapunzelLibrary } from "../components/cache/library";
+import { getRapunzelLoader } from "../api/loader";
+import { getRapunzelLibrary } from "../components/cache/library";
 import { goToFirstChapterOrSelectChapter } from "../components/navigators/goToFirstChapterOrSelect";
 import { BrowserItemProps } from "../components/paper/item/browserItem";
 import { UsesNavigation } from "../components/navigators/interfaces";
-import { useRapunzelStore } from "../store/store";
-import { StoredLibrary, LibraryBook } from "../store/interfaces";
+import { getRapunzelStore } from "../store/store";
 
 export interface UseVirtualListProps extends UsesNavigation {
     forceAllLanguages?: boolean;
@@ -24,12 +23,12 @@ export const useVirtualListEvents = ({
     const {
         config: [config],
         library: [library],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
-    const { saveBookToLibrary, removeBookFromLibrary } = useRapunzelLibrary();
+    const { saveBookToLibrary, removeBookFromLibrary } = getRapunzelLibrary();
 
     const onBookSelectHandler: BookEvent = async (bookBase: BookBase) => {
-        const { loadBook } = useRapunzelLoader({
+        const { loadBook } = getRapunzelLoader({
             useAllLanguages: forceAllLanguages,
         });
         const book = await loadBook(bookBase.id, {
@@ -47,7 +46,7 @@ export const useVirtualListEvents = ({
     };
 
     const onBookSaveHandler: BookEvent = async (bookBase: BookBase) => {
-        const { loadBook, loadChapter } = useRapunzelLoader({
+        const { loadBook, loadChapter } = getRapunzelLoader({
             useAllLanguages: forceAllLanguages,
         });
 

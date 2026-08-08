@@ -6,8 +6,8 @@ import RapunzelConfigCheckbox from "../components/paper/RapunzelConfigCheckbox";
 import CacheScreen from "../components/cache/cacheScreen";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
-import { useRapunzelStore } from "../store/store";
-import { useRapunzelStorage } from "../cache/storage";
+import { getRapunzelStore } from "../store/store";
+import { getRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
 import { RapunzelSelect } from "../components/RapunzelSelect";
 import { LilithRepo } from "../store/interfaces";
@@ -20,8 +20,8 @@ const RapunzelSettings: FC<UsesNavigation> = ({ navigation }) => {
 
     const {
         config: [config],
-    } = useRapunzelStore();
-    const { setItem } = useRapunzelStorage();
+    } = getRapunzelStore();
+    const { setItem } = getRapunzelStorage();
 
     useRouter({ route: ViewNames.RapunzelSettings, navigation });
 

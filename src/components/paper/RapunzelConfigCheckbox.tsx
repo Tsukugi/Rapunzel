@@ -1,9 +1,9 @@
 import React, { FC } from "react";
 import { Checkbox } from "react-native-paper";
 import { RapunzelConfigBase } from "../../config/interfaces";
-import { useRapunzelStore } from "../../store/store";
+import { getRapunzelStore } from "../../store/store";
 import { StorageEntries } from "../../cache/interfaces";
-import { useRapunzelStorage } from "../../cache/storage";
+import { getRapunzelStorage } from "../../cache/storage";
 
 const getStatus = (checkedMatch: boolean) =>
     checkedMatch ? "checked" : "unchecked";
@@ -19,7 +19,7 @@ const RapunzelConfigCheckbox: FC<RapunzelCheckboxItemProps> = ({
 }) => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const [localChecked, setLocalChecked] = React.useState<boolean>(
         config[configId],
@@ -29,11 +29,11 @@ const RapunzelConfigCheckbox: FC<RapunzelCheckboxItemProps> = ({
         if (typeof config[configId] !== "boolean")
             throw "[onCheckedHandler] Cannot assign value to a non boolean property";
 
-        const newState: boolean = !config[configId];
+        const newState = !config[configId];
 
         setLocalChecked(newState);
         config[configId] = newState;
-        useRapunzelStorage().setItem(StorageEntries.config, config);
+        getRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
     return (

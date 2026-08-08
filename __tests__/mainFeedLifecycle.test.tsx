@@ -1,7 +1,6 @@
 import React from "react";
 import renderer, { act, ReactTestRenderer } from "react-test-renderer";
 import { ViewNames } from "../src/components/navigators/interfaces";
-import { LilithRepo } from "../src/store/interfaces";
 
 const mockGetLatestBooks = jest.fn(() => Promise.resolve([]));
 const mockGetTrendingBooks = jest.fn(() => Promise.resolve([]));
@@ -35,7 +34,7 @@ jest.mock("@react-navigation/native", () => ({
 }));
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => ({
+    getRapunzelStore: () => ({
         config: [{ debug: false }],
         latest: [mockLatest, mockLatestEffect],
         trending: [mockTrending, mockTrendingEffect],
@@ -44,7 +43,7 @@ jest.mock("../src/store/store", () => ({
 }));
 
 jest.mock("../src/api/loader", () => ({
-    useRapunzelLoader: () => ({
+    getRapunzelLoader: () => ({
         getLatestBooks: mockGetLatestBooks,
         getTrendingBooks: mockGetTrendingBooks,
     }),
@@ -140,7 +139,7 @@ describe("RapunzelMainFeed lifecycle", () => {
         props.onEndReached?.();
 
         expect(mockGetLatestBooks).toHaveBeenCalledWith(2, false);
-        screen!.unmount();
+        screen?.unmount();
     });
 
     test("renders revalidated latest entries in store order", async () => {
@@ -186,6 +185,6 @@ describe("RapunzelMainFeed lifecycle", () => {
             "NHentai:new-1",
             "NHentai:old-1",
         ]);
-        screen!.unmount();
+        screen?.unmount();
     });
 });

@@ -102,7 +102,7 @@ export interface BrowseState extends BookBaseList {
     page: number;
 }
 
-export interface PopularBooksState extends BookBaseList {}
+export type PopularBooksState = BookBaseList
 export interface LibraryState {
     saved: Record<string, LibraryBook>;
     rendered: string[];
@@ -158,7 +158,7 @@ export interface Store {
     ui: UseReactTaihou<UIState>;
 }
 
-export interface RapunzelImage extends LilithImage {}
+export type RapunzelImage = LilithImage
 
 export interface LibraryBook extends Book {
     savedAt: number; // epoch

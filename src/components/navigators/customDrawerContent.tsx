@@ -5,7 +5,7 @@ import {
 } from "@react-navigation/drawer";
 import { Image } from "react-native";
 import { Avatar, Divider } from "react-native-paper";
-import { useRapunzelStore } from "../../store/store";
+import { getRapunzelStore } from "../../store/store";
 import { getRepositoryMascot } from "./repositoryMascots";
 type CustomDrawerContent = DrawerContentComponentProps;
 
@@ -16,7 +16,7 @@ const CustomDrawerContent = ({
 }: CustomDrawerContent) => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const mascot = getRepositoryMascot(config.repository);
 

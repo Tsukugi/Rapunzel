@@ -1,4 +1,4 @@
-import { TaihouOptions, useState } from "@atsu/taihou";
+import { TaihouOptions, useState as taihouState } from "@atsu/taihou";
 import { LilithLanguage } from "@atsu/lilith";
 import { ViewNames } from "../components/navigators/interfaces";
 import {
@@ -27,7 +27,7 @@ import { useEffect } from "react";
 import { ImageCacheLocations } from "../cache/interfaces";
 
 const RapunzelState = {} as Store;
-export const useRapunzelStore = () => {
+export const getRapunzelStore = () => {
     if (Object.keys(RapunzelState).length === 0) {
         throw Error("Taihou Store not initialized");
     }
@@ -47,34 +47,34 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         ...props,
     };
 
-    const useReactConfig = <T>(
+    const createReactConfig = <T>(
         name: string,
         initialState: T,
     ): UseReactTaihou<T> => {
-        const [state, watch, unwatch] = useState<T>(initialState, {
+        const [state, watch, unwatch] = taihouState<T>(initialState, {
             ...onGetConfig(),
             name,
         });
 
-        const effect: TaihouEffect<T> = (onUpdate) => {
+        const useStoreEffect: TaihouEffect<T> = (onUpdate) => {
             useEffect(() => {
                 watch(onUpdate);
 
                 return () => {
                     unwatch(onUpdate);
                 };
-            }, []);
+            }, [onUpdate]);
         };
 
-        return [state, effect];
+        return [state, useStoreEffect];
     };
 
-    RapunzelState.router = useReactConfig<RouterState>("router", {
+    RapunzelState.router = createReactConfig<RouterState>("router", {
         currentRoute: ViewNames.RapunzelBrowse,
         history: [],
     });
 
-    RapunzelState.config = useReactConfig<ConfigState>("config", {
+    RapunzelState.config = createReactConfig<ConfigState>("config", {
         debug: false,
         enableCache: true,
         useFallbackExtensionOnDownload: false,
@@ -99,7 +99,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         ],
     });
 
-    RapunzelState.reader = useReactConfig<ReaderState>("reader", {
+    RapunzelState.reader = createReactConfig<ReaderState>("reader", {
         activeProcessId: "",
         book: null,
         chapter: null,
@@ -109,7 +109,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         imageFit: ReaderImageFit.Width,
     });
 
-    RapunzelState.header = useReactConfig<HeaderState>("header", {
+    RapunzelState.header = createReactConfig<HeaderState>("header", {
         searchValue: "",
     });
 
@@ -126,33 +126,33 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         scrollOffset: 0,
     });
 
-    RapunzelState.browse = useReactConfig<BrowseState>("browse", {
+    RapunzelState.browse = createReactConfig<BrowseState>("browse", {
         ...getDefaultBookBaseList(),
         page: 1,
     });
 
-    RapunzelState.library = useReactConfig<LibraryState>("library", {
+    RapunzelState.library = createReactConfig<LibraryState>("library", {
         saved: {},
         rendered: [],
     });
 
-    RapunzelState.latest = useReactConfig<LatestBooksState>("latest", {
+    RapunzelState.latest = createReactConfig<LatestBooksState>("latest", {
         ...getDefaultBookBaseList(),
         page: 1,
     });
 
-    RapunzelState.trending = useReactConfig<PopularBooksState>("trending", {
+    RapunzelState.trending = createReactConfig<PopularBooksState>("trending", {
         ...getDefaultBookBaseList(),
     });
 
-    RapunzelState.loading = useReactConfig<LoadingState>("loading", {
+    RapunzelState.loading = createReactConfig<LoadingState>("loading", {
         browse: false,
         reader: false,
         latest: false,
         trending: false,
     });
 
-    RapunzelState.autoFetchWebview = useReactConfig<AutoFetchWebviewState>(
+    RapunzelState.autoFetchWebview = createReactConfig<AutoFetchWebviewState>(
         "autoFetchWebview",
         {
             step: EAutoFetchWebviewStep.Standby,
@@ -160,7 +160,7 @@ export const initRapunzelStore = (props: InitRapunzelStoreProps) => {
         },
     );
 
-    RapunzelState.ui = useReactConfig<UIState>("ui", {
+    RapunzelState.ui = createReactConfig<UIState>("ui", {
         snackMessage: "",
     });
 };

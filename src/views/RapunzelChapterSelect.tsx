@@ -1,9 +1,9 @@
 import React, { FC, useState } from "react";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
-import { Button, Card, List, Text } from "react-native-paper";
-import { useRapunzelStore } from "../store/store";
-import { useRapunzelLoader } from "../api/loader";
+import { Card, List, Text } from "react-native-paper";
+import { getRapunzelStore } from "../store/store";
+import { getRapunzelLoader } from "../api/loader";
 import { RapunzelLog } from "../config/log";
 import { Book } from "@atsu/lilith";
 import { getLocaleEmoji } from "../tools/locales";
@@ -13,18 +13,17 @@ import { Dimensions } from "react-native";
 import { LocalTheme } from "../../themes";
 
 const { width } = Dimensions.get("screen");
-interface RapunzelChapterSelectProps extends UsesNavigation {}
+type RapunzelChapterSelectProps = UsesNavigation
 const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
     navigation,
 }) => {
-    const { colors, dark } = LocalTheme.useTheme();
+    const { dark } = LocalTheme.useTheme();
     const [managedBook, setManagedbook] = useState<Book | null>(null);
 
     const {
-        library: [library],
         reader: [reader],
         loading: [, loadingEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     useRouter({ route: ViewNames.RapunzelChapterSelect, navigation });
 
@@ -38,7 +37,7 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
     }
 
     const onChapterSelectHandler = (id: string) => {
-        const { loadChapter } = useRapunzelLoader();
+        const { loadChapter } = getRapunzelLoader();
 
         loadChapter(managedBook.id, id);
 
@@ -54,25 +53,6 @@ const RapunzelChapterSelect: FC<RapunzelChapterSelectProps> = ({
         } else {
             return `${language} Chapter ${chapter.chapterNumber}: (Untitled)`;
         }
-    };
-
-    const onEndReachedHandler = () => {
-        RapunzelLog.log("[onEndReachedHandler] Reached");
-        if (!reader.book) {
-            RapunzelLog.log("[onEndReachedHandler] No chapters found");
-            return null;
-        }
-        useRapunzelLoader().loadBook(
-            reader.book.id,
-            {
-                chapterList: {
-                    page: reader.chapterPage + 1,
-                    size: 50,
-                    orderBy: "desc",
-                },
-            },
-            false,
-        );
     };
 
     const backdropOpacity = dark ? "0.5" : "0.2";

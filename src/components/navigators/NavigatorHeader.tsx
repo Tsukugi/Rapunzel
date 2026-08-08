@@ -3,11 +3,11 @@ import { Dimensions, ViewStyle } from "react-native";
 import { ParamListBase } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 
-import { useRapunzelStorage } from "../../cache/storage";
-import { useRapunzelLoader } from "../../api/loader";
+import { getRapunzelStorage } from "../../cache/storage";
+import { getRapunzelLoader } from "../../api/loader";
 import { StorageEntries } from "../../cache/interfaces";
 import { RapunzelLog } from "../../config/log";
-import { useRapunzelStore } from "../../store/store";
+import { getRapunzelStore } from "../../store/store";
 import HeaderBar from "../paper/header/headerBar";
 import { HeaderLeftMode } from "../paper/interfaces";
 import { ViewNames } from "./interfaces";
@@ -35,8 +35,8 @@ export const NavigatorHeader = ({
         header: [header],
         library: [library],
         router: [router],
-    } = useRapunzelStore();
-    const { setItem: setStorageItem } = useRapunzelStorage();
+    } = getRapunzelStore();
+    const { setItem: setStorageItem } = getRapunzelStorage();
 
     const { buildLibraryState } = LibraryUtils;
 
@@ -53,7 +53,7 @@ export const NavigatorHeader = ({
 
         if (!newValue) return;
 
-        await useRapunzelLoader().loadSearch(newValue);
+        await getRapunzelLoader().loadSearch(newValue);
 
         if (router.currentRoute != ViewNames.RapunzelBrowse) {
             navigation.navigate(ViewNames.RapunzelBrowse);
@@ -123,8 +123,8 @@ export const NavigatorHeader = ({
             onBack={navigation.goBack}
             onSubmit={searchSubmitBehaviour}
             openMenu={navigation.openDrawer}
-            openOptions={() => {}}
-            openSearch={() => {}}
+            openOptions={() => undefined}
+            openSearch={() => undefined}
             onClose={onSearchClose}
         />
     );

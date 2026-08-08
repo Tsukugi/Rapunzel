@@ -1,6 +1,6 @@
 import "react-native";
 // Note: import explicitly to use the types shiped with jest.
-import { test, describe, jest, expect } from "@jest/globals";
+import { test, describe, expect } from "@jest/globals";
 import { PromiseTools } from "../src/tools/promise";
 
 describe("Promises helper functions", () => {

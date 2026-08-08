@@ -2,7 +2,7 @@ import RNFS from "react-native-fs";
 
 import { DeviceCache, StartLoadingImagesProps } from "./cache";
 import { RapunzelLog } from "../config/log";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import { LibraryBook } from "../store/interfaces";
 import { DateUtils } from "../tools/date";
 
@@ -72,7 +72,7 @@ export const RapunzelCache = {
     clearTempCache: async (): Promise<boolean> => {
         const {
             config: [config],
-        } = useRapunzelStore();
+        } = getRapunzelStore();
 
         const RapunzelLibrary = `${config.cacheTempImageLocation}/${StaticLibraryPaths.RootFolderName}`;
 
@@ -113,7 +113,7 @@ export const RapunzelCache = {
      */ clearLibraryCache: async (): Promise<boolean> => {
         const {
             config: [config],
-        } = useRapunzelStore();
+        } = getRapunzelStore();
 
         try {
             const RapunzelLibrary = `${config.cachelibraryLocation}/${StaticLibraryPaths.RootFolderName}`;
@@ -145,7 +145,7 @@ export const RapunzelCache = {
     ): Promise<Record<string, LibraryBook>> => {
         const {
             config: [config],
-        } = useRapunzelStore();
+        } = getRapunzelStore();
         const newLib: Record<string, LibraryBook> = {};
         return Promise.all(
             Object.keys(storedLibrary).map(async (key) => {

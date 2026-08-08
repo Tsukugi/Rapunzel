@@ -1,13 +1,22 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 
-let mockExists: jest.Mock;
-let mockUnlink: jest.Mock;
-let mockReadDir: jest.Mock;
-let mockDownloadFile: jest.Mock;
-let mockStat: jest.Mock;
-let mockMkdir: jest.Mock;
-let mockCopyFile: jest.Mock;
-let mockMoveFile: jest.Mock;
+type DownloadResult = { promise: Promise<{ statusCode: number }> };
+type DownloadArguments = { fromUrl: string; toFile: string };
+type AsyncMock<Result, Arguments extends unknown[] = []> = jest.MockedFunction<
+    (...args: Arguments) => Promise<Result>
+>;
+type DownloadMock = jest.MockedFunction<
+    (options: DownloadArguments) => DownloadResult
+>;
+
+let mockExists: AsyncMock<boolean, [string]>;
+let mockUnlink: AsyncMock<void, [string]>;
+let mockReadDir: AsyncMock<Array<{ name: string }>, [string]>;
+let mockDownloadFile: DownloadMock;
+let mockStat: AsyncMock<{ size: number }, [string]>;
+let mockMkdir: AsyncMock<void, [string]>;
+let mockCopyFile: AsyncMock<void, [string, string]>;
+let mockMoveFile: AsyncMock<void, [string, string]>;
 
 jest.mock("../src/config/log", () => ({
     RapunzelLog: {
@@ -19,14 +28,14 @@ jest.mock("../src/config/log", () => ({
 
 jest.mock("react-native-fs", () => ({
     DocumentDirectoryPath: "DocPath",
-    exists: (...args: any[]) => mockExists(...args),
-    unlink: (...args: any[]) => mockUnlink(...args),
-    readDir: (...args: any[]) => mockReadDir(...args),
-    downloadFile: (options: any) => mockDownloadFile(options),
-    stat: (...args: any[]) => mockStat(...args),
-    mkdir: (...args: any[]) => mockMkdir(...args),
-    copyFile: (...args: any[]) => mockCopyFile(...args),
-    moveFile: (...args: any[]) => mockMoveFile(...args),
+    exists: (path: string) => mockExists(path),
+    unlink: (path: string) => mockUnlink(path),
+    readDir: (path: string) => mockReadDir(path),
+    downloadFile: (options: DownloadArguments) => mockDownloadFile(options),
+    stat: (path: string) => mockStat(path),
+    mkdir: (path: string) => mockMkdir(path),
+    copyFile: (from: string, to: string) => mockCopyFile(from, to),
+    moveFile: (from: string, to: string) => mockMoveFile(from, to),
 }));
 
 jest.mock("@atsu/lilith", () => ({
@@ -42,16 +51,32 @@ const { DeviceCache } = require("../src/cache/cache");
 
 describe("DeviceCache extra branches", () => {
     beforeEach(() => {
-        mockExists = jest.fn().mockResolvedValue(true);
-        mockUnlink = jest.fn().mockResolvedValue(null);
-        mockReadDir = jest.fn().mockResolvedValue([]);
-        mockDownloadFile = jest.fn().mockReturnValue({
-            promise: Promise.resolve({ statusCode: 200 }),
-        });
-        mockStat = jest.fn().mockResolvedValue({ size: 0 });
-        mockMkdir = jest.fn().mockResolvedValue(null);
-        mockCopyFile = jest.fn().mockResolvedValue(null);
-        mockMoveFile = jest.fn().mockResolvedValue(null);
+        mockExists = jest
+            .fn<(path: string) => Promise<boolean>>()
+            .mockResolvedValue(true);
+        mockUnlink = jest
+            .fn<(path: string) => Promise<void>>()
+            .mockResolvedValue(undefined);
+        mockReadDir = jest
+            .fn<(path: string) => Promise<Array<{ name: string }>>>()
+            .mockResolvedValue([]);
+        mockDownloadFile = jest
+            .fn<(options: DownloadArguments) => DownloadResult>()
+            .mockReturnValue({
+                promise: Promise.resolve({ statusCode: 200 }),
+            });
+        mockStat = jest
+            .fn<(path: string) => Promise<{ size: number }>>()
+            .mockResolvedValue({ size: 0 });
+        mockMkdir = jest
+            .fn<(path: string) => Promise<void>>()
+            .mockResolvedValue(undefined);
+        mockCopyFile = jest
+            .fn<(from: string, to: string) => Promise<void>>()
+            .mockResolvedValue(undefined);
+        mockMoveFile = jest
+            .fn<(from: string, to: string) => Promise<void>>()
+            .mockResolvedValue(undefined);
         jest.useRealTimers();
     });
 
@@ -69,7 +94,7 @@ describe("DeviceCache extra branches", () => {
         const tried: string[] = [];
         const res = await DeviceCache.downloadImageWithFallback({
             url: "https://example.com/cover.webp.webp",
-            downloadHandler: async (url) => {
+            downloadHandler: async (url: string) => {
                 tried.push(url);
                 return {
                     statusCode: url.endsWith("cover.jpg.webp") ? 200 : 404,
@@ -83,9 +108,11 @@ describe("DeviceCache extra branches", () => {
 
     test("downloadAndCacheImage returns null after all downloads fail", async () => {
         mockExists.mockResolvedValue(false);
-        mockDownloadFile = jest.fn().mockReturnValue({
-            promise: Promise.resolve({ statusCode: 404 }),
-        });
+        mockDownloadFile = jest
+            .fn<(options: DownloadArguments) => DownloadResult>()
+            .mockReturnValue({
+                promise: Promise.resolve({ statusCode: 404 }),
+            });
         const onImageCached = jest.fn();
 
         const res = await DeviceCache.downloadAndCacheImage({
@@ -117,7 +144,7 @@ describe("DeviceCache extra branches", () => {
 
     test("downloadAndCacheImage renames file when fallback changes extension", async () => {
         mockExists.mockResolvedValue(false);
-        mockDownloadFile = jest.fn(({ fromUrl, toFile }) => {
+        mockDownloadFile = jest.fn(({ fromUrl }: DownloadArguments) => {
             const statusCode = fromUrl.endsWith(".jpg") ? 404 : 200;
             return { promise: Promise.resolve({ statusCode }) };
         });
@@ -141,7 +168,7 @@ describe("DeviceCache extra branches", () => {
     test("downloadAndCacheImage keeps original extension when no fallback", async () => {
         mockExists.mockResolvedValue(false);
         mockDownloadFile = jest
-            .fn()
+            .fn<(options: DownloadArguments) => DownloadResult>()
             .mockReturnValue({ promise: Promise.resolve({ statusCode: 200 }) });
         const onImageCached = jest.fn();
 
@@ -166,8 +193,8 @@ describe("DeviceCache extra branches", () => {
         const result = await DeviceCache.startLoadingImages({
             data: ["a", "b"],
             imagesPath: "/cache",
-            onFileNaming: ({ index }) => `${index}.jpg`,
-            onImageLoaded: async (url) => loaded.push(url),
+            onFileNaming: ({ index }: { index: number }) => `${index}.jpg`,
+            onImageLoaded: async (url: string) => loaded.push(url),
             shouldCancelLoad: () => true,
         });
 
@@ -178,7 +205,7 @@ describe("DeviceCache extra branches", () => {
 
     test("startLoadingImages propagates cached extension from downloader", async () => {
         mockExists.mockResolvedValue(false);
-        mockDownloadFile = jest.fn(({ fromUrl }) => {
+        mockDownloadFile = jest.fn(({ fromUrl }: DownloadArguments) => {
             const statusCode = fromUrl.endsWith(".jpeg") ? 200 : 404;
             return { promise: Promise.resolve({ statusCode }) };
         });
@@ -188,8 +215,8 @@ describe("DeviceCache extra branches", () => {
         const result = await DeviceCache.startLoadingImages({
             data: ["https://example.com/image"],
             imagesPath: "/cache",
-            onFileNaming: ({ index }) => `${index}.jpg`,
-            onImageLoaded: async (url) => loaded.push(url),
+            onFileNaming: ({ index }: { index: number }) => `${index}.jpg`,
+            onImageLoaded: async (url: string) => loaded.push(url),
         });
 
         expect(result).toEqual(["file:///cache/0.jpeg"]);
@@ -211,8 +238,8 @@ describe("DeviceCache extra branches", () => {
                 },
             ],
             imagesPath: "/cache",
-            onFileNaming: ({ index }) => `${index}.jpg`,
-            onImageLoaded: async () => {},
+            onFileNaming: ({ index }: { index: number }) => `${index}.jpg`,
+            onImageLoaded: async () => undefined,
         });
 
         expect(mockDownloadFile).toHaveBeenCalledWith(
@@ -225,7 +252,7 @@ describe("DeviceCache extra branches", () => {
 
     test("preserves the original page index when a previous page fails", async () => {
         mockExists.mockResolvedValue(false);
-        mockDownloadFile = jest.fn(({ fromUrl }) => ({
+        mockDownloadFile = jest.fn(({ fromUrl }: DownloadArguments) => ({
             promise: Promise.resolve({
                 statusCode: fromUrl.includes("page-2") ? 404 : 200,
             }),
@@ -239,7 +266,7 @@ describe("DeviceCache extra branches", () => {
                 "https://example.com/page-3.jpg",
             ],
             imagesPath: "/cache",
-            onFileNaming: ({ index }) => `${index}.jpg`,
+            onFileNaming: ({ index }: { index: number }) => `${index}.jpg`,
             onImageLoaded: async (url: string, index: number) =>
                 loaded.push({ url, index }),
         });

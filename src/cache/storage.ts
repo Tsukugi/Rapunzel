@@ -1,10 +1,10 @@
 import { MMKVLoader } from "react-native-mmkv-storage";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import {
     StorageEntries,
     RapunzelStorageBase,
     UseStorage,
-    Storage,
+    StorageSetItem,
 } from "./interfaces";
 import { TypeExecutor, TypeTools, UseTypedExecutorProps } from "../tools/type";
 import { ViewNames } from "../components/navigators/interfaces";
@@ -34,42 +34,46 @@ import {
 
 const RapunzelStorage = {} as RapunzelStorageBase;
 
-export const useRapunzelStorage = (): UseStorage => {
+export const getRapunzelStorage = (): UseStorage => {
     if (!RapunzelStorage.instance) {
         throw Error("Storage not initialized");
     }
 
-    const useStorageLogWrapper = <T>(
+    const withStorageLog = <T>(
         key: string,
         value: T,
         exec: TypeExecutor<T>,
     ) => {
-        console.log("[useStorageLogWrapper]", key, value);
+        console.log("[withStorageLog]", key, value);
         return exec(key, value);
     };
 
-    const { setBool, setString, setInt, setArray, setMap, getItem } =
+    const { setBool, setString, setInt, setArray, setMap } =
         RapunzelStorage.instance;
 
-    const buildTypedExecutor =
-        <T, ET>(executor: TypeExecutor<ET>) =>
-        (key: string, value: T): T => {
+    const buildTypedExecutor = <T>(
+        executor: (key: string, value: T) => unknown,
+    ): TypeExecutor<T> => (key: string, value: T): T => {
             executor(key, value);
             return value;
         };
 
-    const setItem: Storage.SetItem = <T>(key: StorageEntries, value: T) => {
+    const setItem: StorageSetItem = <T>(key: StorageEntries, value: T) => {
         const executors: UseTypedExecutorProps<T> = {
             string: buildTypedExecutor(setString),
             boolean: setBool,
             number: buildTypedExecutor(setInt),
-            object: buildTypedExecutor(setMap),
-            array: buildTypedExecutor(setArray),
+            object: buildTypedExecutor<T>(
+                setMap as (key: string, value: T) => unknown,
+            ),
+            array: buildTypedExecutor<T[]>(
+                setArray as (key: string, value: T[]) => unknown,
+            ),
         };
 
-        const executor = TypeTools.useTypedExecutor(executors, value);
+        const executor = TypeTools.typedExecutor(executors, value);
 
-        return useStorageLogWrapper<T>(key, value, executor);
+        return withStorageLog<T>(key, value, executor);
     };
 
     return {
@@ -82,17 +86,9 @@ export const initRapunzelStorage = () => {
     RapunzelStorage.instance = new MMKVLoader().initialize();
     RapunzelStorage.ready = Promise.resolve();
 
-    const {
-        getBool,
-        getString,
-        getInt,
-        getArray,
-        getMap,
-        getItem,
-        getMapAsync,
-    } = RapunzelStorage.instance;
+    const { getString, getMap } = RapunzelStorage.instance;
 
-    const store = useRapunzelStore() as any;
+    const store = getRapunzelStore();
     const [config] = store.config;
     const [header] = store.header;
     const [library] = store.library;
@@ -103,7 +99,7 @@ export const initRapunzelStorage = () => {
     const [trending] = store.trending;
 
     const setIfValid = <T>(setter: (key: T) => void) => {
-        const onLoadValue = (err: any, value: T | null | undefined) => {
+        const onLoadValue = (err: unknown, value: T | null | undefined) => {
             if (err) console.error("[initRapunzelStorage]", err);
             if (value !== null && value !== undefined) {
                 setter(value);
@@ -129,8 +125,11 @@ export const initRapunzelStorage = () => {
     getMap(
         StorageEntries.config,
         setIfValid((value: ConfigState) => {
-            Object.keys(value).forEach((key) => {
-                (config as any)[key] = (value as any)[key];
+            Object.entries(value).forEach(([key, setting]) => {
+                if (key in config) {
+                    (config as unknown as Record<string, unknown>)[key] =
+                        setting;
+                }
             });
         }),
     );
@@ -218,8 +217,8 @@ export const initRapunzelStorage = () => {
             const bookEntry = bookListRecord[id];
             if (!bookEntry) continue;
 
-            let imageValue = imageEntry?.value || bookEntry.cover?.uri || "";
-            let coverCachedAt = metadataRecord[id]?.coverCachedAt;
+            const imageValue = imageEntry?.value || bookEntry.cover?.uri || "";
+            const coverCachedAt = metadataRecord[id]?.coverCachedAt;
             if (imageValue.startsWith("file://")) {
                 const path = imageValue.replace("file://", "");
                 localFiles.push({ id, path });
@@ -339,7 +338,11 @@ export const initRapunzelStorage = () => {
             targetState.hasNextPage = safeSnapshot.snapshot.hasNextPage;
             targetState.scrollOffset = safeSnapshot.snapshot.scrollOffset;
             if ("page" in targetState && "page" in safeSnapshot.snapshot) {
-                (targetState as any).page = (safeSnapshot.snapshot as any).page;
+                const targetWithPage = targetState as T & { page: number };
+                const snapshotWithPage = safeSnapshot.snapshot as T & {
+                    page: number;
+                };
+                targetWithPage.page = snapshotWithPage.page;
             }
             validateLocalImages(targetState, safeSnapshot.localFiles);
             return safeSnapshot.snapshot;

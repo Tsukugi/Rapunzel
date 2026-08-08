@@ -5,14 +5,16 @@ import renderer from "react-test-renderer";
 import { ReaderImageFit, ReaderMode } from "../src/store/interfaces";
 
 const mockReact = React;
+type MockProps = Record<string, unknown>;
 
 jest.mock("react-native-paper", () => {
-    const component = (name: string) => (props: any) =>
+    const component = (name: string) => (props: MockProps) =>
         mockReact.createElement(name, props);
-    const Dialog = component("Dialog") as any;
-    Dialog.Title = component("DialogTitle");
-    Dialog.Content = component("DialogContent");
-    Dialog.Actions = component("DialogActions");
+    const Dialog = Object.assign(component("Dialog"), {
+        Title: component("DialogTitle"),
+        Content: component("DialogContent"),
+        Actions: component("DialogActions"),
+    });
 
     return {
         Appbar: {
@@ -33,7 +35,7 @@ jest.mock("react-native-paper", () => {
 });
 
 jest.mock("../src/components/paper/RapunzelMenu", () => ({
-    RapunzelMenu: (props: any) =>
+    RapunzelMenu: (props: MockProps) =>
         mockReact.createElement("RapunzelMenu", props),
 }));
 
@@ -43,7 +45,7 @@ describe("ReaderHeader layout", () => {
     test("keeps the Paper header root layer measurable when overlaid", () => {
         const component = renderer.create(
             <ReaderHeader
-                navigation={{ goBack: jest.fn() } as any}
+                navigation={{ goBack: jest.fn() } as unknown as never}
                 title="Book 1"
                 visible
                 saved={false}
@@ -58,7 +60,9 @@ describe("ReaderHeader layout", () => {
         const overlay = component.root.findByProps({
             testID: "reader-header-overlay",
         });
-        const header = component.root.findByType("AppbarHeader" as any);
+        const header = component.root.findAll(
+            (node) => String(node.type) === "AppbarHeader",
+        )[0];
 
         expect(overlay.props.style).toEqual(
             expect.objectContaining({

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { useRapunzelLoader } from "../src/api/loader";
+import { getRapunzelLoader } from "../src/api/loader";
 import { ViewNames } from "../src/components/navigators/interfaces";
 import { LilithRepo } from "../src/store/interfaces";
 
@@ -13,11 +13,11 @@ let mockDownloadImageList: any;
 let mockRandomId = "id-0";
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => mockStoreState,
+    getRapunzelStore: () => mockStoreState,
 }));
 
 jest.mock("../src/api/api", () => ({
-    useLilithAPI: () => mockApiClient,
+    getLilithAPI: () => mockApiClient,
 }));
 
 jest.mock("../src/cache/useRapunzelCache", () => ({
@@ -34,7 +34,7 @@ jest.mock("../src/cache/useRapunzelCache", () => ({
 }));
 
 jest.mock("../src/components/cache/library", () => ({
-    useRapunzelLibrary: () => ({
+    getRapunzelLibrary: () => ({
         getLibraryId: (bookId: string) => `library-${bookId}`,
     }),
 }));
@@ -144,7 +144,7 @@ beforeEach(() => {
     mockRandomId = "id-" + Math.random().toString(36).slice(2, 7);
 });
 
-describe("useRapunzelLoader search and feeds", () => {
+describe("getRapunzelLoader search and feeds", () => {
     test("loadSearch caches covers and updates browse state", async () => {
         const results = [
             { id: "book-1", cover: { uri: "cover-1" } },
@@ -152,7 +152,7 @@ describe("useRapunzelLoader search and feeds", () => {
         ];
         mockApiClient.search.mockResolvedValue({ results });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const cached = await loader.loadSearch("query", { page: 2 });
 
         expect(mockApiClient.search).toHaveBeenCalledWith("query", { page: 2 });
@@ -195,7 +195,7 @@ describe("useRapunzelLoader search and feeds", () => {
             return urls;
         });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         await loader.loadSearch("query");
 
         const { cachedImagesRecord } = mockStoreState.browse[0];
@@ -204,7 +204,11 @@ describe("useRapunzelLoader search and feeds", () => {
             "NHentai:book-2",
             "NHentai:book-3",
         ]);
-        expect(Object.values(cachedImagesRecord).map((v) => v.id)).toEqual([
+        expect(
+            (Object.values(cachedImagesRecord) as Array<{ id: string }>).map(
+                (v) => v.id,
+            ),
+        ).toEqual([
             "NHentai:book-1",
             "NHentai:book-2",
             "NHentai:book-3",
@@ -228,7 +232,7 @@ describe("useRapunzelLoader search and feeds", () => {
             .mockResolvedValueOnce({ results: pageOne })
             .mockResolvedValueOnce({ results: pageTwo });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         await loader.loadSearch("query", { page: 1 });
         await loader.loadSearch("query", { page: 2 }, false);
 
@@ -256,7 +260,7 @@ describe("useRapunzelLoader search and feeds", () => {
                 }),
         );
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const firstLoad = loader.loadSearch("query", { page: 1 });
         await new Promise((resolve) => setImmediate(resolve));
 
@@ -316,7 +320,7 @@ describe("useRapunzelLoader search and feeds", () => {
             results: [{ id: "taihou-1", cover: { uri: "cover" } }],
         });
 
-        await useRapunzelLoader().getLatestBooks(1);
+        await getRapunzelLoader().getLatestBooks(1);
 
         expect(latestState.loadedPages["1"].status).toBe("loaded");
         expect(latestState.entryMetaRecord["NHentai:taihou-1"].uid).toBe(
@@ -328,7 +332,7 @@ describe("useRapunzelLoader search and feeds", () => {
         const results = [{ id: "latest-1", cover: { uri: "latest-cover" } }];
         mockApiClient.getLatestBooks.mockResolvedValue({ page: 3, results });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const cached = await loader.getLatestBooks(3);
 
         expect(mockApiClient.getLatestBooks).toHaveBeenCalledWith(3);
@@ -362,7 +366,7 @@ describe("useRapunzelLoader search and feeds", () => {
                 ],
             });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         await loader.getLatestBooks(1);
         await loader.getLatestBooks(1, false, true);
 
@@ -381,7 +385,7 @@ describe("useRapunzelLoader search and feeds", () => {
         ];
         mockApiClient.getTrendingBooks.mockResolvedValue(results);
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const cached = await loader.getTrendingBooks();
 
         expect(mockApiClient.getTrendingBooks).toHaveBeenCalled();
@@ -396,14 +400,14 @@ describe("useRapunzelLoader search and feeds", () => {
     });
 });
 
-describe("useRapunzelLoader book and chapter flows", () => {
+describe("getRapunzelLoader book and chapter flows", () => {
     test("loadBook resets reader when clean", async () => {
         mockApiClient.getBook.mockResolvedValue({
             id: "book-123",
             chapters: [{ id: "c1" }, { id: "c2" }],
         });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const book = await loader.loadBook("book-123");
 
         expect(mockApiClient.getBook).toHaveBeenCalledWith("book-123", {});
@@ -423,7 +427,7 @@ describe("useRapunzelLoader book and chapter flows", () => {
             chapters: [{ id: "c2" }],
         });
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const book = await loader.loadBook(
             "book-123",
             { chapterList: { page: 3 } },
@@ -441,7 +445,7 @@ describe("useRapunzelLoader book and chapter flows", () => {
             id: "book-empty",
             chapters: [],
         });
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
 
         const book = await loader.loadBook("book-empty");
 
@@ -464,7 +468,7 @@ describe("useRapunzelLoader book and chapter flows", () => {
         });
         mockRandomId = "chapter-id";
 
-        const loader = useRapunzelLoader();
+        const loader = getRapunzelLoader();
         const images = await loader.loadChapter("book-abc", "chapter-1");
 
         expect(mockApiClient.getChapter).toHaveBeenCalledWith("chapter-1");

@@ -4,10 +4,15 @@ import { onAppStart } from "../src/lifecycle/onAppStart";
 import { ViewNames } from "../src/components/navigators/interfaces";
 import { LilithRepo } from "../src/store/interfaces";
 
-let mockStoreState: any;
+let mockStoreState: {
+    config: [
+        { debug: boolean; initialView: ViewNames; repository: LilithRepo },
+        jest.Mock,
+    ];
+};
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => mockStoreState,
+    getRapunzelStore: () => mockStoreState,
 }));
 
 jest.mock("../src/config/log", () => ({

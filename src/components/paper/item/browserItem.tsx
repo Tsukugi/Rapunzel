@@ -1,7 +1,14 @@
 import { Card, Chip, Text } from "react-native-paper";
 import { FC, useEffect, useMemo, useState } from "react";
 import { BookBase } from "@atsu/lilith";
-import { Dimensions, StyleSheet, View } from "react-native";
+import {
+    Dimensions,
+    ImageStyle,
+    StyleSheet,
+    TextStyle,
+    View,
+    ViewStyle,
+} from "react-native";
 import { LocalTheme } from "../../../../themes";
 import { removeValuesInParenthesesAndBrackets } from "../../../tools/string";
 import { getLocaleEmoji } from "../../../tools/locales";
@@ -11,9 +18,9 @@ import { CacheUtils } from "../../../cache/CacheUtils";
 import { FallbackCacheExtension } from "../../../api/loader";
 
 export interface StyleProps {
-    style: Record<string, any>;
-    coverStyle: Record<string, any>;
-    titleStyle: Record<string, any>;
+    style: ViewStyle;
+    coverStyle: ImageStyle;
+    titleStyle: TextStyle;
 }
 export interface BrowserItemProps extends Partial<StyleProps> {
     cover?: string;
@@ -32,29 +39,22 @@ const BrowseItem: FC<BrowserItemProps> = ({
     cover,
     fallbackUri,
     bookBase,
-    onClick = () => {},
-    onLongClick = () => {},
+    onClick = () => undefined,
+    onLongClick = () => undefined,
 }) => {
-    if (!bookBase) {
-        return (
-            <Card style={{ ...styles.container, ...style }}>
-                <View style={styles.cover}>
-                    <Text>{cover}</Text>
-                </View>
-            </Card>
-        );
-    }
-
     const { colors } = LocalTheme.useTheme();
+    const bookTitle = bookBase?.title ?? "";
 
     const languages = useMemo(
-        () => bookBase.availableLanguages.map((lang) => getLocaleEmoji(lang)),
-        [bookBase.availableLanguages],
+        () =>
+            (bookBase?.availableLanguages ?? []).map((lang) =>
+                getLocaleEmoji(lang),
+            ),
+        [bookBase?.availableLanguages],
     );
-    const title = useMemo(
-        () => removeValuesInParenthesesAndBrackets(bookBase.title),
-        [bookBase.title],
-    );
+    const title = useMemo(() => removeValuesInParenthesesAndBrackets(bookTitle), [
+        bookTitle,
+    ]);
 
     // Track the active cover; reset whenever a new book or cover arrives.
     const [src, setSrc] = useState(cover);
@@ -73,13 +73,14 @@ const BrowseItem: FC<BrowserItemProps> = ({
     );
 
     // Build the base title/appearance once per book to keep renders light.
+    const languageText = languages.join("");
     const defaultStyle = useMemo(
         () => ({
             backgroundColor: colors.backdrop,
             color: "white",
-            title: `${languages.join("")} ${title}`,
+            title: `${languageText} ${title}`,
         }),
-        [colors.backdrop, languages.join(""), title],
+        [colors.backdrop, languageText, title],
     );
 
     // Ensure the live title props follow the latest defaults (e.g., after long press).
@@ -89,6 +90,16 @@ const BrowseItem: FC<BrowserItemProps> = ({
     }, [defaultStyle]);
 
     const [onLongPressEvent] = useTimedEvent(3000);
+
+    if (!bookBase) {
+        return (
+            <Card style={{ ...styles.container, ...style }}>
+                <View style={styles.cover}>
+                    <Text>{cover}</Text>
+                </View>
+            </Card>
+        );
+    }
 
     const onPressHandler = () => {
         RapunzelLog.log("[BrowseItem.onPressHandler]");

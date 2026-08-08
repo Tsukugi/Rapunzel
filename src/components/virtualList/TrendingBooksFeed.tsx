@@ -4,7 +4,7 @@ import MainFeedItem from "../paper/item/mainFeedItem";
 import { VirtualItem } from "./interfaces";
 import { BookBase } from "@atsu/lilith";
 import { BrowserItemProps } from "../paper/item/browserItem";
-import { useRapunzelStore } from "../../store/store";
+import { getRapunzelStore } from "../../store/store";
 
 export interface TrendingBooksFeedProps {
     virtualItems: VirtualItem<string>[];
@@ -19,7 +19,7 @@ export const TrendingBooksFeed = ({
 }: TrendingBooksFeedProps) => {
     const {
         trending: [trendingBooks],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     return (
         <FlatList

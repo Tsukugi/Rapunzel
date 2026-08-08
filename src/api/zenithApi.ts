@@ -2,21 +2,28 @@ import {
     RepositoryBase,
     Chapter,
     GetBookOptions,
-    Book,
     SearchQueryOptions,
     BookListResults,
 } from "@atsu/lilith";
 
-export const useZenith = (): RepositoryBase => {
+export const getZenith = (): RepositoryBase => {
     const host = "192.168.0.248";
     const port = 1313;
     const baseUrl = `http://${host}:${port}`;
 
     const fetchWithQuery = async <T>(
         path: string,
-        query?: Record<string, any>,
+        query?: object,
     ) => {
-        const queryString = new URLSearchParams(query).toString();
+        const queryString = Object.entries(
+            (query ?? {}) as Record<string, unknown>,
+        )
+            .filter(([, value]) => value !== undefined)
+            .map(
+                ([key, value]) =>
+                    `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+            )
+            .join("&");
 
         const params = `${queryString ? `?${queryString}` : ""}`;
         const url = `${baseUrl}/${path}${params}`;
@@ -39,6 +46,7 @@ export const useZenith = (): RepositoryBase => {
             return res;
         },
         getBook: async (id: string, options?: Partial<GetBookOptions>) => {
+            void options;
             return fetchWithQuery("book", { id });
         },
         search: async (

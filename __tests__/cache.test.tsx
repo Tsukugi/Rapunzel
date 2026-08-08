@@ -23,15 +23,18 @@ const useLocalFullPathFilename = (mockPrefix = "") =>
 const usePromise = <T,>(returnValue: T): Promise<T> =>
     new Promise((res) => res(returnValue));
 
-(global as any).self = (global as any).self || (global as any);
+const globalWithSelf = globalThis as typeof globalThis & {
+    self?: typeof globalThis;
+};
+globalWithSelf.self = globalWithSelf.self || globalWithSelf;
 
 jest.mock("./../src/config/log", () => ({ RapunzelLog: console }));
 jest.mock("react-native-fs", () => ({
     DocumentDirectoryPath: cachePath,
     exists: () => true,
-    unlink: () => {},
+    unlink: () => undefined,
     moveFile: () => usePromise(null),
-    readDir: (path: string) =>
+    readDir: () =>
         usePromise([
             {
                 isDirectory: () => false,
@@ -40,11 +43,11 @@ jest.mock("react-native-fs", () => ({
                 size,
             },
         ]),
-    downloadFile: (options: object) => ({
+    downloadFile: () => ({
         jobId: 0,
         promise: usePromise(null),
     }),
-    stat: (path: string) => usePromise({ size }),
+    stat: () => usePromise({ size }),
 }));
 
 const { DeviceCache } = require("../src/cache/cache");
@@ -66,7 +69,7 @@ describe("Use device cache", () => {
         const image2 = await DeviceCache.downloadImageWithFallback({
             url: imageName,
             downloadHandler: () => usePromise({ statusCode: 404 }),
-        }).catch((error) => {
+        }).catch((error: unknown) => {
             console.log(error);
         });
         expect(image2).toEqual(null);
@@ -88,7 +91,7 @@ describe("Use device cache", () => {
             uri: `${testDomain}/${bookId}/${imageName}`,
             downloadPath: `${cachePath}/${bookId}`,
             imageFileName: `${imageName}`,
-            onImageCached: (path) => {
+            onImageCached: (path: string) => {
                 expect(path).toEqual(useLocalFullPathFilename());
             },
         });
@@ -106,7 +109,7 @@ describe("Use device cache", () => {
             usePath(),
             useDomainFilename(),
             useLocalFilename(),
-            (uri) => {
+            (uri: string) => {
                 expect(uri).toEqual(useLocalFullPathFilename());
             },
         );
@@ -124,8 +127,9 @@ describe("Use device cache", () => {
                 useDomainFilename("4"),
             ],
             imagesPath: usePath(),
-            onFileNaming: ({ index }) => `${index}.${imageName}`,
-            onImageLoaded: async (url) => {
+            onFileNaming: ({ index }: { index: number }) =>
+                `${index}.${imageName}`,
+            onImageLoaded: async (url: string) => {
                 expect(url).toEqual(useLocalFullPathFilename(`${testIndex}`));
                 testIndex++;
             },
@@ -151,8 +155,9 @@ describe("Use device cache", () => {
                 useDomainFilename("4"),
             ],
             imagesPath: usePath(),
-            onFileNaming: ({ index }) => `${index}.${imageName}`,
-            onImageLoaded: async (url) => {
+            onFileNaming: ({ index }: { index: number }) =>
+                `${index}.${imageName}`,
+            onImageLoaded: async () => {
                 testIndex++;
             },
 
@@ -181,7 +186,8 @@ describe("Use device cache", () => {
             id: activeId,
             data: loadData,
             imagesPath: usePath(),
-            onFileNaming: ({ index }) => `${index}.${imageName}`,
+            onFileNaming: ({ index }: { index: number }) =>
+                `${index}.${imageName}`,
             onImageLoaded: async () => {
                 testIndex++;
 
@@ -197,7 +203,7 @@ describe("Use device cache", () => {
                     });
                 }
             },
-            shouldCancelLoad: (id) => {
+            shouldCancelLoad: (id: string) => {
                 console.log(id, activeId, id !== activeId);
                 return id !== activeId;
             },

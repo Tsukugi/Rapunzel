@@ -1,6 +1,7 @@
 import { describe, expect, jest, test } from "@jest/globals";
 import React from "react";
 import renderer, { act } from "react-test-renderer";
+import { BookBase } from "@atsu/lilith";
 import BrowseItem from "../src/components/paper/item/browserItem";
 
 jest.mock("@atsu/lilith", () => ({}));
@@ -41,7 +42,7 @@ jest.mock("../src/config/log", () => ({
 
 describe("BrowseItem", () => {
     const makeBook = (id: string, title: string, languages: string[]) =>
-        ({ id, title, availableLanguages: languages } as any);
+        ({ id, title, availableLanguages: languages } as unknown as BookBase);
 
     test("updates cover and title when receiving a new book", () => {
         const initialBook = makeBook("book-1", "Title One", ["english"]);

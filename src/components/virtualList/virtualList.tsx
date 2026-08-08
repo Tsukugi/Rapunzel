@@ -4,17 +4,19 @@ import {
     StyleSheet,
     ListRenderItem,
     RefreshControl,
+    StyleProp,
+    ViewStyle,
 } from "react-native";
 import { VirtualItem } from "./interfaces";
 import Item from "./item";
 import { LocalTheme } from "../../../themes";
 import { RapunzelLog } from "../../config/log";
 import { useDebugBorders } from "../../tools/debugBorder";
-import { useRapunzelStore } from "../../store/store";
+import { getRapunzelStore } from "../../store/store";
 
 interface VirtualListProps<T> extends PropsWithChildren {
     data: VirtualItem<T>[];
-    style?: Record<string, any>;
+    style?: StyleProp<ViewStyle>;
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
     getItemLayout?: (
@@ -51,17 +53,17 @@ const VirtualList = <T,>({
 }: VirtualListProps<T>) => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const [refreshing, setRefreshing] = React.useState(false);
-    const listRef = React.useRef<any>(null);
+    const listRef = React.useRef<VirtualizedList<VirtualItem<T>>>(null);
     const restoredOffset = React.useRef(false);
 
     const onRefreshHandler = React.useCallback(() => {
         setRefreshing(true);
 
         onRefresh().finally(() => setRefreshing(false));
-    }, []);
+    }, [onRefresh]);
 
     const { colors } = LocalTheme.useTheme();
 
@@ -87,11 +89,7 @@ const VirtualList = <T,>({
     return (
         <VirtualizedList
             ref={listRef}
-            style={{
-                ...styles.container,
-                ...style,
-                ...useDebugBorders(config.debug),
-            }}
+            style={[styles.container, style, useDebugBorders(config.debug)]}
             data={data}
             refreshControl={
                 <RefreshControl

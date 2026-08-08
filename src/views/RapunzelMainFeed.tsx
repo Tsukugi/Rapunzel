@@ -4,10 +4,10 @@ import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 
 import { useFocusEffect } from "@react-navigation/native";
-import { useRapunzelLoader } from "../api/loader";
+import { getRapunzelLoader } from "../api/loader";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import MainFeedItem from "../components/paper/item/mainFeedItem";
 import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
@@ -15,7 +15,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
 import { FeedFreshnessMs, isFresh } from "../cache/listCache";
 
-interface RapunzelMainFeedProps extends UsesNavigation {}
+type RapunzelMainFeedProps = UsesNavigation
 
 const mapImagesToOrder = (
     record: Record<string, VirtualItem<string>>,
@@ -44,10 +44,10 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         latest: [latestBooks, useLatestBooksEffect],
         trending: [trendingBooks, useTrendingBooksEffect],
         loading: [loading],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
-    const loadMainFeed = async (force: boolean = false) => {
-        const { getLatestBooks, getTrendingBooks } = useRapunzelLoader();
+    const loadMainFeed = useCallback(async (force = false) => {
+        const { getLatestBooks, getTrendingBooks } = getRapunzelLoader();
         const refreshLatest =
             force ||
             latestBooks.rendered.length === 0 ||
@@ -60,13 +60,18 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
         const latest = getLatestBooks(1, false, refreshLatest);
 
         await Promise.all([trending, latest]);
-    };
+    }, [
+        latestBooks.lastFetchedAt,
+        latestBooks.rendered.length,
+        trendingBooks.lastFetchedAt,
+        trendingBooks.rendered.length,
+    ]);
 
     useEffect(() => {
         void loadMainFeed(false).catch((error) =>
             RapunzelLog.error("[RapunzelMainFeed] Initial feed load failed", error),
         );
-    }, []);
+    }, [loadMainFeed]);
 
     useFocusEffect(
         useCallback(() => {
@@ -90,7 +95,13 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
                     error,
                 ),
             );
-        }, []),
+        }, [
+            latestBooks.cachedImagesRecord,
+            latestBooks.rendered,
+            loadMainFeed,
+            trendingBooks.cachedImagesRecord,
+            trendingBooks.rendered,
+        ]),
     );
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
@@ -125,7 +136,7 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
             return;
         }
         if (latestBooks.hasNextPage === false) return;
-        useRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
+        getRapunzelLoader().getLatestBooks(latestBooks.page + 1, false);
     }, 1000);
     const onStartReachedHandler = () => {
         debouncedStartReached();

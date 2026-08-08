@@ -3,7 +3,7 @@ import { RandomTools } from "./random";
 
 const borderColors = ["red", "green", "blue", "yellow", "orange", "pink"];
 
-export const useDebugBorders = <T>(debug: boolean): Partial<ViewStyle> => {
+export const useDebugBorders = (debug: boolean): Partial<ViewStyle> => {
     return debug
         ? {
               borderWidth: 4,

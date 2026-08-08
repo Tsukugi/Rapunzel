@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import BrowseItem, { BrowserItemProps, StyleProps } from "./browserItem";
 import { View } from "react-native";
-import { useRapunzelStore } from "../../../store/store";
+import { getRapunzelStore } from "../../../store/store";
 import { useDebugBorders } from "../../../tools/debugBorder";
 
 type MainFeedItemProps = {
@@ -12,7 +12,7 @@ type MainFeedItemProps = {
 const ItemProvider = ({ item, style }: MainFeedItemProps) => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
     const innerStyle: StyleProps = {
         style: {
             marginVertical: 10,

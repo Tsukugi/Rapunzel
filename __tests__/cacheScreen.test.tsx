@@ -5,12 +5,17 @@ import CacheScreen from "../src/components/cache/cacheScreen";
 
 const mockAlert = jest.fn();
 const mockSetItem = jest.fn();
-const mockCalculateCacheSize = jest.fn();
-const mockImportLibrary = jest.fn();
-const mockExportLibrary = jest.fn();
-const mockClearTempCache = jest.fn();
-const mockClearLibraryCache = jest.fn();
-const mockApplyLibraryPatch = jest.fn();
+type UnknownMock = (...args: unknown[]) => unknown;
+const mockCalculateCacheSize = jest.fn<UnknownMock>();
+const mockImportLibrary = jest.fn<UnknownMock>();
+const mockExportLibrary = jest.fn<UnknownMock>();
+const mockClearTempCache = jest.fn<UnknownMock>();
+const mockClearLibraryCache = jest.fn<UnknownMock>();
+const mockApplyLibraryPatch = jest.fn<UnknownMock>();
+type MockProps = {
+    children?: React.ReactNode;
+    [key: string]: unknown;
+};
 
 const mockUi = { snackMessage: "" };
 const mockLibrary = { saved: { "NHentai.book": { title: "Book" } } };
@@ -26,7 +31,7 @@ const mockStoreState = {
 };
 
 jest.mock("react-native", () => ({
-    Alert: { alert: (...args: any[]) => mockAlert(...args) },
+    Alert: { alert: (...args: unknown[]) => mockAlert(...args) },
 }));
 
 jest.mock("react-native-fs", () => ({
@@ -48,30 +53,31 @@ jest.mock("../themes", () => ({
 
 jest.mock("react-native-paper", () => {
     const React = jest.requireActual<typeof import("react")>("react");
-    const passthrough = ({ children, ...props }: any) =>
+    const passthrough = ({ children, ...props }: MockProps) =>
         React.createElement("View", props, children);
-    const Card = (props: any) =>
+    const Card = (props: MockProps) =>
         React.createElement("Card", props, props.children);
     Card.Content = passthrough;
 
     return {
-        Button: (props: any) =>
+        Button: (props: MockProps) =>
             React.createElement("Button", props, props.children),
         Card,
         List: {
-            Item: (props: any) => React.createElement("ListItem", props),
+            Item: (props: MockProps) => React.createElement("ListItem", props),
             Section: passthrough,
         },
-        Text: (props: any) => React.createElement("Text", props, props.children),
+        Text: (props: MockProps) =>
+            React.createElement("Text", props, props.children),
     };
 });
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => mockStoreState,
+    getRapunzelStore: () => mockStoreState,
 }));
 
 jest.mock("../src/cache/storage", () => ({
-    useRapunzelStorage: () => ({
+    getRapunzelStorage: () => ({
         setItem: mockSetItem,
         instance: { getMap: jest.fn(() => ({})) },
     }),
@@ -79,22 +85,23 @@ jest.mock("../src/cache/storage", () => ({
 
 jest.mock("../src/cache/cache", () => ({
     DeviceCache: {
-        calculateCacheSize: (...args: any[]) => mockCalculateCacheSize(...args),
+        calculateCacheSize: (...args: unknown[]) =>
+            mockCalculateCacheSize(...args),
     },
 }));
 
 jest.mock("../src/cache/Export", () => ({
     Export: {
-        importLibraryFromJson: (...args: any[]) => mockImportLibrary(...args),
-        exportLibraryAsJson: (...args: any[]) => mockExportLibrary(...args),
+        importLibraryFromJson: (...args: unknown[]) => mockImportLibrary(...args),
+        exportLibraryAsJson: (...args: unknown[]) => mockExportLibrary(...args),
     },
 }));
 
 jest.mock("../src/cache/useRapunzelCache", () => ({
     RapunzelCache: {
-        clearTempCache: (...args: any[]) => mockClearTempCache(...args),
-        clearLibraryCache: (...args: any[]) => mockClearLibraryCache(...args),
-        applyLibraryBookAndCoverStoragePatch: (...args: any[]) =>
+        clearTempCache: (...args: unknown[]) => mockClearTempCache(...args),
+        clearLibraryCache: (...args: unknown[]) => mockClearLibraryCache(...args),
+        applyLibraryBookAndCoverStoragePatch: (...args: unknown[]) =>
             mockApplyLibraryPatch(...args),
     },
 }));
@@ -128,17 +135,18 @@ describe("CacheScreen settings actions", () => {
         mockStoreState.library[0].saved = {
             "NHentai.book": { title: "Book" },
         };
-        (mockCalculateCacheSize as any).mockResolvedValue(1);
-        (mockImportLibrary as any).mockResolvedValue(2);
-        (mockExportLibrary as any).mockResolvedValue("backup.json");
-        (mockClearTempCache as any).mockResolvedValue(true);
-        (mockClearLibraryCache as any).mockResolvedValue(true);
-        (mockApplyLibraryPatch as any).mockImplementation(
-            (_storedLibrary: unknown, onSuccess: (value: object) => void) => {
+        mockCalculateCacheSize.mockImplementation(() => Promise.resolve(1));
+        mockImportLibrary.mockImplementation(() => Promise.resolve(2));
+        mockExportLibrary.mockImplementation(() =>
+            Promise.resolve("backup.json"),
+        );
+        mockClearTempCache.mockImplementation(() => Promise.resolve(true));
+        mockClearLibraryCache.mockImplementation(() => Promise.resolve(true));
+        mockApplyLibraryPatch.mockImplementation((...args: unknown[]) => {
+            const onSuccess = args[1] as (value: object) => void;
                 onSuccess({});
                 return Promise.resolve({});
-            },
-        );
+        });
     });
 
     test("confirms a destructive action and shows loading until it finishes", async () => {
@@ -157,7 +165,13 @@ describe("CacheScreen settings actions", () => {
         );
         expect(mockClearLibraryCache).not.toHaveBeenCalled();
 
-        const alertButtons = (mockAlert.mock.calls[0] as any[])[2];
+        const alertButtons = (
+            mockAlert.mock.calls[0] as unknown as [
+                string,
+                string,
+                Array<{ onPress: () => void | Promise<void> }>,
+            ]
+        )[2];
         await act(async () => alertButtons[1].onPress());
 
         expect(mockClearLibraryCache).toHaveBeenCalledTimes(1);
@@ -181,7 +195,13 @@ describe("CacheScreen settings actions", () => {
         expect(mockAlert).toHaveBeenCalled();
         expect(mockImportLibrary).not.toHaveBeenCalled();
 
-        const alertButtons = (mockAlert.mock.calls[0] as any[])[2];
+        const alertButtons = (
+            mockAlert.mock.calls[0] as unknown as [
+                string,
+                string,
+                Array<{ onPress: () => void | Promise<void> }>,
+            ]
+        )[2];
         await act(async () => alertButtons[1].onPress());
 
         expect(mockImportLibrary).toHaveBeenCalledTimes(1);

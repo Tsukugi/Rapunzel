@@ -9,7 +9,7 @@ import {
 } from "@atsu/lilith";
 
 import { RapunzelLog } from "../config/log";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import { RandomTools } from "../tools/random";
 
 import { BookBaseList, RapunzelImage } from "../store/interfaces";
@@ -22,9 +22,9 @@ import {
     getTrendingCacheKey,
 } from "../cache/listCache";
 import { VirtualItem } from "../components/virtualList/interfaces";
-import { useRapunzelLibrary } from "../components/cache/library";
-import { useLilithAPI } from "./api";
-import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
+import { getRapunzelLibrary } from "../components/cache/library";
+import { getLilithAPI } from "./api";
+import { createAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 import { getNavigationRef } from "../components/navigators/navigationRef";
 import { ListUtils } from "../tools/list";
 const NumberOfForceRenderImages = 20;
@@ -35,7 +35,8 @@ interface UseRapunzelLoaderProps {
     useAllLanguages: boolean;
 }
 
-export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
+export const getRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
+    void props;
     const getNewId = () => RandomTools.generateRandomId(10);
 
     const {
@@ -47,22 +48,22 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         library: [library],
         trending: [popular],
         ui: [ui],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
-    const apiLoader = useLilithAPI();
+    const apiLoader = getLilithAPI();
 
     const startWebviewClearance = (message?: string) => {
         const navigation = getNavigationRef();
         if (!navigation) {
             RapunzelLog.warn(
-                "[useRapunzelLoader.startWebviewClearance] Navigation not ready",
+                "[getRapunzelLoader.startWebviewClearance] Navigation not ready",
             );
             return;
         }
         ui.snackMessage =
             message ||
             "Refreshing cookies... please solve the challenge in the WebView.";
-        const { startProcess } = useAutoFetchWebviewData({
+        const { startProcess } = createAutoFetchWebviewData({
             navigation: navigation as never,
         });
         startProcess(config, true);
@@ -72,7 +73,13 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         if (!error) return false;
         if (typeof error === "string") return error.includes("403");
         if (typeof error === "object") {
-            const err = error as Record<string, any>;
+            const err = error as {
+                status?: unknown;
+                statusCode?: unknown;
+                response?: { status?: unknown };
+                data?: { status?: unknown; statusCode?: unknown };
+                message?: unknown;
+            };
             const status =
                 err?.status ??
                 err?.statusCode ??
@@ -116,7 +123,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     const loadBook = async (
         code: string,
         options: Partial<GetBookOptions> = {},
-        clean: boolean = true,
+        clean = true,
     ): Promise<Book | null> => {
         // If not cleaning and a search is already in progress, return an empty array
         if (!clean && loading.browse) return null;
@@ -197,7 +204,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             return [];
         }
 
-        const libraryBookId = useRapunzelLibrary().getLibraryId(bookId);
+        const libraryBookId = getRapunzelLibrary().getLibraryId(bookId);
 
         // Extract image URIs from the chapter pages
         const images = chapter.pages as RapunzelImage[];
@@ -343,6 +350,11 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     const isPageLoaded = (state: BookBaseList, page: number) =>
         state.loadedPages?.[String(page)]?.status === "loaded";
 
+    const getLoadedPages = (state: BookBaseList) => {
+        state.loadedPages ??= {};
+        return state.loadedPages;
+    };
+
     const startCoverDownload = ({
         state,
         data,
@@ -410,7 +422,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 ? ListUtils.mergeUniqueValues(newRenderOrder, state.rendered)
                 : ListUtils.mergeUniqueValues(state.rendered, newRenderOrder);
 
-        data.imageList.forEach((item, index) => {
+        data.imageList.forEach((item) => {
             const existing = state.cachedImagesRecord[item.id];
             if (!existing || !existing.value?.startsWith("file://")) {
                 state.cachedImagesRecord[item.id] = item;
@@ -440,7 +452,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
                 ? page < result.totalPages
                 : result.results.length > 0;
         if ("page" in state) {
-            (state as any).page = Math.max((state as any).page || 1, page);
+            const pagedState = state as BookBaseList & { page?: number };
+            pagedState.page = Math.max(pagedState.page || 1, page);
         }
     };
 
@@ -455,8 +468,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     const loadSearch = async (
         searchValue: string,
         searchOptions?: Partial<SearchQueryOptions>,
-        clean: boolean = true,
-        force: boolean = false,
+        clean = true,
+        force = false,
     ): Promise<string[]> => {
         const page = searchOptions?.page || 1;
         const cacheKey = getBrowseCacheKey(config.repository, searchValue);
@@ -474,7 +487,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             browse.page = 1;
         }
         ensureListMetadata(browse, cacheKey);
-        browse.loadedPages![String(page)] = {
+        getLoadedPages(browse)[String(page)] = {
             status: "loading",
             loadedAt: null,
             entryIds: [],
@@ -493,7 +506,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If no search results, finish and return an empty array
         if (!searchResult) {
-            browse.loadedPages![String(page)] = {
+            getLoadedPages(browse)[String(page)] = {
                 status: "failed",
                 loadedAt: null,
                 entryIds: [],
@@ -525,9 +538,9 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     };
 
     const getLatestBooks = async (
-        page: number = 1,
-        clean: boolean = false,
-        force: boolean = false,
+        page = 1,
+        clean = false,
+        force = false,
     ): Promise<string[]> => {
         const cacheKey = getFeedCacheKey(config.repository);
         if (latest.cacheKey && latest.cacheKey !== cacheKey) {
@@ -545,7 +558,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             latest.page = 1;
         }
         ensureListMetadata(latest, cacheKey);
-        latest.loadedPages![String(page)] = {
+        getLoadedPages(latest)[String(page)] = {
             status: "loading",
             loadedAt: null,
             entryIds: [],
@@ -560,7 +573,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
 
         // If no search results, finish and return an empty array
         if (!bookListResults) {
-            latest.loadedPages![String(page)] = {
+            getLoadedPages(latest)[String(page)] = {
                 status: "failed",
                 loadedAt: null,
                 entryIds: [],
@@ -587,8 +600,8 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
     };
 
     const getTrendingBooks = async (
-        clean: boolean = false,
-        force: boolean = false,
+        clean = false,
+        force = false,
     ): Promise<string[]> => {
         const cacheKey = getTrendingCacheKey(config.repository);
         if (popular.cacheKey && popular.cacheKey !== cacheKey) {
@@ -605,7 +618,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
             resetList(popular, cacheKey);
         }
         ensureListMetadata(popular, cacheKey);
-        popular.loadedPages!["1"] = {
+        getLoadedPages(popular)["1"] = {
             status: "loading",
             loadedAt: null,
             entryIds: [],
@@ -619,7 +632,7 @@ export const useRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         );
 
         if (!trendingResults) {
-            popular.loadedPages!["1"] = {
+            getLoadedPages(popular)["1"] = {
                 status: "failed",
                 loadedAt: null,
                 entryIds: [],

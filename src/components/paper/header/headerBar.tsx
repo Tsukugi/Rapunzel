@@ -1,8 +1,8 @@
-import { Appbar, Icon, Menu, Text } from "react-native-paper";
+import { Appbar } from "react-native-paper";
 import { useState } from "react";
-import { Appearance, View, ViewStyle } from "react-native";
+import { Appearance, ViewStyle } from "react-native";
 
-import { useRapunzelStore } from "../../../store/store";
+import { getRapunzelStore } from "../../../store/store";
 
 import PaperSearch from "./search";
 import HeaderLeftBtn, { LeftModeProps } from "./headerLeftBtn";
@@ -30,10 +30,9 @@ const HeaderBar = ({
     onClose,
 }: HeaderBarProps) => {
     const {
-        reader: [reader],
         header: [header],
         loading: [, useLoadingEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);

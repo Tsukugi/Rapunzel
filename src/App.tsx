@@ -5,7 +5,7 @@ import { Navigation } from "./components/navigators/navigationConfig";
 import { onAppStart } from "./lifecycle/onAppStart";
 import { StyleSheet } from "react-native";
 import { Snackbar } from "react-native-paper";
-import { useRapunzelStore } from "./store/store";
+import { getRapunzelStore } from "./store/store";
 import FeedPersistence from "./lifecycle/FeedPersistence";
 
 const Views = Navigation.getViews();
@@ -16,19 +16,21 @@ const App: React.FC = () => {
     // TODO make me a component
     const {
         ui: [ui, useUIEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const [snackMessage, setSnackMessage] = useState(ui.snackMessage);
     const [isSnackBarVisible, setIsSnackBarVisible] = useState(false);
     useUIEffect((_ui) => {
         setIsSnackBarVisible(!!_ui.snackMessage);
-        if (!!_ui.snackMessage) {
+        if (_ui.snackMessage) {
             setTimeout(() => setIsSnackBarVisible(false), 3000);
         }
         setSnackMessage(_ui.snackMessage);
     });
 
-    function onDismissSnackBar(): void {}
+    function onDismissSnackBar(): void {
+        setIsSnackBarVisible(false);
+    }
 
     return (
         <>

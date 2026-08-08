@@ -35,7 +35,7 @@ jest.mock("use-debounce", () => ({
 }));
 
 jest.mock("../src/cache/storage", () => ({
-    useRapunzelStorage: () => ({
+    getRapunzelStorage: () => ({
         setItem: mockSetItem,
         instance: {},
         ready: mockStorageReady,
@@ -43,7 +43,7 @@ jest.mock("../src/cache/storage", () => ({
 }));
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => ({
+    getRapunzelStore: () => ({
         latest: [mockLatestState, (cb: any) => mockLatestEffectHandlers.push(cb)],
         trending: [
             mockTrendingState,

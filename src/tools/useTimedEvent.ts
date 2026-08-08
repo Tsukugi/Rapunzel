@@ -10,9 +10,9 @@ export const useTimedEvent = (delay: number) => {
     const [timer, setTimer] = useState<number | null>(null);
     const event = (handlers: Partial<UseTimedEventHandlers>) => {
         const _handlers: UseTimedEventHandlers = {
-            onStart: () => {},
-            onFinish: () => {},
-            onIgnore: () => {},
+            onStart: () => undefined,
+            onFinish: () => undefined,
+            onIgnore: () => undefined,
             ...handlers,
         };
 

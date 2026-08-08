@@ -4,9 +4,21 @@ import { describe, expect, jest, beforeEach, test } from "@jest/globals";
 
 import { ReaderImageFit, ReaderMode } from "../src/store/interfaces";
 
-const mockVirtualList = jest.fn((_props: Record<string, unknown>) => null);
-const mockReaderHeader = jest.fn((_props: Record<string, unknown>) => null);
-let mockReaderState: any;
+const mockVirtualList = jest.fn((props: Record<string, unknown>) => {
+    void props;
+    return null;
+});
+const mockReaderHeader = jest.fn((props: Record<string, unknown>) => {
+    void props;
+    return null;
+});
+interface MockReaderState extends Record<string, unknown> {
+    cachedImages: Array<{
+        id: string;
+        value: { uri: string; width: number; height: number };
+    }>;
+}
+let mockReaderState: MockReaderState;
 
 jest.mock("@react-navigation/native", () => {
     const ReactActual = jest.requireActual<typeof React>("react");
@@ -19,7 +31,7 @@ jest.mock("@react-navigation/native", () => {
 });
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => ({
+    getRapunzelStore: () => ({
         reader: [mockReaderState, jest.fn()],
         library: [{ saved: {}, rendered: [] }, jest.fn()],
     }),
@@ -38,11 +50,11 @@ jest.mock("../src/components/navigators/useRouter", () => ({
 }));
 
 jest.mock("../src/cache/storage", () => ({
-    useRapunzelStorage: () => ({ setItem: jest.fn() }),
+    getRapunzelStorage: () => ({ setItem: jest.fn() }),
 }));
 
 jest.mock("../src/components/cache/library", () => ({
-    useRapunzelLibrary: () => ({
+    getRapunzelLibrary: () => ({
         getLibraryId: (bookId: string) => `NHentai.${bookId}`,
         saveBookToLibrary: jest.fn(async () => undefined),
         removeBookFromLibrary: jest.fn(async () => undefined),
@@ -97,7 +109,9 @@ describe("RapunzelReader header wiring", () => {
         let view!: ReturnType<typeof renderer.create>;
         act(() => {
             view = renderer.create(
-                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
             );
         });
         const listProps = mockVirtualList.mock.lastCall?.[0] as Record<
@@ -105,7 +119,10 @@ describe("RapunzelReader header wiring", () => {
             unknown
         >;
         const headerProps = () =>
-            mockReaderHeader.mock.lastCall?.[0] as Record<string, unknown>;
+            mockReaderHeader.mock.lastCall?.[0] as unknown as Record<
+                string,
+                unknown
+            >;
         const onScroll = listProps.onScroll as (offset: number) => void;
 
         expect(headerProps().visible).toBe(false);
@@ -129,7 +146,9 @@ describe("RapunzelReader header wiring", () => {
         let view!: ReturnType<typeof renderer.create>;
         act(() => {
             view = renderer.create(
-                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
             );
         });
 
@@ -138,7 +157,10 @@ describe("RapunzelReader header wiring", () => {
             unknown
         >;
         const headerProps = () =>
-            mockReaderHeader.mock.lastCall?.[0] as Record<string, unknown>;
+            mockReaderHeader.mock.lastCall?.[0] as unknown as Record<
+                string,
+                unknown
+            >;
         const onScroll = listProps.onScroll as (offset: number) => void;
 
         act(() => {
@@ -158,7 +180,9 @@ describe("RapunzelReader header wiring", () => {
                 ],
             };
             view.update(
-                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
             );
         });
 
@@ -173,7 +197,9 @@ describe("RapunzelReader header wiring", () => {
         let view!: ReturnType<typeof renderer.create>;
         act(() => {
             view = renderer.create(
-                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
             );
         });
 

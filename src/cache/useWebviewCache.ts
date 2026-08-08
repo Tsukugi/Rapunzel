@@ -1,7 +1,7 @@
 import { Cookies } from "@react-native-cookies/cookies";
 import { WebViewMessageEvent } from "react-native-webview";
-import { useRapunzelStore } from "../store/store";
-import { useRapunzelStorage } from "./storage";
+import { getRapunzelStore } from "../store/store";
+import { getRapunzelStorage } from "./storage";
 import { StorageEntries } from "./interfaces";
 import { ApiLoaderTimestamps } from "../store/interfaces";
 
@@ -27,7 +27,7 @@ export const useWebviewCache = ({
 }: useWebviewCacheProps) => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const updateApiLoaderConfig = (key: ApiLoaderKeys, value: string) => {
         const newApiConfig = { ...config.apiLoaderConfig, [key]: value };
@@ -39,7 +39,7 @@ export const useWebviewCache = ({
                 [timestampKey]: Date.now(),
             };
         }
-        useRapunzelStorage().setItem(StorageEntries.config, config);
+        getRapunzelStorage().setItem(StorageEntries.config, config);
     };
 
     const buildCookieHeader = (cookies: Cookies) =>

@@ -1,8 +1,8 @@
 import React from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { UsesNavigation, ViewNames } from "./interfaces";
-import { useRapunzelStore } from "../../store/store";
-import { useRapunzelStorage } from "../../cache/storage";
+import { getRapunzelStore } from "../../store/store";
+import { getRapunzelStorage } from "../../cache/storage";
 import { StorageEntries } from "../../cache/interfaces";
 import { Alert, BackHandler } from "react-native";
 import { RapunzelLog } from "../../config/log";
@@ -17,7 +17,34 @@ const HomeRoute = ViewNames.RapunzelBrowse;
 export const useRouter = ({ route, navigation }: UseRouterProps) => {
     const {
         router: [router],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
+
+    const onExitHandler = React.useCallback(async () => {
+        await RapunzelCache.clearTempCache();
+        BackHandler.exitApp();
+    }, []);
+
+    const showExitAlert = React.useCallback(
+        (onExit: () => void) => {
+            Alert.alert(
+                "Exiting Rapunzel",
+                "Do you want to exit?",
+                [
+                    {
+                        text: "Cancel",
+                        onPress: () => RapunzelLog.log("Cancel Pressed"),
+                        style: "cancel",
+                    },
+                    {
+                        text: "Exit!",
+                        onPress: onExit,
+                    },
+                ],
+                { cancelable: false },
+            );
+        },
+        [],
+    );
 
     useFocusEffect(
         React.useCallback(() => {
@@ -27,33 +54,9 @@ export const useRouter = ({ route, navigation }: UseRouterProps) => {
             } else if (router.history[router.history.length - 1] !== route) {
                 router.history = [...router.history, route];
             }
-            useRapunzelStorage().setItem(StorageEntries.currentRoute, route);
-        }, []),
+            getRapunzelStorage().setItem(StorageEntries.currentRoute, route);
+        }, [route, router]),
     );
-
-    const showExitAlert = (onExit: () => void) => {
-        Alert.alert(
-            "Exiting Rapunzel",
-            "Do you want to exit?",
-            [
-                {
-                    text: "Cancel",
-                    onPress: () => RapunzelLog.log("Cancel Pressed"),
-                    style: "cancel",
-                },
-                {
-                    text: "Exit!",
-                    onPress: onExit,
-                },
-            ],
-            { cancelable: false },
-        );
-    };
-
-    const onExitHandler = async () => {
-        await RapunzelCache.clearTempCache();
-        BackHandler.exitApp();
-    };
 
     useFocusEffect(
         React.useCallback(() => {
@@ -72,6 +75,6 @@ export const useRouter = ({ route, navigation }: UseRouterProps) => {
             );
 
             return () => subscription.remove();
-        }, []),
+        }, [navigation, onExitHandler, showExitAlert]),
     );
 };

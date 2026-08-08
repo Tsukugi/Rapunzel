@@ -7,26 +7,24 @@ import {
     WebviewInjectJavascript,
     useWebviewCache,
 } from "../cache/useWebviewCache";
-import { useRapunzelStore } from "../store/store";
-import { Snackbar } from "react-native-paper";
-import { StyleSheet } from "react-native";
-import { useAutoFetchWebviewData } from "../process/autoFetchWebviewData";
+import { getRapunzelStore } from "../store/store";
+import { createAutoFetchWebviewData } from "../process/autoFetchWebviewData";
 import { RapunzelLog } from "../config/log";
 
-interface RapunzelWebViewProps extends UsesNavigation {}
+type RapunzelWebViewProps = UsesNavigation
 
-const useDataSavedText = (key: string, value: string) => `${key}: ${value}`;
+const getDataSavedText = (key: string, value: string) => `${key}: ${value}`;
 
 const useWebKit = true;
 const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
     const {
         ui: [ui],
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
     const webviewRef = useRef<WebView>(null);
 
     const onWebviewUpdate = (value: string) => {
-        const { onDataSuccess } = useAutoFetchWebviewData({ navigation });
+        const { onDataSuccess } = createAutoFetchWebviewData({ navigation });
 
         onDataSuccess(config);
         if (!config.debug) return;
@@ -37,9 +35,9 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
 
     const { onCookiesRetrieved, onUserAgentRetrieved } = useWebviewCache({
         onCookieUpdate: (key, value) =>
-            onWebviewUpdate(useDataSavedText(key, value)),
+            onWebviewUpdate(getDataSavedText(key, value)),
         onUserAgentUpdate: (key, value) =>
-            onWebviewUpdate(useDataSavedText(key, value)),
+            onWebviewUpdate(getDataSavedText(key, value)),
     });
 
     return (
@@ -75,12 +73,5 @@ const RapunzelWebView: FC<RapunzelWebViewProps> = ({ navigation }) => {
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        minHeight: 50,
-        zIndex: 1,
-    },
-});
 
 export default RapunzelWebView;

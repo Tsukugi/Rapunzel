@@ -185,7 +185,7 @@ describe("initRapunzelStorage feed hydration", () => {
         );
 
         jest.doMock("../src/store/store", () => ({
-            useRapunzelStore: () => mockStore,
+            getRapunzelStore: () => mockStore,
         }));
 
         jest.doMock("../src/config/log", () => ({

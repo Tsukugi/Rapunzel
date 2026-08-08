@@ -11,7 +11,7 @@ import { LocalTheme } from "../../../themes";
 import { ViewDict, ViewNavigationData } from "./navigationConfig";
 import CustomDrawerContent from "./customDrawerContent";
 import { NavigatorHeader } from "./NavigatorHeader";
-import { useRapunzelStore } from "../../store/store";
+import { getRapunzelStore } from "../../store/store";
 import { getViewEntries } from "./viewEntries";
 
 interface DrawerNavigatorProps {
@@ -25,9 +25,9 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
 
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
-    const useOptions = (view: ViewNavigationData): DrawerNavigationOptions => {
+    const getOptions = (view: ViewNavigationData): DrawerNavigationOptions => {
         return {
             freezeOnBlur: true,
             drawerActiveTintColor: colors.primary,
@@ -72,7 +72,7 @@ const DrawerNavigator: FC<DrawerNavigatorProps> = ({ views }) => {
                     key={name}
                     name={name}
                     component={view.component}
-                    options={useOptions(view)}
+                    options={getOptions(view)}
                 />
             ))}
         </Drawer.Navigator>

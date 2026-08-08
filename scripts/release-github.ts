@@ -4,7 +4,6 @@ import { execSync } from "child_process";
 
 interface PackageJson {
     version: string;
-    [key: string]: any;
 }
 
 export class GitHubReleaseAutomation {
@@ -35,7 +34,7 @@ export class GitHubReleaseAutomation {
             const title = releaseTitle || `Release v${targetVersion}`;
 
             // If notes are not provided, generate them from commit messages
-            let releaseNotes = notes || await this.generateReleaseNotes(tag);
+            const releaseNotes = notes || await this.generateReleaseNotes(tag);
 
             console.log(`📝 Creating GitHub release with tag: ${tag}`);
             console.log(`📝 Title: ${title}`);

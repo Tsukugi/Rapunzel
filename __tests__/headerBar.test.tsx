@@ -3,22 +3,23 @@ import React from "react";
 import renderer from "react-test-renderer";
 
 const mockReact = React;
+type MockProps = Record<string, unknown>;
 
 jest.mock("react-native-paper", () => {
     return {
         Appbar: {
-            Action: (props: any) =>
+            Action: (props: MockProps) =>
                 mockReact.createElement("AppbarAction", props),
-            Content: (props: any) =>
+            Content: (props: MockProps) =>
                 mockReact.createElement("AppbarContent", props),
-            Header: (props: any) =>
+            Header: (props: MockProps) =>
                 mockReact.createElement("AppbarHeader", props),
         },
     };
 });
 
 jest.mock("../src/store/store", () => ({
-    useRapunzelStore: () => ({
+    getRapunzelStore: () => ({
         reader: [{}],
         header: [{ searchValue: "" }],
         loading: [{}, jest.fn()],
@@ -53,7 +54,7 @@ describe("HeaderBar", () => {
     test("does not reserve empty content space when search is shown", () => {
         const component = renderer.create(
             <HeaderBar
-                navigation={{ navigate: jest.fn() } as any}
+                navigation={{ navigate: jest.fn() } as unknown as never}
                 showSearch
                 leftMode={undefined}
                 onBack={jest.fn()}

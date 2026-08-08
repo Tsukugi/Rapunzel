@@ -16,13 +16,11 @@ export enum StorageEntries {
     browse = "browse",
 }
 
-export namespace Storage {
-    export type SetItem = <T>(key: StorageEntries, value: T) => T;
-    export type GetItem<T> = (key: StorageEntries) => Promise<T>;
-}
+export type StorageSetItem = <T>(key: StorageEntries, value: T) => T;
+export type StorageGetItem<T> = (key: StorageEntries) => Promise<T>;
 
 export interface UseStorage {
-    setItem: Storage.SetItem;
+    setItem: StorageSetItem;
     instance: MMKVInstance;
     ready?: Promise<void>;
 }

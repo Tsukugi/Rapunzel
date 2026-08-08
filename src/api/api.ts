@@ -1,15 +1,15 @@
-import { useLilithNHentai } from "@atsu/lilith-nhentai";
-import { useLilithMangaDex } from "@atsu/lilith-mangadex";
-import { useRapunzelStore } from "../store/store";
+import { useLilithNHentai as getLilithNHentai } from "@atsu/lilith-nhentai";
+import { useLilithMangaDex as getLilithMangaDex } from "@atsu/lilith-mangadex";
+import { getRapunzelStore } from "../store/store";
 import { LilithLanguage, RepositoryBase } from "@atsu/lilith";
 import { LilithRepo } from "../store/interfaces";
-import { useZenith } from "./zenithApi";
+import { getZenith } from "./zenithApi";
 
 // TODO implement filter languages on lilith
-export const useLilithAPI = (): RepositoryBase => {
+export const getLilithAPI = (): RepositoryBase => {
     const {
         config: [config],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const props = {
         headers: config.apiLoaderConfig,
@@ -20,10 +20,10 @@ export const useLilithAPI = (): RepositoryBase => {
     };
     switch (config.repository) {
         case LilithRepo.NHentai:
-            return useLilithNHentai(props);
+            return getLilithNHentai(props);
         case LilithRepo.MangaDex:
-            return useLilithMangaDex(props);
+            return getLilithMangaDex(props);
         case LilithRepo.EHentai:
-            return useZenith();
+            return getZenith();
     }
 };

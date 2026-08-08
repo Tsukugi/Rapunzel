@@ -1,26 +1,26 @@
-import { useLilithAPI } from "../api/api";
+import { getLilithAPI } from "../api/api";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import {
     ConfigState,
     EAutoFetchWebviewStep,
     LilithRepo,
 } from "../store/interfaces";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import { RapunzelLog } from "../config/log";
 
-interface UseAutoFetchWebviewData extends UsesNavigation {}
+type UseAutoFetchWebviewData = UsesNavigation
 
 const SupportedSources = [LilithRepo.NHentai];
 const WAIT_BEFORE_RETURN_MS = 1000;
 
-export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
+export const createAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const { navigation } = props;
 
     const {
         autoFetchWebview: [autoFetchWebview],
         router: [router],
         ui: [ui],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const resolveReturnRoute = (): ViewNames => {
         const storedRoute = autoFetchWebview.returnRoute;
@@ -37,22 +37,22 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const validateData = async ({ apiLoaderConfig }: ConfigState) => {
         if (!apiLoaderConfig["User-Agent"] || !apiLoaderConfig.cookie) {
             RapunzelLog.log(
-                `[useAutoFetchWebviewData.validateData] Not enough data ${JSON.stringify(
+                `[createAutoFetchWebviewData.validateData] Not enough data ${JSON.stringify(
                     apiLoaderConfig,
                 )}`,
             );
             return false;
         }
         try {
-            const trending = await useLilithAPI().getTrendingBooks(); // Test a request, should be small
+            const trending = await getLilithAPI().getTrendingBooks(); // Test a request, should be small
             if (trending.length === 0) {
                 RapunzelLog.warn(
-                    "[useAutoFetchWebviewData.validateData] API returned no data",
+                    "[createAutoFetchWebviewData.validateData] API returned no data",
                 );
                 return false;
             }
             RapunzelLog.log(
-                "[useAutoFetchWebviewData.validateData] Data seems valid",
+                "[createAutoFetchWebviewData.validateData] Data seems valid",
             );
             return true;
         } catch (err) {
@@ -64,7 +64,7 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const isSupported = (repo: LilithRepo): boolean => {
         const isSupportedRepo = SupportedSources.includes(repo);
         RapunzelLog.log(
-            `[useAutoFetchWebviewData.isSupported] ${repo} validity is ${isSupportedRepo}`,
+            `[createAutoFetchWebviewData.isSupported] ${repo} validity is ${isSupportedRepo}`,
         );
         return isSupportedRepo;
     };
@@ -84,19 +84,19 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
 
     const startProcess = async (
         configState: ConfigState,
-        force: boolean = false,
+        force = false,
     ) => {
-        RapunzelLog.log("[useAutoFetchWebviewData.startProcess]");
+        RapunzelLog.log("[createAutoFetchWebviewData.startProcess]");
         if (!isSupported(configState.repository)) {
             RapunzelLog.log(
-                "[useAutoFetchWebviewData.startProcess] Can't start process",
+                "[createAutoFetchWebviewData.startProcess] Can't start process",
             );
             return;
         }
         if (autoFetchWebview.step !== EAutoFetchWebviewStep.Standby) {
             if (!force) {
                 RapunzelLog.log(
-                    "[useAutoFetchWebviewData.startProcess] Process already started",
+                    "[createAutoFetchWebviewData.startProcess] Process already started",
                 );
                 return;
             }
@@ -118,7 +118,7 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     };
 
     const onDataSuccess = async (configState: ConfigState) => {
-        RapunzelLog.log("[useAutoFetchWebviewData.onDataSuccess]");
+        RapunzelLog.log("[createAutoFetchWebviewData.onDataSuccess]");
 
         if (!(await validateData(configState))) return;
 
@@ -128,14 +128,14 @@ export const useAutoFetchWebviewData = (props: UseAutoFetchWebviewData) => {
     const restartProcess = async (
         configState: ConfigState,
     ): Promise<boolean> => {
-        RapunzelLog.log("[useAutoFetchWebviewData.restartProcess]");
+        RapunzelLog.log("[createAutoFetchWebviewData.restartProcess]");
 
         if (
             !isSupported(configState.repository) ||
             (await validateData(configState))
         ) {
             RapunzelLog.log(
-                "[useAutoFetchWebviewData.restartProcess] No need to restart process",
+                "[createAutoFetchWebviewData.restartProcess] No need to restart process",
             );
             RapunzelLog.log({ configState });
             return false;

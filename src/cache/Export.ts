@@ -1,9 +1,9 @@
 import { Book } from "@atsu/lilith";
 import RNFS from "react-native-fs";
 import { RapunzelLog } from "../config/log";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import { isCancel, pickSingle } from "react-native-document-picker";
-import { useRapunzelStorage } from "./storage";
+import { getRapunzelStorage } from "./storage";
 import { StorageEntries } from "./interfaces";
 import { LibraryBook } from "../store/interfaces";
 import { LibraryUtils } from "../tools/library";
@@ -11,7 +11,7 @@ import { LibraryUtils } from "../tools/library";
 /**
  * Exports the current library as a JSON file.
  *
- * This function retrieves the library from the `useRapunzelStore` hook,
+ * This function retrieves the library from the `getRapunzelStore` hook,
  * serializes the `saved` books into JSON, and saves the metadata to a file
  * in the device's download directory (`RapunzelMigration/metadata.json`).
  *
@@ -23,7 +23,7 @@ import { LibraryUtils } from "../tools/library";
 const exportLibraryAsJson = async (): Promise<string> => {
     const {
         library: [library],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const jsonMetadata: Record<string, Book> = { ...library.saved };
     const MigrateRoot = `${RNFS.DownloadDirectoryPath}/RapunzelMigration`;
@@ -44,7 +44,7 @@ const exportLibraryAsJson = async (): Promise<string> => {
  * Imports the library from a JSON file.
  *
  * This function allows the user to select a JSON file, reads its contents, and
- * merges the imported books into the current library stored in `useRapunzelStore`.
+ * merges the imported books into the current library stored in `getRapunzelStore`.
  * It then updates the library both in memory and in persistent storage.
  *
  * @async
@@ -57,7 +57,7 @@ const importLibraryFromJson = async (): Promise<number | null> => {
     const {
         config: [config],
         library: [library],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     let picked: Awaited<ReturnType<typeof pickSingle>>;
     try {
@@ -89,7 +89,7 @@ const importLibraryFromJson = async (): Promise<number | null> => {
     library.saved = saved;
     library.rendered = rendered;
 
-    const { setItem } = useRapunzelStorage();
+    const { setItem } = getRapunzelStorage();
     setItem(StorageEntries.library, library.saved);
 
     return backupKeys.length;

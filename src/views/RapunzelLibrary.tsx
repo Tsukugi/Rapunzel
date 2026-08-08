@@ -3,27 +3,27 @@ import VirtualList from "../components/virtualList/virtualList";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 import CoupleItem from "../components/paper/item/coupleItem";
-import { useRapunzelStore } from "../store/store";
+import { getRapunzelStore } from "../store/store";
 import { useVirtualListEvents } from "../tools/useVirtualListEvents";
 import { useFocusEffect } from "@react-navigation/native";
 import { StorageEntries } from "../cache/interfaces";
-import { useRapunzelStorage } from "../cache/storage";
+import { getRapunzelStorage } from "../cache/storage";
 import { ListUtils } from "../tools/list";
 import { LibraryBook } from "../store/interfaces";
 import { LibraryUtils } from "../tools/library";
 
-interface RapunzelLibraryProps extends UsesNavigation {}
+type RapunzelLibraryProps = UsesNavigation
 
 const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
     const {
         config: [config],
         library: [library, useLibraryEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const [rendered, setRendered] = React.useState<string[]>([]);
 
-    const updateLibraryFromStorage = () => {
-        const storedLibrary = useRapunzelStorage().instance.getMap<
+    const updateLibraryFromStorage = useCallback(() => {
+        const storedLibrary = getRapunzelStorage().instance.getMap<
             Record<string, LibraryBook>
         >(StorageEntries.library);
         if (!storedLibrary) return;
@@ -34,7 +34,7 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
         );
         library.saved = saved;
         library.rendered = rendered;
-    };
+    }, [config, library]);
 
     useRouter({ route: ViewNames.RapunzelLibrary, navigation });
 
@@ -42,7 +42,7 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
         useCallback(() => {
             updateLibraryFromStorage();
             setRendered(library.rendered);
-        }, []),
+        }, [library.rendered, updateLibraryFromStorage]),
     );
 
     useLibraryEffect(({ rendered }) => setRendered(rendered));

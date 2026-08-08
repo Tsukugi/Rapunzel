@@ -10,15 +10,15 @@ import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
 import ReaderHeader from "../components/reader/readerHeader";
 import { StorageEntries } from "../cache/interfaces";
-import { useRapunzelStorage } from "../cache/storage";
+import { getRapunzelStorage } from "../cache/storage";
 import {
     LibraryBook,
     RapunzelImage,
     ReaderImageFit,
     ReaderMode,
 } from "../store/interfaces";
-import { useRapunzelStore } from "../store/store";
-import { useRapunzelLibrary } from "../components/cache/library";
+import { getRapunzelStore } from "../store/store";
+import { getRapunzelLibrary } from "../components/cache/library";
 import { ListUtils } from "../tools/list";
 import { useReaderHeaderVisibility } from "../tools/useReaderHeaderVisibility";
 import { RapunzelLog } from "../config/log";
@@ -33,10 +33,10 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
     const {
         reader: [reader, readerEffect],
         library: [library, libraryEffect],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
     const { getLibraryId, saveBookToLibrary, removeBookFromLibrary } =
-        useRapunzelLibrary();
-    const { setItem: setStorageItem } = useRapunzelStorage();
+        getRapunzelLibrary();
+    const { setItem: setStorageItem } = getRapunzelStorage();
     const currentBookRef = useRef(reader.book);
     currentBookRef.current = reader.book;
     const currentReaderRef = useRef(reader);

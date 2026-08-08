@@ -1,23 +1,22 @@
 import { Book, BookBase } from "@atsu/lilith";
 import { StorageEntries } from "../../cache/interfaces";
-import { useRapunzelStorage } from "../../cache/storage";
-import { useRapunzelStore } from "../../store/store";
-import { LibraryBook, LibraryState } from "../../store/interfaces";
+import { getRapunzelStorage } from "../../cache/storage";
+import { getRapunzelStore } from "../../store/store";
+import { LibraryBook } from "../../store/interfaces";
 import { DateUtils } from "../../tools/date";
-import { RapunzelLog } from "../../config/log";
 import { LibraryUtils } from "../../tools/library";
 
-export const useRapunzelLibrary = () => {
+export const getRapunzelLibrary = () => {
     const {
         config: [config],
         library: [library],
-    } = useRapunzelStore();
+    } = getRapunzelStore();
 
     const { buildLibraryState } = LibraryUtils;
 
     const getLibraryId = (bookId: string) => `${config.repository}.${bookId}`;
     const saveBookToLibrary = async (book: Book) => {
-        const { instance, setItem } = useRapunzelStorage();
+        const { instance, setItem } = getRapunzelStorage();
         const currentLibrary =
             (await instance.getMapAsync<Record<string, LibraryBook>>(
                 StorageEntries.library,
@@ -35,7 +34,7 @@ export const useRapunzelLibrary = () => {
     };
 
     const removeBookFromLibrary = async (book: BookBase) => {
-        const { setItem, instance } = useRapunzelStorage();
+        const { setItem, instance } = getRapunzelStorage();
 
         const bookIdToDelete = getLibraryId(book.id);
 

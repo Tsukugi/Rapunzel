@@ -3,8 +3,8 @@ import { Alert } from "react-native";
 import { DeviceCache } from "../../cache/cache";
 import { Button, Card, List, Text } from "react-native-paper";
 import { Export } from "../../cache/Export";
-import { useRapunzelStore } from "../../store/store";
-import { useRapunzelStorage } from "../../cache/storage";
+import { getRapunzelStore } from "../../store/store";
+import { getRapunzelStorage } from "../../cache/storage";
 import { ImageCacheLocations, StorageEntries } from "../../cache/interfaces";
 import { RapunzelSelect } from "../RapunzelSelect";
 import { RapunzelCache } from "../../cache/useRapunzelCache";
@@ -24,8 +24,8 @@ const CacheScreen = () => {
         ui: [ui],
         library: [library],
         config: [config],
-    } = useRapunzelStore();
-    const { setItem, instance } = useRapunzelStorage();
+    } = getRapunzelStore();
+    const { setItem, instance } = getRapunzelStorage();
     const { colors } = LocalTheme.useTheme();
 
     const [tempSize, setTempSize] = useState(0);

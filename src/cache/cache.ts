@@ -113,7 +113,7 @@ const downloadAndCacheImage = async ({
     downloadPath,
     imageFileName,
     forceDownload = false,
-    onImageCached = (path) => {},
+    onImageCached = () => undefined,
 }: DownloadAndCacheImageProps): Promise<string | null> => {
     let imageFullPath = `${downloadPath}/${imageFileName}`;
 
@@ -333,36 +333,22 @@ const calculateCacheSize = async (path: string): Promise<number> => {
 
 const getRecursiveFolderSize = async (cachePath: string): Promise<number> => {
     try {
-        return new Promise(async (resolve) => {
-            const items = await RNFS.readDir(cachePath);
-
-            const onItemFile = async (item: RNFS.ReadDirItem) => {
-                if (item.isDirectory()) {
-                    return await getRecursiveFolderSize(item.path);
-                } else {
-                    return item.size;
-                }
-            };
-
-            const processes = items.map(onItemFile);
-            const size: number = await Promise.allSettled(processes).then(
-                (values) =>
-                    values.reduce((acc, val) => {
-                        if (val.status === "rejected") {
-                            RapunzelLog.error(val.reason);
-                            return acc;
-                        }
-                        if (val.value === 0) return acc;
-                        const message = `${cachePath
-                            .split("/")
-                            .pop()}: ${acc} + ${val.value}`;
-                        RapunzelLog.log(`[getRecursiveFolderSize]: ${message}`);
-                        acc = acc + val.value;
-                        return acc;
-                    }, 0),
-            );
-            return resolve(size);
-        });
+        const items = await RNFS.readDir(cachePath);
+        const onItemFile = async (item: RNFS.ReadDirItem) =>
+            item.isDirectory()
+                ? getRecursiveFolderSize(item.path)
+                : item.size;
+        const values = await Promise.allSettled(items.map(onItemFile));
+        return values.reduce((acc, val) => {
+            if (val.status === "rejected") {
+                RapunzelLog.error(val.reason);
+                return acc;
+            }
+            if (val.value === 0) return acc;
+            const message = `${cachePath.split("/").pop()}: ${acc} + ${val.value}`;
+            RapunzelLog.log(`[getRecursiveFolderSize]: ${message}`);
+            return acc + val.value;
+        }, 0);
     } catch (error) {
         RapunzelLog.error(
             `[calculateCacheSize] Error calculating cache size of ${cachePath}: ${error}`,
@@ -495,12 +481,9 @@ const ensureCreateDeepFolders = async (
 };
 
 const getFolderInfo = async (folderPath: string): Promise<RNFS.StatResult> => {
-    return await new Promise(async (resolve, reject) => {
-        const exists = await RNFS.exists(folderPath);
-        if (!exists) return reject(null);
-        const stats = await RNFS.stat(folderPath);
-        resolve(stats);
-    });
+    const exists = await RNFS.exists(folderPath);
+    if (!exists) return Promise.reject(null);
+    return RNFS.stat(folderPath);
 };
 
 export const DeviceCache = {

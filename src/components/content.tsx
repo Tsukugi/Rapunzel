@@ -1,4 +1,4 @@
-import React, { FC, Fragment, HTMLProps, ReactNode } from "react";
+import React, { FC, HTMLProps, ReactNode } from "react";
 import { StatusBar, View } from "react-native";
 import { LocalTheme } from "../../themes";
 

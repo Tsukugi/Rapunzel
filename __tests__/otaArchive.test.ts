@@ -76,9 +76,10 @@ describe("OTA archive extraction", () => {
         fs.readFile.mockResolvedValue(
             fromByteArray(
                 zipSync({
-                    "index.android.bundle": new TextEncoder().encode(
-                        "var answer = 42;",
-                    ),
+                    "index.android.bundle": new Uint8Array([
+                        118, 97, 114, 32, 97, 110, 115, 119, 101, 114, 32,
+                        61, 32, 52, 50, 59,
+                    ]),
                 }),
             ),
         );

@@ -4,13 +4,6 @@ import { execSync } from "child_process";
 
 interface PackageJson {
     version: string;
-    [key: string]: any;
-}
-
-interface AndroidBuildConfig {
-    versionName: string;
-    versionCode: number;
-    [key: string]: any;
 }
 
 export class ReleaseAutomation {
@@ -22,7 +15,7 @@ export class ReleaseAutomation {
         this.buildsDir = path.join(this.projectRoot, "builds");
     }
 
-    public async run(version?: string, doGitHubRelease: boolean = false): Promise<void> {
+    public async run(version?: string, doGitHubRelease = false): Promise<void> {
         try {
             console.log("🤖 Starting Rapunzel release automation process...");
 
@@ -172,6 +165,7 @@ export class ReleaseAutomation {
 
     private stageReleaseChanges(version: string): string[] {
         console.log("🗂️ Staging release artifacts...");
+        void version;
         const gitPath = (...segments: string[]) =>
             path.join(...segments).replace(/\\/g, "/");
         const releaseFiles = [
@@ -307,8 +301,8 @@ export class ReleaseAutomation {
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-let version: string = "";
-let doGitHubRelease: boolean = false;
+let version = "";
+let doGitHubRelease = false;
 
 // Check for help flag first
 if (args.includes("--help") || args.includes("-h")) {

@@ -303,24 +303,24 @@ describe('ReleaseAutomation', () => {
   describe('run', () => {
     it('should run the full release process without GitHub release', async () => {
       // Mock all necessary methods
-      const getCurrentVersionSpy = jest
+      jest
         .spyOn(releaseAutomation as any, 'getCurrentVersion')
         .mockReturnValue('0.8.2');
       const updatePackageJsonVersionSpy = jest
         .spyOn(releaseAutomation as any, 'updatePackageJsonVersion')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const updateAndroidVersionSpy = jest
         .spyOn(releaseAutomation as any, 'updateAndroidVersion')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const createBuildsDirectorySpy = jest
         .spyOn(releaseAutomation as any, 'createBuildsDirectory')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const buildReleaseAPKSpy = jest
         .spyOn(releaseAutomation as any, 'buildReleaseAPK')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const moveAPKToBuildsFolderSpy = jest
         .spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const stageReleaseChangesSpy = jest
         .spyOn(releaseAutomation as any, 'stageReleaseChanges')
         .mockReturnValue([]);
@@ -329,7 +329,7 @@ describe('ReleaseAutomation', () => {
         .mockReturnValue(false);
       const pushReleaseChangesSpy = jest
         .spyOn(releaseAutomation as any, 'pushReleaseChanges')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
 
       mockedFs.readFileSync.mockReturnValue(JSON.stringify({ version: '0.8.2' }));
       mockedFs.existsSync.mockReturnValue(true);
@@ -349,24 +349,24 @@ describe('ReleaseAutomation', () => {
 
     it('should run the full release process with GitHub release', async () => {
       // Mock all necessary methods
-      const getCurrentVersionSpy = jest
+      jest
         .spyOn(releaseAutomation as any, 'getCurrentVersion')
         .mockReturnValue('0.8.2');
       const updatePackageJsonVersionSpy = jest
         .spyOn(releaseAutomation as any, 'updatePackageJsonVersion')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const updateAndroidVersionSpy = jest
         .spyOn(releaseAutomation as any, 'updateAndroidVersion')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const createBuildsDirectorySpy = jest
         .spyOn(releaseAutomation as any, 'createBuildsDirectory')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const buildReleaseAPKSpy = jest
         .spyOn(releaseAutomation as any, 'buildReleaseAPK')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const moveAPKToBuildsFolderSpy = jest
         .spyOn(releaseAutomation as any, 'moveAPKToBuildsFolder')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const stageReleaseChangesSpy = jest
         .spyOn(releaseAutomation as any, 'stageReleaseChanges')
         .mockReturnValue([]);
@@ -375,7 +375,7 @@ describe('ReleaseAutomation', () => {
         .mockReturnValue(true);
       const pushReleaseChangesSpy = jest
         .spyOn(releaseAutomation as any, 'pushReleaseChanges')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
       const runGitHubReleaseScriptSpy = jest
         .spyOn(releaseAutomation as any, 'runGitHubReleaseScript')
         .mockResolvedValue(undefined);
