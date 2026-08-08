@@ -168,4 +168,34 @@ describe("RapunzelReader header wiring", () => {
             view.unmount();
         });
     });
+
+    test("provides stable page layouts for fast reader scrolling", () => {
+        let view!: ReturnType<typeof renderer.create>;
+        act(() => {
+            view = renderer.create(
+                <RapunzelReader navigation={{ goBack: jest.fn() } as any} />,
+            );
+        });
+
+        const listProps = mockVirtualList.mock.lastCall?.[0] as Record<
+            string,
+            unknown
+        >;
+        const getItemLayout = listProps.getItemLayout as (
+            data: unknown,
+            index: number,
+        ) => { length: number; offset: number; index: number };
+
+        expect(getItemLayout).toEqual(expect.any(Function));
+        expect(getItemLayout(listProps.data, 0)).toMatchObject({
+            index: 0,
+            length: expect.any(Number),
+            offset: 0,
+        });
+        expect(getItemLayout(listProps.data, 1).offset).toBeGreaterThan(0);
+
+        act(() => {
+            view.unmount();
+        });
+    });
 });

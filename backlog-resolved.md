@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-016: Stabilize reader fast scrolling
+
+- Status: resolved
+- Added: 2026-08-08
+- Resolved: 2026-08-08
+- Source: user request and focused reproduction test
+- Problem or goal: Fast scrolling in the reader could make variable-height image pages jump and temporarily render in a disordered layout while the native virtualized list measured them.
+- Resolution: Reader pages now provide deterministic `VirtualizedList` item lengths and cumulative offsets from their fitted image dimensions. Pages without source dimensions use the same existing fallback ratio, so the native list can jump to a fast-scroll target without estimating row positions while images render.
+- Verification: The focused reproduction test failed before the change and passed after it. Reader layout, reader wiring, virtual-list, and image sizing suites passed (11 tests); the full Jest suite passed (32 suites, 136 tests). The release APK built successfully and installed as version 0.9.8/versionCode 14 on emulator `Medium_Phone_API_35` at 1080x2400. The Reader survived 8 fast flings, a 20-swipe burst, and 12 alternating down/up pairs. The immediate and 3-second-settled final screenshots were pixel-identical (0 differing pixels), with no AndroidRuntime or ReactNativeJS errors. The physical Xiaomi phone was also started successfully, but its ADB tap/swipe injection remains blocked.
+
 ### BL-014: Publish the OTA manifest with the Android release
 
 - Status: resolved

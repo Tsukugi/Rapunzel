@@ -1,9 +1,10 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
 import VirtualList from "../components/virtualList/virtualList";
 import ImageRenderer from "../components/virtualList/imageItem";
+import { getReaderPageLayout } from "../components/virtualList/readerLayout";
 import { VirtualItem } from "../components/virtualList/interfaces";
 import { UsesNavigation, ViewNames } from "../components/navigators/interfaces";
 import { useRouter } from "../components/navigators/useRouter";
@@ -44,6 +45,23 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
 
     const readerMode = reader.mode || ReaderMode.Scroll;
     const readerImageFit = reader.imageFit || ReaderImageFit.Width;
+    const readerViewportWidth = Dimensions.get("screen").width;
+    const readerViewportHeight = Dimensions.get("screen").height;
+    const getItemLayout = useCallback(
+        (
+            data: ArrayLike<VirtualItem<RapunzelImage>> | null | undefined,
+            index: number,
+        ) =>
+            getReaderPageLayout(data, index, readerImageFit, {
+                width: readerViewportWidth,
+                height: readerViewportHeight,
+            }),
+        [
+            readerImageFit,
+            readerViewportWidth,
+            readerViewportHeight,
+        ],
+    );
     const { visible: headerVisible, onScroll: onReaderScroll } =
         useReaderHeaderVisibility(
             String(reader.chapter?.id || ""),
@@ -192,6 +210,7 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
             ) : (
                 <VirtualList
                     data={loadedImages}
+                    getItemLayout={getItemLayout}
                     onRefresh={async () => updateImages()}
                     onScroll={onReaderScroll}
                     renderer={({ item }) => (

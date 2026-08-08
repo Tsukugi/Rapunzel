@@ -7,6 +7,10 @@ import VirtualList from "../src/components/virtualList/virtualList";
 interface CapturedListProps {
     contentOffset?: { x: number; y: number };
     keyExtractor: (item: VirtualItem<string>, index: number) => string;
+    getItemLayout?: (
+        data: VirtualItem<string>[] | null | undefined,
+        index: number,
+    ) => { length: number; offset: number; index: number };
     onEndReachedThreshold?: number;
     onScroll?: (event: {
         nativeEvent: { contentOffset: { y: number } };
@@ -143,6 +147,26 @@ describe("VirtualList pagination behavior", () => {
 
         expect(onScroll).toHaveBeenCalledWith(120);
         expect(props.onEndReachedThreshold).toBeLessThanOrEqual(1);
+        list.unmount();
+    });
+
+    test("forwards deterministic item layouts to the native list", () => {
+        const getItemLayout = jest.fn((_data: unknown, index: number) => ({
+            length: 800,
+            offset: index * 800,
+            index,
+        }));
+        const list = renderer.create(
+            <VirtualListForTest
+                data={[{ id: "page-1", value: "Page 1" }]}
+                getItemLayout={getItemLayout}
+            />,
+        );
+
+        const props = mockVirtualizedList.mock
+            .lastCall?.[0] as unknown as CapturedListProps;
+        expect(props.getItemLayout).toBe(getItemLayout);
+
         list.unmount();
     });
 });

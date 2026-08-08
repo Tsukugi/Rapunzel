@@ -17,6 +17,10 @@ interface VirtualListProps<T> extends PropsWithChildren {
     style?: Record<string, any>;
     renderer?: ListRenderItem<VirtualItem<T>>;
     getItem?: (data: VirtualItem<T>[], index: number) => VirtualItem<T>;
+    getItemLayout?: (
+        data: ArrayLike<VirtualItem<T>> | null | undefined,
+        index: number,
+    ) => { length: number; offset: number; index: number };
     onRefresh?: () => Promise<void>;
     onEndReached?: () => void;
     onStartReached?: () => void;
@@ -31,6 +35,7 @@ const VirtualList = <T,>({
     style,
     renderer = ({ item }) => <Item value={item.value as string} />,
     getItem = (_data, index) => _data[index],
+    getItemLayout,
     onRefresh = async () => {
         RapunzelLog.log("[onRefresh]: Reached");
     },
@@ -102,6 +107,7 @@ const VirtualList = <T,>({
             keyExtractor={(item) => item.id}
             getItemCount={(_data) => _data.length}
             getItem={getItem}
+            getItemLayout={getItemLayout}
             scrollEventThrottle={16}
             onScroll={(event) => onScroll?.(event.nativeEvent.contentOffset.y)}
             onMomentumScrollEnd={(event) =>
