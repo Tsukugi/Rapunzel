@@ -23,8 +23,16 @@ jest.mock('fs', () => ({
 const mockedFs = fs as jest.Mocked<typeof fs>;
 const mockedExecSync = execSync as jest.MockedFunction<typeof execSync>;
 
+type PrivateGitHubReleaseAutomation = {
+  getCurrentVersion: () => string;
+  checkGitHubCLI: () => void;
+  createGitHubRelease: (tag: string, title: string, notes: string, apkPath: string) => void;
+  generateReleaseNotes: (tag: string) => Promise<string>;
+};
+
 describe('GitHubReleaseAutomation', () => {
   let githubReleaseAutomation: GitHubReleaseAutomation;
+  let privateAutomation: PrivateGitHubReleaseAutomation;
   const realProjectRoot = path.resolve(__dirname, '..', '..');
   const realBuildsDir = path.join(realProjectRoot, 'builds');
 
@@ -37,6 +45,7 @@ describe('GitHubReleaseAutomation', () => {
 
     // Create instance
     githubReleaseAutomation = new GitHubReleaseAutomation();
+    privateAutomation = githubReleaseAutomation as unknown as PrivateGitHubReleaseAutomation;
   });
 
   afterEach(() => {
@@ -48,7 +57,7 @@ describe('GitHubReleaseAutomation', () => {
       const mockPackageJson = { version: '0.8.3' };
       mockedFs.readFileSync.mockReturnValueOnce(JSON.stringify(mockPackageJson));
 
-      const version = (githubReleaseAutomation as any).getCurrentVersion();
+      const version = privateAutomation.getCurrentVersion();
 
       expect(version).toBe('0.8.3');
       expect(mockedFs.readFileSync).toHaveBeenCalledWith(
@@ -62,7 +71,7 @@ describe('GitHubReleaseAutomation', () => {
     it('should verify GitHub CLI is installed', () => {
       mockedExecSync.mockReturnValueOnce(Buffer.from('gh version 2.0.0'));
 
-      (githubReleaseAutomation as any).checkGitHubCLI();
+      privateAutomation.checkGitHubCLI();
 
       expect(mockedExecSync).toHaveBeenCalledWith('gh --version', { stdio: 'pipe' });
     });
@@ -73,7 +82,7 @@ describe('GitHubReleaseAutomation', () => {
       });
 
       expect(() => {
-        (githubReleaseAutomation as any).checkGitHubCLI();
+        privateAutomation.checkGitHubCLI();
       }).toThrow('GitHub CLI is not installed. Please install it from https://cli.github.com/');
     });
   });
@@ -85,7 +94,7 @@ describe('GitHubReleaseAutomation', () => {
         .mockReturnValueOnce(Buffer.from(''));
 
       const apkPath = path.join(realProjectRoot, 'builds', 'Rapunzel-0.8.3.apk');
-      (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', apkPath);
+      privateAutomation.createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', apkPath);
 
       expect(mockedExecSync).toHaveBeenCalledWith(
         'gh release create v0.8.3 -t "Release v0.8.3" -n "Release notes" --draft=false',
@@ -103,7 +112,7 @@ describe('GitHubReleaseAutomation', () => {
       });
 
       expect(() => {
-        (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', '/path/to/apk');
+        privateAutomation.createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', '/path/to/apk');
       }).toThrow('Failed to create GitHub release or upload APK: Error: Release failed');
     });
 
@@ -116,7 +125,7 @@ describe('GitHubReleaseAutomation', () => {
 
       const apkPath = path.join(realProjectRoot, 'builds', 'Rapunzel-0.8.3.apk');
       expect(() => {
-        (githubReleaseAutomation as any).createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', apkPath);
+        privateAutomation.createGitHubRelease('v0.8.3', 'Release v0.8.3', 'Release notes', apkPath);
       }).toThrow('Failed to create GitHub release or upload APK: Error: Upload failed');
     });
   });
@@ -128,7 +137,7 @@ describe('GitHubReleaseAutomation', () => {
         .mockReturnValueOnce('a1b2c3d Update docs\n e4f5g6h Fix bug in browser item\n') // git log command
         .mockReturnValueOnce('gh version 2.0.0'); // gh --version check
 
-      const result = await (githubReleaseAutomation as any).generateReleaseNotes('v0.8.2');
+      const result = await privateAutomation.generateReleaseNotes('v0.8.2');
 
       expect(result).toContain('Changes in this release');
       expect(result).toContain('- a1b2c3d Update docs');
@@ -150,7 +159,7 @@ describe('GitHubReleaseAutomation', () => {
           return '';
         });
 
-      const result = await (githubReleaseAutomation as any).generateReleaseNotes('v0.8.2');
+      const result = await privateAutomation.generateReleaseNotes('v0.8.2');
 
       expect(result).toContain('Changes in this release');
       expect(result).toContain('- a1b2c3d Initial commit');
@@ -163,7 +172,7 @@ describe('GitHubReleaseAutomation', () => {
         .mockReturnValueOnce('') // git log command (no commits)
         .mockReturnValueOnce('gh version 2.0.0'); // gh --version check
 
-      const result = await (githubReleaseAutomation as any).generateReleaseNotes('v0.8.2');
+      const result = await privateAutomation.generateReleaseNotes('v0.8.2');
 
       expect(result).toContain('Release v0.8.2');
       expect(result).toContain('Automated release');

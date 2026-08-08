@@ -2,6 +2,7 @@ import { jest, describe, beforeEach, test, expect } from "@jest/globals";
 
 import React from "react";
 import renderer, { act } from "react-test-renderer";
+import { BookBase } from "@atsu/lilith";
 import { StorageEntries } from "../src/cache/interfaces";
 import { MaxBrowseItems, MaxFeedItems } from "../src/cache/feedConstants";
 import {
@@ -28,10 +29,9 @@ jest.mock("react-native-fs", () => ({
 }));
 
 jest.mock("use-debounce", () => ({
-    useDebouncedCallback:
-        (fn: (...args: any[]) => void) =>
-        (...args: any[]) =>
-            fn(...args),
+    useDebouncedCallback: <TArgs extends unknown[]>(
+        fn: (...args: TArgs) => void,
+    ) => (...args: TArgs) => fn(...args),
 }));
 
 jest.mock("../src/cache/storage", () => ({
@@ -44,14 +44,20 @@ jest.mock("../src/cache/storage", () => ({
 
 jest.mock("../src/store/store", () => ({
     getRapunzelStore: () => ({
-        latest: [mockLatestState, (cb: any) => mockLatestEffectHandlers.push(cb)],
+        latest: [
+            mockLatestState,
+            (cb: (state: LatestBooksState) => void) =>
+                mockLatestEffectHandlers.push(cb),
+        ],
         trending: [
             mockTrendingState,
-            (cb: any) => mockTrendingEffectHandlers.push(cb),
+            (cb: (state: PopularBooksState) => void) =>
+                mockTrendingEffectHandlers.push(cb),
         ],
         browse: [
             mockBrowseState,
-            (cb: any) => mockBrowseEffectHandlers.push(cb),
+            (cb: (state: BrowseState) => void) =>
+                mockBrowseEffectHandlers.push(cb),
         ],
     }),
 }));
@@ -78,8 +84,8 @@ describe("FeedPersistence", () => {
             page: 1,
             rendered: ["keep", "missing-image", "missing-book"],
             bookListRecord: {
-                keep: { id: "keep" } as any,
-                "missing-image": { id: "missing-image" } as any,
+                keep: { id: "keep" } as unknown as BookBase,
+                "missing-image": { id: "missing-image" } as unknown as BookBase,
             },
             cachedImagesRecord: {
                 keep: { id: "keep", value: "file://keep" },
@@ -94,8 +100,8 @@ describe("FeedPersistence", () => {
             activeProcessId: "",
             rendered: ["t0", "t1"],
             bookListRecord: {
-                t0: { id: "t0" } as any,
-                t1: { id: "t1" } as any,
+                t0: { id: "t0" } as unknown as BookBase,
+                t1: { id: "t1" } as unknown as BookBase,
             },
             cachedImagesRecord: {
                 t0: { id: "t0", value: "file://t0" },
@@ -107,7 +113,9 @@ describe("FeedPersistence", () => {
             page: 2,
             cacheKey: "NHentai:browse:query",
             rendered: ["NHentai:1"],
-            bookListRecord: { "NHentai:1": { id: "1" } as any },
+            bookListRecord: {
+                "NHentai:1": { id: "1" } as unknown as BookBase,
+            },
             cachedImagesRecord: {
                 "NHentai:1": { id: "NHentai:1", value: "file://1" },
             },
@@ -189,7 +197,9 @@ describe("FeedPersistence", () => {
         );
 
         const books = Object.fromEntries(
-            longRendered.map((id) => [id, { id } as any]),
+            longRendered.map(
+                (id) => [id, { id } as unknown as BookBase] as const,
+            ),
         );
         const images = Object.fromEntries(
             longRendered.map((id) => [id, { id, value: `file://${id}` }]),
@@ -254,7 +264,9 @@ describe("FeedPersistence", () => {
             activeProcessId: "",
             page: 2,
             rendered: ["cached"],
-            bookListRecord: { cached: { id: "cached" } as any },
+            bookListRecord: {
+                cached: { id: "cached" } as unknown as BookBase,
+            },
             cachedImagesRecord: {
                 cached: { id: "cached", value: "file://cached" },
             },

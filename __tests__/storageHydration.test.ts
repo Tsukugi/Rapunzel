@@ -1,4 +1,5 @@
 import { jest, describe, test, expect, afterEach } from "@jest/globals";
+import { BookBase } from "@atsu/lilith";
 
 import { StorageEntries } from "../src/cache/interfaces";
 import { MaxFeedItems } from "../src/cache/feedConstants";
@@ -100,7 +101,7 @@ describe("initRapunzelStorage feed hydration", () => {
                 "missing-file": {
                     id: "missing-file",
                     cover: { uri: "remote-missing-cover" },
-                } as any,
+                } as unknown as BookBase,
                 ...Object.fromEntries(validIds.map((id) => [id, { id }])),
             },
             cachedImagesRecord: {
@@ -124,8 +125,10 @@ describe("initRapunzelStorage feed hydration", () => {
                 "missing-file": {
                     id: "missing-file",
                     cover: { uri: "remote-missing-cover" },
-                } as any,
-                "trending-valid": { id: "trending-valid" } as any,
+                } as unknown as BookBase,
+                "trending-valid": {
+                    id: "trending-valid",
+                } as unknown as BookBase,
             },
             cachedImagesRecord: {
                 "missing-file": {
@@ -140,11 +143,27 @@ describe("initRapunzelStorage feed hydration", () => {
         };
 
         const mmkvInstance = {
-            getBool: jest.fn((_key: string, cb?: any) => cb?.(null, null)),
-            getString: jest.fn((_key: string, cb?: any) => cb?.(null, null)),
-            getInt: jest.fn((_key: string, cb?: any) => cb?.(null, null)),
-            getArray: jest.fn((_key: string, cb?: any) => cb?.(null, null)),
-            getMap: jest.fn((key: string, cb?: any) => {
+            getBool: jest.fn(
+                (_key: string, cb?: (error: unknown, value: null) => void) =>
+                    cb?.(null, null),
+            ),
+            getString: jest.fn(
+                (_key: string, cb?: (error: unknown, value: null) => void) =>
+                    cb?.(null, null),
+            ),
+            getInt: jest.fn(
+                (_key: string, cb?: (error: unknown, value: null) => void) =>
+                    cb?.(null, null),
+            ),
+            getArray: jest.fn(
+                (_key: string, cb?: (error: unknown, value: null) => void) =>
+                    cb?.(null, null),
+            ),
+            getMap: jest.fn(
+                (
+                    key: string,
+                    cb?: (error: unknown, value: unknown) => void,
+                ) => {
                 if (key === StorageEntries.feedLatest) return latestSnapshot;
                 if (key === StorageEntries.feedTrending)
                     return trendingSnapshot;
@@ -157,7 +176,8 @@ describe("initRapunzelStorage feed hydration", () => {
                     return settings;
                 }
                 return null;
-            }),
+                },
+            ),
             getItem: jest.fn(),
             getMapAsync: jest.fn((key: StorageEntries) => {
                 if (key === StorageEntries.feedLatest)
@@ -181,7 +201,8 @@ describe("initRapunzelStorage feed hydration", () => {
 
         const existsMock = require("react-native-fs").exists as jest.Mock;
         existsMock.mockImplementation(
-            ((path: string) => !path.includes("missing")) as any,
+            (path: unknown) =>
+                typeof path === "string" && !path.includes("missing"),
         );
 
         jest.doMock("../src/store/store", () => ({

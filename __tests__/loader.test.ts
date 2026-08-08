@@ -1,15 +1,84 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { getRapunzelLoader } from "../src/api/loader";
+import { DownloadBookProps } from "../src/cache/useRapunzelCache";
 import { ViewNames } from "../src/components/navigators/interfaces";
-import { LilithRepo } from "../src/store/interfaces";
+import {
+    EntryCacheMetadata,
+    LilithRepo,
+    ListPageState,
+} from "../src/store/interfaces";
 
 jest.mock("@atsu/lilith", () => ({
     LilithImageExtension: { webp: "webp" },
 }));
 
-let mockStoreState: any;
-let mockApiClient: any;
-let mockDownloadImageList: any;
+type AsyncMock = jest.MockedFunction<
+    (...args: never[]) => Promise<unknown>
+>;
+type FeedBook = { cover: { uri: string } };
+type FeedState = {
+    activeProcessId: string;
+    bookListRecord: Record<string, FeedBook>;
+    cachedImagesRecord: Record<string, { id: string; value: string }>;
+    rendered: string[];
+    page?: number;
+    loadedPages?: Record<string, ListPageState>;
+    entryMetaRecord?: Record<string, EntryCacheMetadata>;
+};
+type ReaderBook = { id: string; chapters: Array<{ id: string }> };
+type ReaderState = {
+    activeProcessId: string;
+    book: ReaderBook | null;
+    chapter: { id: string } | null;
+    cachedImages: Array<{
+        id: string;
+        value: { uri: string; width: number; height: number };
+    }>;
+    chapterPage: number;
+};
+type MockStoreState = {
+    loading: [
+        { browse: boolean; reader: boolean; trending: boolean; latest: boolean },
+        jest.Mock,
+    ];
+    reader: [ReaderState, jest.Mock];
+    browse: [FeedState, jest.Mock];
+    config: [
+        {
+            debug: boolean;
+            enableCache: boolean;
+            useFallbackExtensionOnDownload: boolean;
+            cachelibraryLocation: string;
+            cacheTempImageLocation: string;
+            apiLoaderConfig: Record<string, string>;
+            webviewUrl: string;
+            initialView: ViewNames;
+            repository: LilithRepo;
+            languages: string[];
+        },
+        jest.Mock,
+    ];
+    latest: [FeedState, jest.Mock];
+    library: [
+        { saved: Record<string, { id: string; savedAt: number }>; rendered: string[] },
+        jest.Mock,
+    ];
+    trending: [FeedState, jest.Mock];
+    ui: [{ snackMessage: string }, jest.Mock];
+};
+interface MockApiClient {
+    search: AsyncMock;
+    getBook: AsyncMock;
+    getChapter: AsyncMock;
+    getLatestBooks: AsyncMock;
+    getTrendingBooks: AsyncMock;
+}
+
+let mockStoreState: MockStoreState;
+let mockApiClient: MockApiClient;
+let mockDownloadImageList: jest.MockedFunction<
+    (options: DownloadBookProps) => Promise<string[]>
+>;
 let mockRandomId = "id-0";
 
 jest.mock("../src/store/store", () => ({
@@ -22,7 +91,8 @@ jest.mock("../src/api/api", () => ({
 
 jest.mock("../src/cache/useRapunzelCache", () => ({
     RapunzelCache: {
-        downloadImageList: (...args: any[]) => mockDownloadImageList(...args),
+        downloadImageList: (options: DownloadBookProps) =>
+            mockDownloadImageList(options),
     },
     StaticLibraryPaths: {
         SearchResults: "cache/search",
@@ -53,7 +123,7 @@ jest.mock("../src/tools/random", () => ({
     },
 }));
 
-const createStoreState = () => ({
+const createStoreState = (): MockStoreState => ({
     loading: [
         { browse: false, reader: false, trending: false, latest: false },
         jest.fn(),
@@ -119,13 +189,13 @@ const createStoreState = () => ({
 beforeEach(() => {
     mockStoreState = createStoreState();
     mockApiClient = {
-        search: jest.fn(),
-        getBook: jest.fn(),
-        getChapter: jest.fn(),
-        getLatestBooks: jest.fn(),
-        getTrendingBooks: jest.fn(),
+        search: jest.fn<(...args: never[]) => Promise<unknown>>(),
+        getBook: jest.fn<(...args: never[]) => Promise<unknown>>(),
+        getChapter: jest.fn<(...args: never[]) => Promise<unknown>>(),
+        getLatestBooks: jest.fn<(...args: never[]) => Promise<unknown>>(),
+        getTrendingBooks: jest.fn<(...args: never[]) => Promise<unknown>>(),
     };
-    mockDownloadImageList = jest.fn(async (options: any) => {
+    mockDownloadImageList = jest.fn(async (options: DownloadBookProps) => {
         const results: string[] = [];
         for (let i = 0; i < options.data.length; i++) {
             const url = `cached-${i}`;
@@ -182,7 +252,7 @@ describe("getRapunzelLoader search and feeds", () => {
             { id: "book-3", cover: { uri: "cover-3" } },
         ];
         mockApiClient.search.mockResolvedValue({ results });
-        mockDownloadImageList = jest.fn(async (options: any) => {
+        mockDownloadImageList = jest.fn(async (options: DownloadBookProps) => {
             const urls: string[] = [];
             // Simulate images finishing from last to first.
             for (let i = options.data.length - 1; i >= 0; i--) {
@@ -254,10 +324,12 @@ describe("getRapunzelLoader search and feeds", () => {
 
         let finishImages: (() => void) | undefined;
         mockDownloadImageList = jest.fn(
-            () =>
-                new Promise<string[]>((resolve) => {
+            (options: DownloadBookProps) => {
+                void options;
+                return new Promise<string[]>((resolve) => {
                     finishImages = () => resolve(["cached-cover"]);
-                }),
+                });
+            },
         );
 
         const loader = getRapunzelLoader();
@@ -282,11 +354,11 @@ describe("getRapunzelLoader search and feeds", () => {
     });
 
     test("does not store Taihou nested proxies back into list state", async () => {
-        const loadedPages = new Proxy<Record<string, any>>(
+        const loadedPages = new Proxy<Record<string, ListPageState>>(
             {},
             { set: (target, property, value) => Reflect.set(target, property, value) },
         );
-        const entryMetaRecord = new Proxy<Record<string, any>>(
+        const entryMetaRecord = new Proxy<Record<string, EntryCacheMetadata>>(
             {},
             { set: (target, property, value) => Reflect.set(target, property, value) },
         );
