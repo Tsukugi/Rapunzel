@@ -1,6 +1,7 @@
 import {
     Book,
     BookBase,
+    Chapter,
     SearchResult,
     BookListResults,
     SearchQueryOptions,
@@ -178,11 +179,13 @@ export const getRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
      * Loads a chapter based on its id, automatically downloading and caching the image list to the Reader state.
      * @param {string} book - Unique id of the containing book.
      * @param {string} chapterId - Unique id of the selected chapter.
+     * @param {Chapter} preloadedChapter - Chapter data already included in the loaded book.
      * @returns {Promise<string[] >} - A Promise that resolves to an array of cached image paths corresponding to the loaded images. Returns null if the chapter loading fails.
      */
     const loadChapter = async (
         bookId: string,
         chapterId: string,
+        preloadedChapter?: Chapter,
     ): Promise<string[]> => {
         // Set the loader.reader flag to true to indicate that a chapter is being loaded
         loading.reader = true;
@@ -190,9 +193,9 @@ export const getRapunzelLoader = (props?: UseRapunzelLoaderProps) => {
         RapunzelLog.log("[loadBook] Loading chapter from id", chapterId);
 
         // Retrieve the chapter information from the API
-        const chapter = await withLilithRequest(
-            apiLoader.getChapter(chapterId),
-        );
+        const chapter =
+            preloadedChapter ||
+            (await withLilithRequest(apiLoader.getChapter(chapterId)));
 
         // Define a callback to execute when the chapter loading process finishes
         const onFinish = () => {

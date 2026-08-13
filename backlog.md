@@ -4,6 +4,14 @@ This file lists work that is still open. Keep it short, current, and specific.
 
 ## Open items
 
+### BL-019: Fix Pixel reader book-loading stall
+
+- Status: open
+- Added: 2026-08-13
+- Source: Pixel 7 release smoke test
+- Problem or goal: Release 0.9.10 opens a search result and enters Reader, but the Reader stays blank. Debug logs show the book request starts and the follow-up chapter request to the same NHentai gallery endpoint does not complete, so no reader images are cached.
+- Acceptance criteria: On the Pixel 7, search for `Dendou Monaka`, open `Futanari Taiken Esthe Salon`, and see the first reader page load with no request hang or blank Reader screen.
+
 ### BL-015: Harden release navigation screen names
 
 - Status: open

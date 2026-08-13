@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { getRapunzelLoader } from "../src/api/loader";
 import { DownloadBookProps } from "../src/cache/useRapunzelCache";
 import { ViewNames } from "../src/components/navigators/interfaces";
+import { goToFirstChapterOrSelectChapter } from "../src/components/navigators/goToFirstChapterOrSelect";
 import {
     EntryCacheMetadata,
     LilithRepo,
@@ -563,5 +564,36 @@ describe("getRapunzelLoader book and chapter flows", () => {
         );
         expect(mockStoreState.loading[0].reader).toBe(false);
         expect(images).toEqual(["cached-0", "cached-1"]);
+    });
+
+    test("opens the embedded first chapter without waiting for a second API request", async () => {
+        mockApiClient.getBook.mockResolvedValue({
+            id: "book-reader",
+            chapters: [
+                {
+                    id: "chapter-reader",
+                    pages: [{ uri: "page-1", width: 1280, height: 1790 }],
+                },
+            ],
+        });
+        mockApiClient.getChapter.mockImplementation(
+            () => new Promise<unknown>(() => undefined),
+        );
+
+        const loader = getRapunzelLoader();
+        const book = await loader.loadBook("book-reader");
+        if (!book) throw new Error("Expected the book to load");
+
+        const navigate = jest.fn();
+        const navigation = { navigate } as never;
+        goToFirstChapterOrSelectChapter({ book, navigation });
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(mockApiClient.getChapter).not.toHaveBeenCalled();
+        expect(mockStoreState.reader[0].chapter?.id).toBe("chapter-reader");
+        expect(mockStoreState.reader[0].cachedImages).toHaveLength(1);
+        expect(navigate).toHaveBeenCalledWith(
+            ViewNames.RapunzelReader,
+        );
     });
 });
