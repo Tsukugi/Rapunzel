@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-019: Fix Pixel reader book-loading stall
+
+- Status: resolved
+- Added: 2026-08-13
+- Resolved: 2026-08-13
+- Source: Pixel 7 release smoke test
+- Problem or goal: Release 0.9.10 opened a search result and entered Reader, but the Reader stayed blank. The first investigation found a duplicate chapter request; after that was fixed, a synchronous Taihou subscription loop still prevented the native reader row from mounting.
+- Resolution: The Reader now passes stable callbacks to the Taihou reader and library subscriptions. The first-page loader fix also reuses the chapter already included in the loaded one-chapter book, avoiding the duplicate chapter request.
+- Verification: The focused Reader regression first failed when subscription callbacks changed on every render and passed after stabilization. The full Jest suite passed (33 suites, 141 tests), focused lint and TypeScript passed, release APK 0.9.12/versionCode 18 built with the private release certificate, and the exact APK was installed over 0.9.11 on Pixel 7 `2A141FDH200B7G`. Searching `Dendou Monaka` and opening the target result visibly displayed the first Reader page; the UI dump showed the installed app with no fatal Android or React Native error.
+
 ### BL-018: Fix the production feed/API stall
 
 - Status: resolved

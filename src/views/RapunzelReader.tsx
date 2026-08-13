@@ -13,7 +13,9 @@ import { StorageEntries } from "../cache/interfaces";
 import { getRapunzelStorage } from "../cache/storage";
 import {
     LibraryBook,
+    LibraryState,
     RapunzelImage,
+    ReaderState,
     ReaderImageFit,
     ReaderMode,
 } from "../store/interfaces";
@@ -36,6 +38,8 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
     } = getRapunzelStore();
     const { getLibraryId, saveBookToLibrary, removeBookFromLibrary } =
         getRapunzelLibrary();
+    const getLibraryIdRef = useRef(getLibraryId);
+    getLibraryIdRef.current = getLibraryId;
     const { setItem: setStorageItem } = getRapunzelStorage();
     const currentBookRef = useRef(reader.book);
     currentBookRef.current = reader.book;
@@ -79,13 +83,15 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
         }, [updateImages]),
     );
 
-    readerEffect(({ cachedImages }) => {
+    const onReaderUpdate = useCallback(({ cachedImages }: ReaderState) => {
         setLoadedImages((current) =>
             cachedImages.length === 0
                 ? []
                 : ListUtils.mergeVirtualItems(current, cachedImages),
         );
-    });
+    }, []);
+
+    readerEffect(onReaderUpdate);
 
     useEffect(() => {
         setSinglePageIndex(0);
@@ -94,16 +100,23 @@ const RapunzelReader: FC<RapunzelReaderProps> = ({ navigation }) => {
     const updateSavedState = useCallback(
         (saved: Record<string, LibraryBook>) => {
             const book = currentBookRef.current;
-            setIsSaved(!!book && !!saved[getLibraryId(book.id)]);
+            setIsSaved(
+                !!book && !!saved[getLibraryIdRef.current(book.id)],
+            );
         },
-        [getLibraryId],
+        [],
     );
 
     useEffect(() => {
         updateSavedState(library.saved);
     }, [library.saved, reader.book?.id, updateSavedState]);
 
-    libraryEffect(({ saved }) => updateSavedState(saved));
+    const onLibraryUpdate = useCallback(
+        ({ saved }: LibraryState) => updateSavedState(saved),
+        [updateSavedState],
+    );
+
+    libraryEffect(onLibraryUpdate);
 
     useEffect(() => {
         setSinglePageIndex((current) =>

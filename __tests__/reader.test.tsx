@@ -12,6 +12,8 @@ const mockReaderHeader = jest.fn((props: Record<string, unknown>) => {
     void props;
     return null;
 });
+const mockReaderEffect = jest.fn();
+const mockLibraryEffect = jest.fn();
 interface MockReaderState extends Record<string, unknown> {
     cachedImages: Array<{
         id: string;
@@ -19,6 +21,7 @@ interface MockReaderState extends Record<string, unknown> {
     }>;
 }
 let mockReaderState: MockReaderState;
+let notifyReaderUpdate: (state: MockReaderState) => void = () => undefined;
 
 jest.mock("@react-navigation/native", () => {
     const ReactActual = jest.requireActual<typeof React>("react");
@@ -32,8 +35,20 @@ jest.mock("@react-navigation/native", () => {
 
 jest.mock("../src/store/store", () => ({
     getRapunzelStore: () => ({
-        reader: [mockReaderState, jest.fn()],
-        library: [{ saved: {}, rendered: [] }, jest.fn()],
+        reader: [
+            mockReaderState,
+            (effect: (state: MockReaderState) => void) => {
+                notifyReaderUpdate = effect;
+                mockReaderEffect(effect);
+            },
+        ],
+        config: [{ debug: false }],
+        library: [
+            { saved: {}, rendered: [] },
+            (effect: (state: Record<string, unknown>) => void) => {
+                mockLibraryEffect(effect);
+            },
+        ],
     }),
 }));
 
@@ -89,6 +104,9 @@ describe("RapunzelReader header wiring", () => {
     beforeEach(() => {
         mockVirtualList.mockClear();
         mockReaderHeader.mockClear();
+        mockReaderEffect.mockClear();
+        mockLibraryEffect.mockClear();
+        notifyReaderUpdate = () => undefined;
         mockReaderState = {
             activeProcessId: "process-1",
             book: { id: "book-1", title: "Book 1" },
@@ -103,6 +121,71 @@ describe("RapunzelReader header wiring", () => {
             mode: ReaderMode.Scroll,
             imageFit: ReaderImageFit.Width,
         };
+    });
+
+    test("keeps Taihou subscription callbacks stable across renders", () => {
+        let view!: ReturnType<typeof renderer.create>;
+        act(() => {
+            view = renderer.create(
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
+            );
+        });
+
+        const firstReaderEffect = mockReaderEffect.mock.lastCall?.[0];
+        const firstLibraryEffect = mockLibraryEffect.mock.lastCall?.[0];
+
+        act(() => {
+            view.update(
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
+            );
+        });
+
+        expect(mockReaderEffect.mock.lastCall?.[0]).toBe(firstReaderEffect);
+        expect(mockLibraryEffect.mock.lastCall?.[0]).toBe(firstLibraryEffect);
+
+        act(() => {
+            view.unmount();
+        });
+    });
+
+    test("renders the first page when it arrives after an empty reader mount", () => {
+        mockReaderState.cachedImages = [];
+
+        let view!: ReturnType<typeof renderer.create>;
+        act(() => {
+            view = renderer.create(
+                <RapunzelReader
+                    navigation={{ goBack: jest.fn() } as unknown as never}
+                />,
+            );
+        });
+
+        expect(
+            (mockVirtualList.mock.lastCall?.[0] as Record<string, unknown>)
+                .data,
+        ).toHaveLength(0);
+
+        act(() => {
+            const firstPage = {
+                id: "1",
+                value: { uri: "page-1", width: 100, height: 140 },
+            };
+            mockReaderState.cachedImages = [firstPage];
+            notifyReaderUpdate({ ...mockReaderState });
+        });
+
+        expect(
+            (mockVirtualList.mock.lastCall?.[0] as Record<string, unknown>)
+                .data,
+        ).toHaveLength(1);
+
+        act(() => {
+            view.unmount();
+        });
     });
 
     test("shows the header, hides it on downward scroll, and shows it on upward scroll", () => {
