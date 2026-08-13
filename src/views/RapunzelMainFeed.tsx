@@ -14,6 +14,7 @@ import { TrendingBooksFeed } from "../components/virtualList/TrendingBooksFeed";
 import { useDebouncedCallback } from "use-debounce";
 import { RapunzelLog } from "../config/log";
 import { FeedFreshnessMs, isFresh } from "../cache/listCache";
+import { PopularBooksState, LatestBooksState } from "../store/interfaces";
 
 type RapunzelMainFeedProps = UsesNavigation
 
@@ -106,19 +107,34 @@ const RapunzelMainFeed: FC<RapunzelMainFeedProps> = ({ navigation }) => {
 
     useRouter({ route: ViewNames.RapunzelMainFeed, navigation });
 
-    useTrendingBooksEffect(({ cachedImagesRecord, rendered }) => {
-        setLoadedTrendingBookImages(
-            mapImagesToOrder(cachedImagesRecord, rendered),
-        );
-    });
-
-    useLatestBooksEffect(({ cachedImagesRecord, rendered }) => {
-        setLatestBooksImages(
-            includeImagesWithTrending(
+    const updateTrendingImages = useCallback(
+        ({ cachedImagesRecord, rendered }: Pick<
+            PopularBooksState,
+            "cachedImagesRecord" | "rendered"
+        >) => {
+            setLoadedTrendingBookImages(
                 mapImagesToOrder(cachedImagesRecord, rendered),
-            ),
-        );
-    });
+            );
+        },
+        [],
+    );
+
+    const updateLatestImages = useCallback(
+        ({ cachedImagesRecord, rendered }: Pick<
+            LatestBooksState,
+            "cachedImagesRecord" | "rendered"
+        >) => {
+            setLatestBooksImages(
+                includeImagesWithTrending(
+                    mapImagesToOrder(cachedImagesRecord, rendered),
+                ),
+            );
+        },
+        [],
+    );
+
+    useTrendingBooksEffect(updateTrendingImages);
+    useLatestBooksEffect(updateLatestImages);
 
     const { getVirtualItemProps } = useVirtualListEvents({
         navigation,

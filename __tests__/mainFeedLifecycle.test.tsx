@@ -8,8 +8,18 @@ const mockVirtualList = jest.fn((props: Record<string, unknown>) => {
     void props;
     return null;
 });
-const mockLatestEffect = jest.fn();
-const mockTrendingEffect = jest.fn();
+let latestEffectRegistrations = 0;
+let trendingEffectRegistrations = 0;
+const mockLatestEffect = jest.fn((onUpdate: unknown) => {
+    React.useEffect(() => {
+        latestEffectRegistrations += 1;
+    }, [onUpdate]);
+});
+const mockTrendingEffect = jest.fn((onUpdate: unknown) => {
+    React.useEffect(() => {
+        trendingEffectRegistrations += 1;
+    }, [onUpdate]);
+});
 
 const mockLatest = {
     activeProcessId: "",
@@ -80,6 +90,8 @@ describe("RapunzelMainFeed lifecycle", () => {
         mockVirtualList.mockClear();
         mockLatestEffect.mockClear();
         mockTrendingEffect.mockClear();
+        latestEffectRegistrations = 0;
+        trendingEffectRegistrations = 0;
         Object.assign(mockLatest, {
             bookListRecord: {},
             cachedImagesRecord: {},
@@ -185,6 +197,8 @@ describe("RapunzelMainFeed lifecycle", () => {
             "NHentai:new-1",
             "NHentai:old-1",
         ]);
+        expect(latestEffectRegistrations).toBe(1);
+        expect(trendingEffectRegistrations).toBe(1);
         screen?.unmount();
     });
 });

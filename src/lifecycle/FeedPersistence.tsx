@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { getRapunzelStore } from "../store/store";
 import { getRapunzelStorage } from "../cache/storage";
 import { StorageEntries } from "../cache/interfaces";
@@ -60,17 +60,21 @@ const FeedPersistence: React.FC = () => {
         trending,
     ]);
 
-    useLatestEffect((state: LatestBooksState) => {
+    const onLatestUpdate = useCallback((state: LatestBooksState) => {
         persistLatest(state);
-    });
+    }, [persistLatest]);
 
-    useTrendingEffect((state: PopularBooksState) => {
+    const onTrendingUpdate = useCallback((state: PopularBooksState) => {
         persistTrending(state);
-    });
+    }, [persistTrending]);
 
-    useBrowseEffect((state: BrowseState) => {
+    const onBrowseUpdate = useCallback((state: BrowseState) => {
         persistBrowse(state);
-    });
+    }, [persistBrowse]);
+
+    useLatestEffect(onLatestUpdate);
+    useTrendingEffect(onTrendingUpdate);
+    useBrowseEffect(onBrowseUpdate);
 
     return null;
 };

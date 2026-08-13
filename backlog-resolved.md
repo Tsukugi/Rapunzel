@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-018: Fix the production feed/API stall
+
+- Status: resolved
+- Added: 2026-08-13
+- Resolved: 2026-08-13
+- Source: user report and focused production-path reproduction
+- Problem or goal: The production app could keep showing cached feed cards while refresh and book loading appeared to do nothing.
+- Resolution: The Lilith adapters now use the React Native fetch transport. Feed and persistence store listeners now keep stable callback identities, preventing Taihou's synchronous update loop from adding listeners while it publishes an update.
+- Verification: Focused API and main-feed regression tests passed (4 tests), the full Jest suite passed (33 suites, 138 tests), lint and TypeScript passed, and `git diff --check` passed. The clean release APK built successfully and was installed on Xiaomi `42adce68`; after a fresh launch, the UI hierarchy showed current live feed cards and cover image views, with no React Native or Android fatal error. Direct host requests for popular, latest, a book, and its cover all returned HTTP 200. Xiaomi ADB touch injection is blocked, so a physical tap to open a book was not claimed as device-verified; the book endpoint and existing loader coverage were verified instead.
+
 ### BL-017: Keep header search within the appbar height
 
 - Status: resolved
