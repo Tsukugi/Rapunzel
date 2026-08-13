@@ -49,9 +49,14 @@ const RapunzelBrowse: FC<RapunzelBrowseProps> = ({ navigation }) => {
         );
     }, [mapImagesToOrder, browse.cachedImagesRecord, browse.rendered]);
 
-    browseEffect(({ cachedImagesRecord, rendered }) => {
-        setLoadedImages(mapImagesToOrder(cachedImagesRecord, rendered));
-    });
+    const onBrowseUpdate = useCallback(
+        ({ cachedImagesRecord, rendered }: typeof browse) => {
+            setLoadedImages(mapImagesToOrder(cachedImagesRecord, rendered));
+        },
+        [mapImagesToOrder],
+    );
+
+    browseEffect(onBrowseUpdate);
 
     useFocusEffect(
         useCallback(() => {

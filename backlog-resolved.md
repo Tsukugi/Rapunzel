@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-020: Stop Browse subscription render loop
+
+- Status: resolved
+- Added: 2026-08-13
+- Resolved: 2026-08-13
+- Source: Pixel 7 production smoke test
+- Problem or goal: Release 0.9.12 showed cached Browse cards, but the JavaScript thread stayed at 100% CPU and card presses did not reach Reader. The direct NHentai search and book APIs were healthy.
+- Resolution: RapunzelBrowse now passes a stable callback to its Taihou Browse subscription, preventing synchronous store updates from registering a fresh callback on every render.
+- Verification: The focused Browse regression failed before the change and passed afterward. Full Jest passed with 34 suites and 142 tests; lint, TypeScript, and `git diff --check` passed. Release APK 0.9.13/versionCode 19 was built with the existing release certificate and installed over 0.9.12 on Pixel 7 `2A141FDH200B7G`. After relaunch, the JavaScript thread stayed idle instead of pegging the CPU; opening the first visible book showed the first Reader page in `artifacts/live-recheck/0.9.13-after-book-tap.png`, and the log recorded 63 loaded pages with no app fatal error.
+
 ### BL-019: Fix Pixel reader book-loading stall
 
 - Status: resolved
