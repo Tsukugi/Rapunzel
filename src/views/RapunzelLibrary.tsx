@@ -9,7 +9,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { StorageEntries } from "../cache/interfaces";
 import { getRapunzelStorage } from "../cache/storage";
 import { ListUtils } from "../tools/list";
-import { LibraryBook } from "../store/interfaces";
+import { LibraryBook, LibraryState } from "../store/interfaces";
 import { LibraryUtils } from "../tools/library";
 
 type RapunzelLibraryProps = UsesNavigation
@@ -22,7 +22,7 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
 
     const [rendered, setRendered] = React.useState<string[]>([]);
 
-    const updateLibraryFromStorage = useCallback(() => {
+    const updateLibraryFromStorage = useCallback((): string[] | undefined => {
         const storedLibrary = getRapunzelStorage().instance.getMap<
             Record<string, LibraryBook>
         >(StorageEntries.library);
@@ -34,18 +34,23 @@ const RapunzelLibrary: FC<RapunzelLibraryProps> = ({ navigation }) => {
         );
         library.saved = saved;
         library.rendered = rendered;
+        return rendered;
     }, [config, library]);
 
     useRouter({ route: ViewNames.RapunzelLibrary, navigation });
 
     useFocusEffect(
         useCallback(() => {
-            updateLibraryFromStorage();
-            setRendered(library.rendered);
-        }, [library.rendered, updateLibraryFromStorage]),
+            const nextRendered = updateLibraryFromStorage();
+            if (nextRendered) setRendered(nextRendered);
+        }, [updateLibraryFromStorage]),
     );
 
-    useLibraryEffect(({ rendered }) => setRendered(rendered));
+    const onLibraryUpdate = useCallback(
+        ({ rendered }: LibraryState) => setRendered(rendered),
+        [],
+    );
+    useLibraryEffect(onLibraryUpdate);
 
     const { onRemoveFromLibraryHandler, onBookSelectHandler } =
         useVirtualListEvents({ navigation });

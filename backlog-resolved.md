@@ -4,6 +4,16 @@ This file records backlog items that were completed. Keep the history concise an
 
 ## Resolved items
 
+### BL-021: Prevent large-library navigation lockup
+
+- Status: resolved
+- Added: 2026-08-21
+- Resolved: 2026-08-21
+- Source: user report and Android emulator reproduction
+- Problem or goal: A large local library could leave the app at high CPU while the drawer and book reader stopped responding.
+- Resolution: RapunzelLibrary now keeps its focus-refresh and Taihou subscription callbacks stable, so synchronous library updates do not register new callbacks during every render.
+- Verification: The focused library regression reproduced the callback identity change before the fix and passed after it. The full Jest suite passed with 35 suites and 143 tests; lint, TypeScript, and `git diff --check` passed. The final release APK was installed over the existing data on `emulator-5554`; the drawer opened, Library displayed the saved entries, CPU settled at 0%, and tapping the first book opened the Reader with visible pages. Captures and UI dumps are in `artifacts/emulator-final-*.png` and `artifacts/emulator-final-*.xml`.
+
 ### BL-020: Stop Browse subscription render loop
 
 - Status: resolved
