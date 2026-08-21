@@ -78,8 +78,8 @@ android {
         applicationId "com.rapunzel"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 19
-        versionName "0.9.13"
+        versionCode 20
+        versionName "0.9.14"
     }
     signingConfigs {
         debug {
